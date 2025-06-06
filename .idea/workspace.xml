@@ -4,36 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f3198714-8684-46f0-9483-42d012aa9f0e" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/globals.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/screens/_layout.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/screens/discover.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/icons/discover.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/icons/friends.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/icons/matches.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/icons/profile.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/babel.config.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/constants/icons.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/declarations.d.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/nativewind-env.d.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tailwind.config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(tabs)/_layout.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(tabs)/four.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/screens/profile.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(tabs)/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/screens/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(tabs)/three.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/screens/matches.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(tabs)/two.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/screens/friends.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/+html.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/+html.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/_layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/modal.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/components/EditScreenInfo.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/components/ExternalLink.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/metro.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/metro.config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
+    <list default="true" id="f3198714-8684-46f0-9483-42d012aa9f0e" name="Changes" comment="Merge branch 'master' of https://github.com/WinterK0101/SigmaBites into nav">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,7 +19,7 @@
     <dismissed value="$PROJECT_DIR$/package.json" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="ProjectErrors" />
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
@@ -63,7 +35,7 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "frontend",
+    "git-widget-placeholder": "nav",
     "last_opened_file_path": "/Users/School/Desktop/Repos/SigmaBites",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -98,12 +70,27 @@
       <workItem from="1749200749561" duration="9618000" />
       <workItem from="1749221396789" duration="932000" />
       <workItem from="1749222334307" duration="199000" />
-      <workItem from="1749225244020" duration="6066000" />
+      <workItem from="1749225244020" duration="6951000" />
     </task>
+    <task id="LOCAL-00001" summary="Merge branch 'master' of https://github.com/WinterK0101/SigmaBites into nav">
+      <option name="closed" value="true" />
+      <created>1749235311552</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1749235311552</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="setup nativewind, material top navigator, remove some initial styling, add icons and svg dependencies, change nav" />
+    <MESSAGE value="Merge branch 'master' of https://github.com/WinterK0101/SigmaBites into nav&#10;# Please enter a commit message to explain why this merge is necessary,&#10;# especially if it merges an updated upstream into a topic branch.&#10;#&#10;# Lines starting with '#' will be ignored, and an empty message aborts&#10;# the commit." />
+    <MESSAGE value="Merge branch 'master' of https://github.com/WinterK0101/SigmaBites into nav" />
+    <option name="LAST_COMMIT_MESSAGE" value="Merge branch 'master' of https://github.com/WinterK0101/SigmaBites into nav" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
