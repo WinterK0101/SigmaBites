@@ -10,6 +10,10 @@ module.exports = {
         "lexend-bold": ['Lexend-Bold', 'sans-serif'],
         "lexend-regular": ['Lexend-Regular', 'sans-serif'],
         "lexend-variable": ['Lexend-Variable', 'sans-serif'],
+      },
+      colors: {
+        offwhite: "#F8F8F8",
+        accent: "#FE724C"
       }
     },
   },

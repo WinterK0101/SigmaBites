@@ -4,7 +4,26 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f3198714-8684-46f0-9483-42d012aa9f0e" name="Changes" comment="Merge branch 'master' of https://github.com/WinterK0101/SigmaBites into nav" />
+    <list default="true" id="f3198714-8684-46f0-9483-42d012aa9f0e" name="Changes" comment="Merge branch 'master' of https://github.com/WinterK0101/SigmaBites into nav">
+      <change afterPath="$PROJECT_DIR$/app/(tabs)/Discover.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/_layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/screens/Discover.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/screens/FriendInfo.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/FriendInfo.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/screens/Friends.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/Friends.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/screens/Matched.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/Matched.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/screens/Matches.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/Matches.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/screens/NoMatches.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/NoMatches.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/screens/Profile.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/Profile.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/screens/RestaurantDetails.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/RestaurantDetails.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/screens/StartupScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/StartupScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/screens/Swiping.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/Swiping.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/screens/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/_layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/screens/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/metro.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/metro.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tailwind.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/tailwind.config.js" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -72,7 +91,7 @@
       <workItem from="1749200749561" duration="9618000" />
       <workItem from="1749221396789" duration="932000" />
       <workItem from="1749222334307" duration="199000" />
-      <workItem from="1749225244020" duration="11297000" />
+      <workItem from="1749225244020" duration="14796000" />
     </task>
     <task id="LOCAL-00001" summary="Merge branch 'master' of https://github.com/WinterK0101/SigmaBites into nav">
       <option name="closed" value="true" />

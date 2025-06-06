@@ -1,9 +1,9 @@
 import * as React from 'react';
 import {createMaterialTopTabNavigator} from "@react-navigation/material-top-tabs";
-import Matches from "@/app/screens/Matches";
-import Friends from "@/app/screens/Friends";
-import Profile from "@/app/screens/Profile";
-import Discover from "@/app/screens/Discover";
+import Matches from "@/app/(tabs)/Matches";
+import Friends from "@/app/(tabs)/Friends";
+import Profile from "@/app/(tabs)/Profile";
+import Discover from "@/app/(tabs)/Discover";
 import {icons} from "@/constants/icons";
 
 const Tab = createMaterialTopTabNavigator();
