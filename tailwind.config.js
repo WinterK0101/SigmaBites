@@ -13,7 +13,8 @@ module.exports = {
       },
       colors: {
         offwhite: "#F8F8F8",
-        accent: "#FE724C"
+        accent: "#FE724C",
+        grey: "#D9D9D9"
       }
     },
   },
