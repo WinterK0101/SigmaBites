@@ -4,24 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f3198714-8684-46f0-9483-42d012aa9f0e" name="Changes" comment="Merge branch 'master' of https://github.com/WinterK0101/SigmaBites into nav">
-      <change afterPath="$PROJECT_DIR$/app/modal.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/fonts/Baloo-Regular.ttf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/fonts/Lexend-Bold.ttf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/fonts/Lexend-Regular.ttf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/fonts/Lexend-Variable.ttf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/components/EditScreenInfo.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/components/ExternalLink.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/_layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/screens/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/screens/_layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/screens/discover.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/screens/discover.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/icons/discover.svg" beforeDir="false" afterPath="$PROJECT_DIR$/assets/icons/discover.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/icons/matches.svg" beforeDir="false" afterPath="$PROJECT_DIR$/assets/icons/matches.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/icons/profile.svg" beforeDir="false" afterPath="$PROJECT_DIR$/assets/icons/profile.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/components/Themed.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/Themed.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tailwind.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/tailwind.config.js" afterDir="false" />
-    </list>
+    <list default="true" id="f3198714-8684-46f0-9483-42d012aa9f0e" name="Changes" comment="Merge branch 'master' of https://github.com/WinterK0101/SigmaBites into nav" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -89,7 +72,7 @@
       <workItem from="1749200749561" duration="9618000" />
       <workItem from="1749221396789" duration="932000" />
       <workItem from="1749222334307" duration="199000" />
-      <workItem from="1749225244020" duration="10903000" />
+      <workItem from="1749225244020" duration="11297000" />
     </task>
     <task id="LOCAL-00001" summary="Merge branch 'master' of https://github.com/WinterK0101/SigmaBites into nav">
       <option name="closed" value="true" />
