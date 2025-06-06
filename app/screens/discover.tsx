@@ -1,12 +1,27 @@
-import {StyleSheet, Text, View} from 'react-native'
-import React from 'react'
+import { StyleSheet } from 'react-native';
+import { Text, View } from '@/components/Themed';
 
-const Discover = () => {
+export default function Discover() {
     return (
-        <View>
-            <Text>Discover</Text>
+        <View style={styles.container}>
+            <Text style={styles.title}>Discover</Text>
         </View>
-    )
+    );
 }
-export default Discover
-const styles = StyleSheet.create({})
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    title: {
+        fontSize: 20,
+        fontWeight: 'bold',
+    },
+    separator: {
+        marginVertical: 30,
+        height: 1,
+        width: '80%',
+    },
+});

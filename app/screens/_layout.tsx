@@ -6,10 +6,6 @@ import Profile from "@/app/screens/profile";
 import Discover from "@/app/screens/discover";
 import {icons} from "@/constants/icons";
 
-function TabIcon({focused, icon, name}){
-
-}
-
 const Tab = createMaterialTopTabNavigator();
 const TabLayout = () => {
     return (
@@ -18,34 +14,40 @@ const TabLayout = () => {
             screenOptions={{
                 tabBarIndicatorStyle: {
                     position: 'absolute',
-                    top: 0,
+                    top: -2,
                     height: 6,
                     backgroundColor: '#FE724C',
                 },
                 tabBarLabelStyle: {
-                    fontSize: 12,
+                    fontSize: 10,
                     textAlignVertical: 'center',
                     includeFontPadding: false,
+                    fontFamily: 'Lexend-Regular',
                 },
                 tabBarStyle: {
                     backgroundColor: "white",
-                    height: 90,
+                    height: 92,
+                    borderTopColor: '#d9d9d9',
+                    borderTopWidth: 2,
+                    position: 'fixed',
                 },
                 tabBarItemStyle: {
                     justifyContent: "center",
                     alignItems: "center",
                     flexDirection: "column",
                     paddingVertical: 8,
-                    marginTop: 8,
+                    marginTop: 4,
                 },
+                tabBarActiveTintColor: '#FE724C',
+                tabBarInactiveTintColor: '#272D2F',
             }}
         >
             <Tab.Screen name="Discover"
                         component={Discover}
                         options={{
                             title: "Discover",
-                            tabBarIcon: ({ focused }) => (
-                                <icons.discover height={25} width={25} fill={"transparent"}/>
+                            tabBarIcon: ({ focused, color }) => (
+                                <icons.discover height={25} width={25} stroke={color}/>
                             )
                         }}
             />
@@ -53,8 +55,8 @@ const TabLayout = () => {
                         component={Matches}
                         options={{
                             title: "Matches",
-                            tabBarIcon: ({ focused }) => (
-                                <icons.matches height={25} width={25} fill={"transparent"}/>
+                            tabBarIcon: ({ focused, color }) => (
+                                <icons.matches height={25} width={25} stroke={color}/>
                             )
                         }}
             />
@@ -62,8 +64,8 @@ const TabLayout = () => {
                         component={Friends}
                         options={{
                             title: "Friends",
-                            tabBarIcon: ({ focused }) => (
-                                <icons.friends height={25} width={25} fill={"transparent"}/>
+                            tabBarIcon: ({ focused, color }) => (
+                                <icons.friends height={25} width={25} stroke={color}/>
                             )
                         }}
             />
@@ -71,8 +73,8 @@ const TabLayout = () => {
                         component={Profile}
                         options={{
                             title: "Profile",
-                            tabBarIcon: ({ focused }) => (
-                                <icons.profile height={25} width={25} fill={"transparent"}/>
+                            tabBarIcon: ({ focused, color }) => (
+                                <icons.profile height={25} width={25} stroke={color}/>
                             )
                         }}
             />
