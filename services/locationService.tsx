@@ -1,5 +1,5 @@
 import * as Location from 'expo-location';
-import { Alert } from 'react-native';
+import {Alert, Linking} from 'react-native';
 
 export const getCurrentLocation = async (): Promise<string> => {
     try {
@@ -9,7 +9,13 @@ export const getCurrentLocation = async (): Promise<string> => {
             Alert.alert(
                 'Location Permission Required',
                 'Please enable location access in your device settings to use this feature.',
-                [{ text: 'OK' }]
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                        text: 'Open Settings',
+                        onPress: () => Linking.openSettings()
+                    }
+                ]
             );
             throw new Error('Permission to access location was denied');
         }
