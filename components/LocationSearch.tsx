@@ -39,17 +39,21 @@ export default function LocationSearch({onLocationSelect}: LocationSearchProps) 
     }
 
     const handleSelectLocation = async (prediction) => {
+
+        // Updates UI of the search box
         setDisplayText(prediction.description);
         setShowPredictions(false);
         setPredictions([]);
         Keyboard.dismiss();
 
+        // Obtaining the selected location information
         setIsGettingDetails(true);
 
         try {
             // Get coordinates and formatted address using place_id
             const locationData = await getLocationFromPlaceId(prediction.place_id);
 
+            // Sends the location information to the parent (Discover.tsx)
             if (onLocationSelect) {
                 onLocationSelect(locationData);
             }
@@ -57,7 +61,7 @@ export default function LocationSearch({onLocationSelect}: LocationSearchProps) 
             console.error('Error getting location details:', error);
             // Fallback to basic prediction data
             const fallbackData: LocationData = {
-                coordinates: { latitude: 0, longitude: 0 }, // You might want to handle this differently
+                coordinates: { latitude: 0, longitude: 0 },
                 address: prediction.description,
                 isCurrentLocation: false
             };
@@ -69,6 +73,7 @@ export default function LocationSearch({onLocationSelect}: LocationSearchProps) 
         }
     }
 
+    // Handles the UI of a prediction row
     const renderPrediction = ({ item }) => (
         <TouchableOpacity
             onPress={() => handleSelectLocation(item)}

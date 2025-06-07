@@ -2,6 +2,7 @@ import * as Location from 'expo-location';
 import {Alert, Linking} from 'react-native';
 import debounce from 'lodash.debounce';
 
+// For storing of important location details
 export interface LocationData {
     coordinates: {
         latitude: number;
@@ -11,6 +12,7 @@ export interface LocationData {
     isCurrentLocation: boolean;
 }
 
+// Creates location object with the important location details if user selects current location
 export const getCurrentLocation = async (): Promise<LocationData> => {
     try {
         // Request permission
@@ -31,7 +33,7 @@ export const getCurrentLocation = async (): Promise<LocationData> => {
         }
 
         // Get current position
-        let location = await Location.getCurrentPositionAsync({});
+        let location = await Location.getCurrentPositionAsync({}); // Creates a new location object based on current location
         let { latitude, longitude } = location.coords;
 
         // Reverse geocode to get formatted address
@@ -48,6 +50,7 @@ export const getCurrentLocation = async (): Promise<LocationData> => {
     }
 };
 
+// Creates a location object with the important details if location search is done
 export const getLocationFromPlaceId = async (placeId: string): Promise<LocationData> => {
     try {
         const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=geometry,formatted_address&key=${process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY}`;
@@ -114,10 +117,10 @@ const searchLocations = async (query: string, setPredictions: Function, setLoadi
     }
 };
 
-// Create the debounced function once and export it
+// Adds a delay to reduce API cals
 export const debouncedLocationSearch = debounce(
     (query: string, setPredictions: Function, setLoading: Function) => {
         searchLocations(query, setPredictions, setLoading);
     },
-    300
+    500
 );
