@@ -1,5 +1,6 @@
 import * as Location from 'expo-location';
 import {Alert, Linking} from 'react-native';
+import debounce from 'lodash.debounce';
 
 export const getCurrentLocation = async (): Promise<string> => {
     try {
@@ -39,3 +40,33 @@ export const getCurrentLocation = async (): Promise<string> => {
         throw error;
     }
 };
+
+const searchLocations = async (query: string, setPredictions: Function, setLoading: Function) => {
+    const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&key=${process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY}`;
+
+    setLoading(true);
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.status === 'OK') {
+            setPredictions(data.predictions || []);
+        } else {
+            console.error('Google Places API error:', data.status, data.error_message);
+            setPredictions([]);
+        }
+    } catch (error) {
+        console.error('Fetching predictions failed:', error);
+        setPredictions([]);
+    } finally {
+        setLoading(false);
+    }
+};
+
+// Create the debounced function once and export it
+export const debouncedLocationSearch = debounce(
+    (query: string, setPredictions: Function, setLoading: Function) => {
+        searchLocations(query, setPredictions, setLoading);
+    },
+    300
+);
