@@ -1,4 +1,4 @@
-import {View, Text, TextInput} from 'react-native'
+import {View, Text, TextInput, Keyboard} from 'react-native'
 import React from 'react'
 import {icons} from "@/constants/icons";
 
@@ -10,7 +10,8 @@ export default function LocationSearch() {
                 onPress={()=>{}}
                 placeholder={"Enter a location"}
                 onChangeText={(text) => {}}
-                className="ml-2 flex-1 text-6c6c6c"
+                className="ml-3 flex-1 text-6c6c6c"
+                clearButtonMode={"while-editing"}
             />
         </View>
     )
