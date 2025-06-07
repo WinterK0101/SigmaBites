@@ -1,17 +1,22 @@
 import React, { useState } from 'react';
-import { getCurrentLocation } from "@/services/locationService";
+import { getCurrentLocation, LocationData } from "@/services/locationService";
 import { icons } from "@/constants/icons";
 import { Text, TouchableOpacity, View } from "react-native";
 
-export const LocationDisplay = ({selectedLocation, onLocationChange}) => {
+interface LocationDisplayProps {
+    selectedLocation: LocationData | null;
+    onLocationChange: (locationData: LocationData | null) => void;
+}
+
+export const LocationDisplay = ({selectedLocation, onLocationChange}: LocationDisplayProps) => {
     const [displayText, setDisplayText] = useState('Tap here to use current location');
     const [isLoading, setIsLoading] = useState(false);
 
     const getDisplayText = () => {
         if (selectedLocation) {
-            return selectedLocation.description; // Sets display text as a "custom" location
+            return selectedLocation.address; // Use formatted address from coordinates
         }
-        return displayText; // Sets display text as current location
+        return displayText; // Current location display text
     }
 
     const handleLocationPress = async () => {
@@ -19,10 +24,11 @@ export const LocationDisplay = ({selectedLocation, onLocationChange}) => {
         setDisplayText('Getting location...');
 
         try {
-            const address = await getCurrentLocation();
-            setDisplayText(address);
+            const locationData = await getCurrentLocation();
+            setDisplayText(locationData.address);
+
             if (onLocationChange) {
-                onLocationChange(null);
+                onLocationChange(locationData); // Pass the full LocationData object
             }
         } catch (error) {
             setDisplayText('Failed to get location');
@@ -31,8 +37,6 @@ export const LocationDisplay = ({selectedLocation, onLocationChange}) => {
             setIsLoading(false);
         }
     };
-
-
 
     return (
         <TouchableOpacity

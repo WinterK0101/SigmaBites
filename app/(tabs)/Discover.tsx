@@ -4,12 +4,23 @@ import {SafeAreaView} from "react-native-safe-area-context";
 import LocationSearch from "@/components/LocationSearch";
 import {LocationDisplay} from "@/components/LocationDisplay";
 import React, {useState} from 'react';
+import {LocationData} from "@/services/locationService";
 
 export default function Discover() {
-    const [userLocation, setUserLocation] = useState(null);
+    const [userLocation, setUserLocation] = useState<LocationData | null>(null);
 
-    const handleLocationChange = (location) => {
+    const handleLocationChange = (location: LocationData | null) => {
         setUserLocation(location);
+    };
+
+    // Helper function to get coordinates
+    const getCurrentCoordinates = () => {
+        return userLocation?.coordinates || null;
+    };
+
+    // Helper function to get address
+    const getCurrentAddress = () => {
+        return userLocation?.address || null;
     };
 
     return (

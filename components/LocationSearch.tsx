@@ -1,13 +1,18 @@
 import {View, Text, TextInput, Keyboard, FlatList, TouchableOpacity} from 'react-native'
 import React, {useState, useCallback} from 'react'
 import {icons} from "@/constants/icons";
-import {debouncedLocationSearch} from "@/services/locationService";
+import {debouncedLocationSearch, getLocationFromPlaceId, LocationData} from "@/services/locationService";
 
-export default function LocationSearch({onLocationSelect}) {
+interface LocationSearchProps {
+    onLocationSelect: (locationData: LocationData) => void;
+}
+
+export default function LocationSearch({onLocationSelect}: LocationSearchProps) {
     const [displayText, setDisplayText] = useState('');
     const [predictions, setPredictions] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [showPredictions, setShowPredictions] = useState(false);
+    const [isGettingDetails, setIsGettingDetails] = useState(false);
 
     // Create a stable debounced function using useCallback
     const debouncedSearch = useCallback(
@@ -33,13 +38,34 @@ export default function LocationSearch({onLocationSelect}) {
         }
     }
 
-    const handleSelectLocation = (prediction) => {
+    const handleSelectLocation = async (prediction) => {
         setDisplayText(prediction.description);
         setShowPredictions(false);
         setPredictions([]);
         Keyboard.dismiss();
-        if (onLocationSelect) {
-            onLocationSelect(prediction);
+
+        setIsGettingDetails(true);
+
+        try {
+            // Get coordinates and formatted address using place_id
+            const locationData = await getLocationFromPlaceId(prediction.place_id);
+
+            if (onLocationSelect) {
+                onLocationSelect(locationData);
+            }
+        } catch (error) {
+            console.error('Error getting location details:', error);
+            // Fallback to basic prediction data
+            const fallbackData: LocationData = {
+                coordinates: { latitude: 0, longitude: 0 }, // You might want to handle this differently
+                address: prediction.description,
+                isCurrentLocation: false
+            };
+            if (onLocationSelect) {
+                onLocationSelect(fallbackData);
+            }
+        } finally {
+            setIsGettingDetails(false);
         }
     }
 
@@ -47,6 +73,7 @@ export default function LocationSearch({onLocationSelect}) {
         <TouchableOpacity
             onPress={() => handleSelectLocation(item)}
             className="px-4 py-3 border-b border-gray-200"
+            disabled={isGettingDetails}
         >
             <Text className="font-lexend-regular text-xs text-primary">{item.description}</Text>
         </TouchableOpacity>
@@ -67,9 +94,12 @@ export default function LocationSearch({onLocationSelect}) {
                             setShowPredictions(true);
                         }
                     }}
+                    editable={!isGettingDetails}
                 />
-                {isLoading && (
-                    <Text className="text-gray-500 text-sm">Loading...</Text>
+                {(isLoading || isGettingDetails) && (
+                    <Text className="text-gray-500 text-sm">
+                        {isGettingDetails ? 'Getting details...' : 'Loading...'}
+                    </Text>
                 )}
             </View>
 
