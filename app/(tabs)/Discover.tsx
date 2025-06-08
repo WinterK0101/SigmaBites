@@ -223,7 +223,7 @@ export default function Discover() {
                             height: 60,
                         }}
                     >
-                        <Text className="font-baloo-regular text-white text-2xl ">
+                        <Text className="font-baloo-regular text-white text-2xl pt-2">
                             Start Swiping!
                         </Text>
                     </LinearGradient>
