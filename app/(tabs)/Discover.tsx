@@ -181,7 +181,7 @@ export default function Discover() {
                 <View className="mt-6">
                     <Text className="font-lexend-bold text-primary text-base mb-3">Show Only Open Eateries?</Text>
                     <Switch
-                        trackColor={{false: '#767577', true: '#fe274c'}}
+                        trackColor={{false: '#767577', true: '#fe724c'}}
                         thumbColor={searchOpen ? '#ffffff' : '#f4f3f4'}
                         ios_backgroundColor="#d9d9d9"
                         onValueChange={toggleOpenNow}
