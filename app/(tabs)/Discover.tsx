@@ -37,7 +37,26 @@ export default function Discover() {
     const toggleCuisines = (cuisine: string) => {
         setSelectedCuisines((prev: Set<string>) => {
             const newSet = new Set(prev);
-            newSet.has(cuisine) ? newSet.delete(cuisine) : newSet.add(cuisine);
+
+            if (cuisine === 'All') {
+                // If "All" is selected, clear everything and add only "All"
+                return new Set(['All']);
+            } else {
+                // If a specific cuisine is selected, remove "All" first
+                newSet.delete('All');
+
+                // Then toggle the selected cuisine
+                if (newSet.has(cuisine)) {
+                    newSet.delete(cuisine);
+                    // If no cuisines are selected after removal, default back to "All"
+                    if (newSet.size === 0) {
+                        newSet.add('All');
+                    }
+                } else {
+                    newSet.add(cuisine);
+                }
+            }
+
             return newSet;
         });
     };
