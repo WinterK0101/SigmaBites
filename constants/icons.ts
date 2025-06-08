@@ -3,6 +3,7 @@ import friends from "@/assets/icons/friends.svg";
 import matches from "@/assets/icons/matches.svg";
 import profile from "@/assets/icons/profile.svg";
 import search from "@/assets/icons/search.svg";
+import location from "@/assets/icons/location.svg";
 
 export const icons = {
     discover,
@@ -10,4 +11,5 @@ export const icons = {
     matches,
     profile,
     search,
+    location,
 };
