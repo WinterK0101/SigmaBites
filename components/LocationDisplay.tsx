@@ -46,7 +46,7 @@ export const LocationDisplay = ({selectedLocation, onLocationChange}: LocationDi
         >
             <icons.location height={35} width={35} stroke={"#6c6c6c"} />
             <View className="flex-column ml-3">
-                <Text className="text-primary font-baloo-regular text-xl">Location</Text>
+                <Text className="text-primary font-lexend-bold text-base">Location</Text>
                 <Text className="text-primary font-lexend-regular text-xs">
                     {getDisplayText()}
                 </Text>
