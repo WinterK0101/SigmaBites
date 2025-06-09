@@ -1,99 +1,195 @@
-import { Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView } from 'react-native'
-import React, { useState } from 'react'
-import { auth } from '../FirebaseConfig'
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth'
-import { router } from 'expo-router'
+import { Text, StyleSheet, TextInput, TouchableOpacity, Image, SafeAreaView, View } from 'react-native';
+import React, { useState } from 'react';
+import { auth } from '../FirebaseConfig';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { router } from 'expo-router';
 
-
-const index = () => {
+const SignInScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-
   const signIn = async () => {
     try {
-      const user = await signInWithEmailAndPassword(auth, email, password)
+      const user = await signInWithEmailAndPassword(auth, email, password);
       if (user) router.replace('/(tabs)');
     } catch (error: any) {
-      console.log(error)
+      console.log(error);
       alert('Sign in failed: ' + error.message);
     }
-  }
-
-  const signUp = async () => {
-    try {
-      const user = await createUserWithEmailAndPassword(auth, email, password)
-      if (user) router.replace('/(tabs)');
-    } catch (error: any) {
-      console.log(error)
-      alert('Sign in failed: ' + error.message);
-    }
-  }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Login</Text>
-      <TextInput style={styles.textInput} placeholder="email" value={email} onChangeText={setEmail} />
-      <TextInput style={styles.textInput} placeholder="password" value={password} onChangeText={setPassword} secureTextEntry/>
-      <TouchableOpacity style={styles.button} onPress={signIn}>
-        <Text style={styles.text}>Login</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={signUp}>
-        <Text style={styles.text}>Make Account</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
-  )
-}
+      <View style={styles.cloudWrapper}>
+        <View style={styles.cloudCircle1} />
+        <View style={styles.cloudCircle2} />
+      </View>
 
-export default index
+
+      <Text style={styles.title}>Sign In</Text>
+      
+      <View style={styles.centerAlign}>
+      <TouchableOpacity style={styles.googleButton}>
+        <View style={styles.googleButtonContent}>
+        <Image 
+          source={{ uri: 'https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png' }} 
+          style={styles.googleIcon}
+        />
+        <Text style={styles.googleButtonText}>Sign in with Google</Text>
+        </View>
+      </TouchableOpacity>
+
+      </View>
+
+      <View style={styles.centerAlign}>
+      <View style={styles.dividerContainer}>
+        <View style={styles.dividerLine} />
+        <Text style={styles.dividerText}>or</Text>
+        <View style={styles.dividerLine} />
+      </View>
+        <Text style={styles.inputLabel}>Username or Email</Text>
+        <TextInput 
+          style={styles.textInput} 
+          placeholder="Username or Email" 
+          value={email} 
+          onChangeText={setEmail} 
+          autoCapitalize="none"
+        />
+        <Text style={styles.inputLabel}>Password</Text>
+        <TextInput 
+          style={styles.textInput} 
+          placeholder="Password" 
+          value={password} 
+          onChangeText={setPassword} 
+          secureTextEntry
+        />
+      
+      
+      <TouchableOpacity style={styles.signInButton} onPress={signIn}>
+        <Text style={styles.signInButtonText}>Sign in</Text>
+      </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+};
+
+export default SignInScreen;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FAFAFA', // A softer white for a modern, minimalist background
+    paddingHorizontal: 24,
+    backgroundColor: '#fff',
   },
-  title: {
-    fontSize: 28, // A bit larger for a more striking appearance
-    fontWeight: '800', // Extra bold for emphasis
-    marginBottom: 40, // Increased space for a more airy, open feel
-    color: '#1A237E', // A deep indigo for a sophisticated, modern look
-  },
-  textInput: {
-    height: 50, // Standard height for elegance and simplicity
-    width: '90%', // Full width for a more expansive feel
-    backgroundColor: '#FFFFFF', // Pure white for contrast against the container
-    borderColor: '#E8EAF6', // A very light indigo border for subtle contrast
-    borderWidth: 2,
-    borderRadius: 15, // Softly rounded corners for a modern, friendly touch
-    marginVertical: 15,
-    paddingHorizontal: 25, // Generous padding for ease of text entry
-    fontSize: 16, // Comfortable reading size
-    color: '#3C4858', // A dark gray for readability with a hint of warmth
-    shadowColor: '#9E9E9E', // A medium gray shadow for depth
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4, // Slightly elevated for a subtle 3D effect
-  },
-  button: {
-    width: '90%',
-    marginVertical: 15,
-    backgroundColor: '#5C6BC0', // A lighter indigo to complement the title color
-    padding: 20,
-    borderRadius: 15, // Matching rounded corners for consistency
+  cloudWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 200,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#5C6BC0', // Shadow color to match the button for a cohesive look
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 5,
-    elevation: 5,
+    zIndex: -1,
   },
-  text: {
-    color: '#FFFFFF', // Maintained white for clear visibility
-    fontSize: 18, // Slightly larger for emphasis
-    fontWeight: '600', // Semi-bold for a balanced weight
-  }
+  
+  cloudCircle1: {
+    position: 'absolute',
+    width: 350,
+    height: 300,
+    borderRadius: 200,
+    backgroundColor: '#FE724C',
+    top: -60,
+    left: -70,
+  },
+  cloudCircle2: {
+    position: 'absolute',
+    width: 260,
+    height: 220,
+    borderRadius: 120,
+    backgroundColor: '#FE724C',
+    top: -30,
+    left: 180,
+  },
+  title: {
+    fontSize: 38,
+    fontWeight: 'bold',
+    marginBottom: 140,
+    textAlign: 'center',
+    color: 'white',
+  },
+  googleButton: {
+    width: '80%',
+    padding: 15,
+    borderRadius: 20,
+    backgroundColor: 'white',
+    alignItems: 'center',
+    marginBottom: 24,
+    borderWidth: 2,
+    borderColor: '#FE724C',
+  },
+  googleButtonText: {
+    color: '#FE724C',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+    marginHorizontal: 45,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 2,
+    backgroundColor: '#FE724C',
+  },
+  dividerText: {
+    marginHorizontal: 10,
+    color: '#FE724C',
+  },
+  textInput: {
+    height: 48,
+    width: '80%',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    backgroundColor: '#fff',
+  },
+  signInButton: {
+    width: '80%',
+    padding: 16,
+    borderRadius: 20,
+    backgroundColor: '#FE724C',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  signInButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  centerAlign: {
+    alignItems: 'center',
+  },  
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#444',
+    marginBottom: 6,
+  },
+  googleButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  googleIcon: {
+    width: 50,
+    height: 50,
+    resizeMode: 'contain',
+    marginRight: 10,
+  },
+  
 });
