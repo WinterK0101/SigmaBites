@@ -5,7 +5,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
-
+import './globals.css';
 import { useColorScheme } from '@/components/useColorScheme';
 
 export {
@@ -22,9 +22,13 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
+  const [fontsLoaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
+    "Lexend-Bold": require('../assets/fonts/Lexend-Bold.ttf'),
+    "Lexend-Regular": require('../assets/fonts/Lexend-Regular.ttf'),
+    "Lexend-Variable": require('../assets/fonts/Lexend-Variable.ttf'),
+    "Baloo-Regular": require('../assets/fonts/Baloo-Regular.ttf'),
   });
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
@@ -33,12 +37,12 @@ export default function RootLayout() {
   }, [error]);
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
+    if (fontsLoaded) {
+      SplashScreen.hideAsync(); // If fonts have loaded, splash screen will be hidden
     }
-  }, [loaded]);
+  }, [fontsLoaded]); // Checks if fonts are loaded
 
-  if (!loaded) {
+  if (!fontsLoaded) {
     return null;
   }
 
@@ -51,10 +55,13 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
+        {
+          //<Stack.Screen name="index" options={{ headerShown: false }} />
+        }
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
     </ThemeProvider>
   );
 }
+
