@@ -29,7 +29,7 @@ export default function NoMatches() {
 
             <TouchableOpacity
                 style={styles.button}
-                onPress={() => router.push('/Discover')}
+                onPress={() => router.back()}
             >
                 <Text style={styles.buttonText}>Go to Discover</Text>
             </TouchableOpacity>

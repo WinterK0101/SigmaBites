@@ -50,20 +50,27 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
-        {
-          //<Stack.Screen name="index" options={{ headerShown: false }} />
-        }
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="Swiping" options={{ headerShown: false }} />
-        <Stack.Screen name="NoMatches" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+              name="(modals)"
+              options={{ presentation: 'modal', headerShown: false }}
+          />
+        <Stack.Screen
+            name="(modals)/Swiping"
+            options={{
+              headerShown: false,
+            }}
+        />
+        <Stack.Screen
+            name="NoMatches"
+            options={{
+              headerShown: false,
+            }}
+        />
       </Stack>
-    </ThemeProvider>
   );
 }
+
 

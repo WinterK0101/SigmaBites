@@ -121,7 +121,7 @@ export default function Discover() {
 
         // Navigate to Swiping screen with eateries data
         router.push({
-            pathname: '/Swiping',
+            pathname: '/(modals)/Swiping',
             params: {
                 latitude: userLocation.coordinates.latitude.toString(),
                 longitude: userLocation.coordinates.longitude.toString(),
@@ -138,7 +138,7 @@ export default function Discover() {
                 contentContainerStyle={{ flexGrow: 1 }}
                 showsVerticalScrollIndicator={false}
             >
-                <Text className="font-baloo-regular text-accent text-4xl pt-4 pb-2">Discover</Text>
+                <Text className="font-baloo-regular text-accent text-4xl mt-8 pt-4 pb-2">Discover</Text>
 
                 <LocationSearch onLocationSelect={setUserLocation} />
                 <LocationDisplay
