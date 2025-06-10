@@ -1,99 +1,78 @@
-import { Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView } from 'react-native'
-import React, { useState } from 'react'
-import { auth } from '../FirebaseConfig'
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth'
-import { router } from 'expo-router'
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ImageBackground } from 'react-native';
+import { router } from 'expo-router';
 
+import bgImage from '../assets/images/background.png'; 
 
-const index = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-
-  const signIn = async () => {
-    try {
-      const user = await signInWithEmailAndPassword(auth, email, password)
-      if (user) router.replace('/(tabs)');
-    } catch (error: any) {
-      console.log(error)
-      alert('Sign in failed: ' + error.message);
-    }
-  }
-
-  const signUp = async () => {
-    try {
-      const user = await createUserWithEmailAndPassword(auth, email, password)
-      if (user) router.replace('/(tabs)');
-    } catch (error: any) {
-      console.log(error)
-      alert('Sign in failed: ' + error.message);
-    }
-  }
-
+export default function StartPage() {
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Login</Text>
-      <TextInput style={styles.textInput} placeholder="email" value={email} onChangeText={setEmail} />
-      <TextInput style={styles.textInput} placeholder="password" value={password} onChangeText={setPassword} secureTextEntry/>
-      <TouchableOpacity style={styles.button} onPress={signIn}>
-        <Text style={styles.text}>Login</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={signUp}>
-        <Text style={styles.text}>Make Account</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
-  )
+    <ImageBackground
+      source={bgImage}
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay}>
+        <Text style={styles.logo}>Sigma Bites</Text>
+
+        <TouchableOpacity style={styles.button} onPress={() => router.push('/SignInPage')}>
+          <Text style={styles.buttonText}>Sign in</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => router.push('/SignUpPage')}>
+          <Text style={styles.linkText}>Create an account</Text>
+        </TouchableOpacity>
+      </View>
+    </ImageBackground>
+  );
 }
 
-export default index
 
 const styles = StyleSheet.create({
-  container: {
+  background: {
     flex: 1,
-    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    flex: 1,
     alignItems: 'center',
-    backgroundColor: '#FAFAFA', // A softer white for a modern, minimalist background
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)', 
+    paddingHorizontal: 20,
   },
-  title: {
-    fontSize: 28, // A bit larger for a more striking appearance
-    fontWeight: '800', // Extra bold for emphasis
-    marginBottom: 40, // Increased space for a more airy, open feel
-    color: '#1A237E', // A deep indigo for a sophisticated, modern look
-  },
-  textInput: {
-    height: 50, // Standard height for elegance and simplicity
-    width: '90%', // Full width for a more expansive feel
-    backgroundColor: '#FFFFFF', // Pure white for contrast against the container
-    borderColor: '#E8EAF6', // A very light indigo border for subtle contrast
-    borderWidth: 2,
-    borderRadius: 15, // Softly rounded corners for a modern, friendly touch
-    marginVertical: 15,
-    paddingHorizontal: 25, // Generous padding for ease of text entry
-    fontSize: 16, // Comfortable reading size
-    color: '#3C4858', // A dark gray for readability with a hint of warmth
-    shadowColor: '#9E9E9E', // A medium gray shadow for depth
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4, // Slightly elevated for a subtle 3D effect
+  logo: {
+    fontSize: 45,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 150,
+    fontFamily: 'Baloo-Regular', 
+    textShadowColor: 'rgba(0, 0, 0, 1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 4,
   },
   button: {
-    width: '90%',
-    marginVertical: 15,
-    backgroundColor: '#5C6BC0', // A lighter indigo to complement the title color
-    padding: 20,
-    borderRadius: 15, // Matching rounded corners for consistency
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#5C6BC0', // Shadow color to match the button for a cohesive look
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 5,
+    backgroundColor: 'white',
+    paddingVertical: 12,
+    paddingHorizontal: 70,
+    borderRadius: 24,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
     elevation: 5,
   },
-  text: {
-    color: '#FFFFFF', // Maintained white for clear visibility
-    fontSize: 18, // Slightly larger for emphasis
-    fontWeight: '600', // Semi-bold for a balanced weight
-  }
+  buttonText: {
+    color: '#FE724C',
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  linkText: {
+    color: 'white',
+    fontSize: 16,
+    textDecorationLine: 'underline',
+    textShadowColor: 'rgba(0, 0, 0, 1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 4,
+  },
 });
