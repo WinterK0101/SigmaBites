@@ -1,38 +1,38 @@
 export interface Eatery {
-    id: string;
-    name: string;
-    primaryCuisine: string;
-    rating?: number;
-    totalRatings?: number;
-    priceLevel?: number;
-    distance: number;
-    isOpen?: boolean;
-    todayHours?: string;
-    photoReferences: string[];
-    coords: {
-        lat: number;
-        lng: number;
-    };
     placeId: string;
-}
-
-export interface EateryDetails extends Eatery {
-    address: string;
-    phoneNumber?: string;
-    website?: string;
-    allHours?: string[];
-    editorialSummary?: string;
-    reviews?: Review[];
+    displayName: string;
+    formattedAddress: string;
+    location: {
+        latitude: number;
+        longitude: number;
+    };
+    websiteUri: string;
     googleMapsUri: string;
+    currentOpeningHours: {
+        openNow: boolean;
+        weekdayDescriptions: string[];
+    }
+    types: string[];
+    primaryType: string;
+    rating: number;
+    userRatingCount: number;
+    priceLevel: number;
+    photo: string;
+    editorialSummary: string;
+    generativeSummary: string;
+    reviews: Review[];
+    internationalPhoneNumber: string;
 }
 
 export interface Review {
-    authorName: string;
+    author: {
+        displayName: string;
+        uri: string;
+        photoUri: string;
+        }
     rating: number;
     text: string;
-    relativeTime: string;
-    authorUrl?: string;
-    profilePhotoUrl?: string;
+    relativePublishTimeDescription: string;
 }
 
 export interface EateryFilters {
