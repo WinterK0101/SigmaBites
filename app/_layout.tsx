@@ -61,6 +61,13 @@ function RootLayoutNav() {
               headerShown: false,
             }}
         />
+          <Stack.Screen
+              name="(modals)/Matched"
+              options={{
+                  headerShown: false,
+                  animation: "fade",
+              }}
+          />
         <Stack.Screen
             name="NoMatches"
             options={{

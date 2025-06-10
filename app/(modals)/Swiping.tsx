@@ -144,7 +144,7 @@ export default function Swiping() {
         console.log('Liked:', likedRestaurant.displayName);
 
         router.push({
-            pathname: '/Matched',
+            pathname: '/(modals)/Matched',
             params: {
                 restaurantImage: likedRestaurant.photo,
             },

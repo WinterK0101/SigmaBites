@@ -23,7 +23,7 @@ export default function Matched() {
 
     return (
         <ImageBackground
-            source={require('../assets/images/match-bg.jpeg')}
+            source={require('../../assets/images/match-bg.jpeg')}
             style={styles.background}
             resizeMode="cover"
         >
@@ -45,17 +45,12 @@ export default function Matched() {
             </TouchableOpacity>
 
             <TouchableOpacity
-                style={[styles.primaryButton, { marginTop: 10 }]}
+                style={{ marginTop: 10 }}
                 onPress={() =>
-                    router.replace({
-                        pathname: '/Swiping',
-                        params: {
-                            likedImage: imageUri,
-                        },
-                    })
+                    router.back()
                 }
             >
-                <Text style={styles.primaryText}>Keep swiping</Text>
+                <Text className="font-baloo-regular text-2xl text-white">Keep swiping</Text>
             </TouchableOpacity>
         </ImageBackground>
     );
@@ -86,18 +81,18 @@ const styles = StyleSheet.create({
         height: 150,
         borderRadius: 80,
         borderWidth: 4,
-        borderColor: '#EEA191',
+        borderColor: 'white',
         marginHorizontal: -20,
     },
     heartCircle: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        backgroundColor: '#FF6B3E',
+        width: 80,
+        height: 80,
+        borderRadius: 100,
+        backgroundColor: '#FE724C',
         alignItems: 'center',
         justifyContent: 'center',
         position: 'absolute',
-        top: 45,
+        top: 100,
         zIndex: 2,
     },
     primaryButton: {
@@ -108,7 +103,7 @@ const styles = StyleSheet.create({
         marginBottom: 15,
     },
     primaryText: {
-        color: '#FF6B3E',
+        color: '#FF724C',
         fontFamily: 'Baloo-Regular',
         fontSize: 20,
     },
