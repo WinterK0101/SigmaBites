@@ -1,10 +1,11 @@
+// app/(tabs)/_layout.tsx
 import * as React from 'react';
-import {createMaterialTopTabNavigator} from "@react-navigation/material-top-tabs";
+import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import Matches from "@/app/(tabs)/Matches";
 import Friends from "@/app/(tabs)/Friends";
 import Profile from "@/app/(tabs)/Profile";
 import Discover from "@/app/(tabs)/Discover";
-import {icons} from "@/constants/icons";
+import { icons } from "@/constants/icons";
 
 const Tab = createMaterialTopTabNavigator();
 const TabLayout = () => {
@@ -43,40 +44,40 @@ const TabLayout = () => {
             }}
         >
             <Tab.Screen name="Discover"
-                        component={Discover}
-                        options={{
-                            title: "Discover",
-                            tabBarIcon: ({ focused, color }) => (
-                                <icons.discover height={25} width={25} stroke={color}/>
-                            )
-                        }}
+                component={Discover}
+                options={{
+                    title: "Discover",
+                    tabBarIcon: ({ focused, color }) => (
+                        <icons.discover height={25} width={25} stroke={color} />
+                    )
+                }}
             />
             <Tab.Screen name="Matches"
-                        component={Matches}
-                        options={{
-                            title: "Matches",
-                            tabBarIcon: ({ focused, color }) => (
-                                <icons.matches height={25} width={25} stroke={color}/>
-                            )
-                        }}
+                component={Matches}
+                options={{
+                    title: "Matches",
+                    tabBarIcon: ({ focused, color }) => (
+                        <icons.matches height={25} width={25} stroke={color} />
+                    )
+                }}
             />
             <Tab.Screen name="Friends"
-                        component={Friends}
-                        options={{
-                            title: "Friends",
-                            tabBarIcon: ({ focused, color }) => (
-                                <icons.friends height={25} width={25} stroke={color}/>
-                            )
-                        }}
+                component={Friends}
+                options={{
+                    title: "Friends",
+                    tabBarIcon: ({ focused, color }) => (
+                        <icons.friends height={25} width={25} stroke={color} />
+                    )
+                }}
             />
             <Tab.Screen name="Profile"
-                        component={Profile}
-                        options={{
-                            title: "Profile",
-                            tabBarIcon: ({ focused, color }) => (
-                                <icons.profile height={25} width={25} stroke={color}/>
-                            )
-                        }}
+                component={Profile}
+                options={{
+                    title: "Profile",
+                    tabBarIcon: ({ focused, color }) => (
+                        <icons.profile height={25} width={25} stroke={color} />
+                    )
+                }}
             />
         </Tab.Navigator>
     );
