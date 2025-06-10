@@ -224,7 +224,9 @@ export default function Swiping() {
                 onSwipedLeft={handleSwipeLeft}
                 onSwipedRight={handleSwipeRight}
                 onSwipedAll={() => {
-                    router.replace('/NoMatches');
+                    if (!lastSwipeWasRightRef.current) {
+                        router.replace('/NoMatches');
+                    }
                 }}
                 onSwiped={(index) => setCurrentIndex(index + 1)}
                 cardIndex={0}
