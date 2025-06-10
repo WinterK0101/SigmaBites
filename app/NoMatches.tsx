@@ -8,20 +8,20 @@ import {
     ImageBackground,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import {images} from "@/constants/images";
 
 export default function NoMatches() {
     const router = useRouter();
 
     return (
         <ImageBackground
-            source={require('../assets/images/nomatches-bg.jpg')}
+            source={images.nomatchesbg}
             style={styles.background}
             resizeMode="cover"
         >
-            <Text style={styles.title}>Oops!</Text>
-
+            <Text className="font-baloo-regular text-5xl pt-2">Oops!</Text>
             <Image
-                source={require('../assets/images/deadfishwhy.png')}
+                source={images.deadfish}
                 style={styles.fishbone}
             />
 
@@ -44,15 +44,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         padding: 20,
     },
-    title: {
-        fontSize: 42,
-        color: 'white',
-        fontFamily: 'Baloo-Regular',
-        marginBottom: 20,
-    },
     subtitle: {
         fontSize: 20,
-        color: 'white',
+        color: 'primary',
         fontFamily: 'Lexend-Regular',
         marginTop: 10,
         marginBottom: 30,
@@ -67,6 +61,8 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         paddingVertical: 14,
         paddingHorizontal: 50,
+        borderWidth: 2,
+        borderColor: '#fe724c',
     },
     buttonText: {
         color: '#FF6B3E',

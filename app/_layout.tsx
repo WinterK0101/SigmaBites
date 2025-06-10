@@ -61,6 +61,7 @@ function RootLayoutNav() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
         <Stack.Screen name="Swiping" options={{ headerShown: false }} />
+        <Stack.Screen name="NoMatches" options={{ headerShown: false }} />
       </Stack>
     </ThemeProvider>
   );

@@ -224,13 +224,11 @@ export default function Swiping() {
                 onSwipedLeft={handleSwipeLeft}
                 onSwipedRight={handleSwipeRight}
                 onSwipedAll={() => {
-                    if (!lastSwipeWasRightRef.current) {
-                        router.replace('/NoMatches');
-                    }
+                    router.replace('/NoMatches');
                 }}
                 onSwiped={(index) => setCurrentIndex(index + 1)}
                 cardIndex={0}
-                stackSize={2}
+                stackSize={3}
                 stackSeparation={0}
                 stackScale={0}
                 backgroundColor="transparent"
@@ -262,12 +260,12 @@ export default function Swiping() {
                 <TouchableOpacity
                     className="w-[66px] h-[66px] rounded-full bg-white justify-center items-center shadow-lg border-2 border-white"
                     onPress={() => {
-                        const currentCard: any = eateries[currentIndex];
+                        const currentCard: any = restaurants[currentIndex];
                         router.push({
                             pathname: "/RestaurantDetails",
                             params: {
                                 name: currentCard.displayName,
-                                image: Array.isArray(currentCard.image) ? currentCard.image[0] : currentCard.image,
+                                image: currentCard.image,
                                 rating: currentCard.rating,
                             },
                         });
