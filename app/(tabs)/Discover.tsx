@@ -113,7 +113,13 @@ export default function Discover() {
         //     });
 
         // Navigate to Swiping screen
-        router.push('/Swiping');
+        router.push({
+            pathname: '/Swiping',
+            params: {
+                latitude: userLocation.coordinates.latitude.toString(),
+                longitude: userLocation.coordinates.longitude.toString()
+            }
+        });
     }
 
     return (

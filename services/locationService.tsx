@@ -13,7 +13,7 @@ export interface LocationData {
 }
 
 // Creates location object with the important location details if user selects current location
-export const getCurrentLocation = async (): Promise<LocationData> => {
+export const getCurrentLocation = async (skipGeocode = false): Promise<LocationData> => {
     try {
         // Request permission
         let { status } = await Location.requestForegroundPermissionsAsync();
@@ -37,7 +37,7 @@ export const getCurrentLocation = async (): Promise<LocationData> => {
         let { latitude, longitude } = location.coords;
 
         // Reverse geocode to get formatted address
-        const address = await reverseGeocode(latitude, longitude);
+        const address = skipGeocode ? '' : await reverseGeocode(latitude, longitude);
 
         return {
             coordinates: { latitude, longitude },

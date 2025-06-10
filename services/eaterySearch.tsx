@@ -90,7 +90,7 @@ const createEatery = (place: any) => {
             weekdayDescriptions: place.currentOpeningHours?.weekdayDescriptions || [],
         },
         types: place.types || [],
-        primaryType: place.primaryTypeDisplayName?.text || '',
+        primaryTypeDisplayName: place.primaryTypeDisplayName?.text || '',
         rating: place.rating || 0,
         userRatingCount: place.userRatingCount || 0,
         priceLevel: priceLevelMap[place.priceLevel as keyof typeof priceLevelMap] || 0,

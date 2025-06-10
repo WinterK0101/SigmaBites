@@ -13,7 +13,7 @@ export interface Eatery {
         weekdayDescriptions: string[];
     }
     types: string[];
-    primaryType: string;
+    primaryTypeDisplayName: string;
     rating: number;
     userRatingCount: number;
     priceLevel: number;

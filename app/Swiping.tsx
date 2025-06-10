@@ -1,69 +1,128 @@
-import React, { useRef, useState, useEffect } from 'react';
 import {
     View,
     Text,
     Image,
     TouchableOpacity,
-    Dimensions,
+    SafeAreaView,
 } from 'react-native';
+
 import Swiper from 'react-native-deck-swiper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons, Entypo } from '@expo/vector-icons';
+import {LinearGradient} from "expo-linear-gradient";
+import {distanceFromUser, getOpeningHoursForToday} from "@/services/apiDetailsForUI";
+import {useEffect, useRef, useState} from "react";
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
-
-const cards = [
+const eateries = [
     {
-        name: 'Ajisen Ramen',
-        image: 'https://ucarecdn.com/14373564-94e1-48f6-bcd5-a99767cbc5f2/-/crop/1867x777/0,294/-/format/auto/-/resize/1024x/',
-        details: '12.0 km • Japanese • 11:30 am to 9:30 pm',
-        rating: '★ 3.0 • $$$$',
+        displayName: 'Ajisen Ramen',
+        location: {
+            latitude: 1.35096,
+            longitude: 103.848619,
+        },
+        currentOpeningHours: {
+            openNow: true,
+            weekdayDescriptions: [
+                "Monday: 11:30 am – 2:30 pm, 5:00pm–9:00pm",
+                "Tuesday: 11:30 am – 2:30 pm, 5:00pm–9:00pm",
+                "Wednesday: 11:30 am – 2:30 pm, 5:00pm–9:00pm",
+                "Thursday: 11:30 am – 2:30 pm, 5:00pm–9:00pm",
+                "Friday: 11:30 am – 2:30 pm, 5:00pm–9:00pm",
+                "Saturday: 11:30 am – 2:30 pm, 5:00pm–9:00pm",
+                "Sunday: 11:30 am – 2:30 pm, 5:00pm–9:00pm",
+            ]
+        },
+        photo: 'https://ucarecdn.com/14373564-94e1-48f6-bcd5-a99767cbc5f2/-/crop/1867x777/0,294/-/format/auto/-/resize/1024x/',
+        primaryTypeDisplayName: 'Japanese',
+        priceLevel: 2,
+        rating: 4.5,
     },
     {
-        name: 'Pepper Lunch',
-        image: 'https://moribyan.com/wp-content/uploads/2023/10/Pepper-Lunch-683x1024.jpg',
-        details: '1.6 km • Japanese • 11:00 am to 10:00 pm',
-        rating: '★ 4.2 • $$$',
+        displayName: 'Pepper Lunch',
+        location: {
+            latitude: 1.39258,
+            longitude: 103.89525,
+        },
+        currentOpeningHours: {
+            openNow: true,
+            weekdayDescriptions: [
+                "Monday: 5:00pm–9:00pm",
+                "Tuesday: 5:00pm–9:00pm",
+                "Wednesday: 5:00pm–9:00pm",
+                "Thursday: 5:00pm–9:00pm",
+                "Friday: 5:00pm–9:00pm",
+                "Saturday: 5:00pm–9:00pm",
+                "Sunday: 5:00pm–9:00pm",
+            ]
+        },
+        photo: 'https://moribyan.com/wp-content/uploads/2023/10/Pepper-Lunch-683x1024.jpg',
+        primaryTypeDisplayName: 'Japanese',
+        priceLevel: 3,
+        rating: 3,
     },
     {
-        name: "Josh's Grill",
-        image: 'https://www.capitaland.com/sg/malls/bugisjunction/en/stores/josh-s-grill/_jcr_content/root/container/container/entitydetails.coreimg.jpeg/content/dam/capitaland-sites/singapore/shop/malls/bugis-junction/tenants/Josh%27s%20Grill%20-%20Sirloin%20Beef%20.jpg',
-        details: '10.0 km • Western • 10:00 am to 9:00 pm',
-        rating: '★ 4.5 • $$$',
+        displayName: "Josh's Grill",
+        location: {
+            latitude: 1.299521,
+            longitude: 103.855501,
+        },
+        currentOpeningHours: {
+            openNow: true,
+            weekdayDescriptions: [
+                "Monday: 5:00pm–9:00pm",
+                "Tuesday: 5:00pm–9:00pm",
+                "Wednesday: 5:00pm–9:00pm",
+                "Thursday: 5:00pm–9:00pm",
+                "Friday: 5:00pm–9:00pm",
+                "Saturday: 5:00pm–9:00pm",
+                "Sunday: 5:00pm–9:00pm",
+            ]
+        },
+        primaryTypeDisplayName: 'Western',
+        priceLevel: 3,
+        rating: 4.9,
+        photo: 'https://www.capitaland.com/sg/malls/bugisjunction/en/stores/josh-s-grill/_jcr_content/root/container/container/entitydetails.coreimg.jpeg/content/dam/capitaland-sites/singapore/shop/malls/bugis-junction/tenants/Josh%27s%20Grill%20-%20Sirloin%20Beef%20.jpg',
     },
-];
+]
 
 export default function Swiping() {
     const swiperRef = useRef<Swiper<any>>(null);
     const router = useRouter();
-    const { likedImage } = useLocalSearchParams();
-    const [restaurants, setRestaurants] = useState(cards);
+    const { latitude, longitude, likedImage } = useLocalSearchParams();
+    const [restaurants, setRestaurants] = useState(eateries);
     const [lastSwipeWasRight, setLastSwipeWasRight] = useState(false);
     const lastSwipeWasRightRef = useRef(false);
 
+    const userLocation = latitude && longitude ? {
+        coordinates: {
+            latitude: parseFloat(latitude as string),
+            longitude: parseFloat(longitude as string)
+        }
+    } : null;
+
     useEffect(() => {
         if (likedImage) {
-            const filtered = cards.filter((restaurant) => restaurant.image !== likedImage);
+            const filtered = eateries.filter((eatery) => eatery.photo !== likedImage);
             setRestaurants(filtered);
         } else {
-            setRestaurants(cards);
+            setRestaurants(eateries);
         }
     }, [likedImage]);
 
     const handleSwipeLeft = (index: number) => {
         lastSwipeWasRightRef.current = false;
-        console.log('Disliked:', restaurants[index]?.name);
+        console.log('Disliked:', restaurants[index]?.displayName);
     };
 
     const handleSwipeRight = (index: number) => {
         lastSwipeWasRightRef.current = true;
         const likedRestaurant = restaurants[index];
-        console.log('Liked:', likedRestaurant.name);
+        console.log('Liked:', likedRestaurant.displayName);
 
         router.push({
             pathname: '/Matched',
             params: {
-                restaurantImage: likedRestaurant.image,
+                restaurantImage: likedRestaurant.photo,
             },
         });
     };
@@ -78,25 +137,64 @@ export default function Swiping() {
     };
 
     return (
-        <View className="flex-1 bg-white">
+        <SafeAreaView className="flex-1 bg-offwhite">
             <Swiper
                 ref={swiperRef}
                 cards={restaurants}
-                renderCard={(card) => (
-                    <View className="rounded-[20px] border-4 border-[#FF6B3E] bg-white h-[500px] p-5 items-center shadow-lg">
-                        <Image
-                            source={{ uri: card.image }}
-                            className="w-full h-[340px] rounded-2xl"
+                renderCard={(eatery) => (
+                    <View
+                        className="mt-6 flex-col items-start rounded-[20px] border-4 border-accent h-[500px] bg-white"
+                        style={{
+                            shadowColor: '#000',
+                            shadowOffset: {
+                                width: 0,
+                                height: 4,
+                            },
+                            shadowOpacity: 0.20,
+                            shadowRadius: 5,
+                        }}
+                    >
+                        <LinearGradient
+                            colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.3)', 'rgba(102,51,25,0.8)']}
+                            locations={[0, 0.6, 1]}
+                            style={{
+                                position: 'absolute',
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                height: '100%',
+                                width: '100%',
+                                justifyContent: 'flex-end',
+                                padding: 20,
+                                borderRadius: 20,
+                                zIndex: 0,
+                            }}
                         />
-                        <Text className="text-2xl font-bold my-2.5 text-center">
-                            {card.name}
-                        </Text>
-                        <Text className="text-base text-gray-600 mb-1 text-center">
-                            {card.details}
-                        </Text>
-                        <Text className="text-lg font-semibold text-gray-700 text-center">
-                            {card.rating}
-                        </Text>
+                        <Image
+                            source={{ uri: eatery.photo }}
+                            className="size-full"
+                            style={{
+                                zIndex: -3,
+                                borderRadius: 16,
+                            }}
+                            resizeMode="cover"
+                        />
+                        <View className="absolute bottom-2 p-5 z-10">
+                            <Text className="font-lexend-bold text-2xl text-white">
+                                {eatery.displayName}
+                            </Text>
+                            <Text className="font-lexend-regular text-sm text-white">
+                                {distanceFromUser(userLocation, eatery.location)}  •  {eatery.primaryTypeDisplayName}  •  {getOpeningHoursForToday(eatery)}
+                            </Text>
+                            <Text className="font-lexend-regular text-sm text-white/80 mt-2">
+                                ★ {eatery.rating.toFixed(1)}  •  {'$'.repeat(eatery.priceLevel)}
+                            </Text>
+                            <View className="flex-row mt-2 items-center">
+                                <Text className="bg-white/20 font-lexend-regular px-3 py-1 rounded-full text-white text-xs">
+                                    {eatery.currentOpeningHours.openNow ? 'Open now' : 'Closed'}
+                                </Text>
+                            </View>
+                        </View>
                     </View>
                 )}
                 onSwipedLeft={handleSwipeLeft}
@@ -106,8 +204,10 @@ export default function Swiping() {
                         router.replace('/NoMatches');
                     }
                 }}
-                stackSize={3}
                 cardIndex={0}
+                stackSize={2}
+                stackSeparation={0}
+                stackScale={0}
                 backgroundColor="transparent"
                 verticalSwipe={false}
             />
@@ -121,14 +221,14 @@ export default function Swiping() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    className="w-[66px] h-[66px] rounded-full bg-[#FF6B3E] justify-center items-center shadow-lg"
+                    className="w-[66px] h-[66px] rounded-full bg-accent justify-center items-center shadow-lg"
                     onPress={() => swiperRef.current?.swipeLeft()}
                 >
                     <MaterialCommunityIcons name="thumb-down-outline" size={36} color="white" />
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    className="w-[66px] h-[66px] rounded-full bg-[#FF6B3E] justify-center items-center shadow-lg"
+                    className="w-[66px] h-[66px] rounded-full bg-accent justify-center items-center shadow-lg"
                     onPress={() => swiperRef.current?.swipeRight()}
                 >
                     <MaterialCommunityIcons name="thumb-up-outline" size={36} color="white" />
@@ -141,6 +241,6 @@ export default function Swiping() {
                     <Entypo name="menu" size={28} color="#000" />
                 </TouchableOpacity>
             </View>
-        </View>
+        </SafeAreaView>
     );
 }
