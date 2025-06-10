@@ -176,7 +176,7 @@ export default function Profile() {
                           }}
                       >
                         <Text
-                            className="text-white text-xs font-lexend-medium ml-2"
+                            className="text-white text-xs font-lexend-regular ml-2 pr-2"
                             numberOfLines={2}
                         >
                           {eatery.displayName}
