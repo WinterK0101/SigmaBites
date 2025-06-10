@@ -107,11 +107,14 @@ const styles = StyleSheet.create({
     left: 180,
   },
   title: {
-    fontSize: 38,
+    fontSize: 45,
     fontWeight: 'bold',
-    marginBottom: 80,
     textAlign: 'center',
     color: 'white',
+    fontFamily: 'Baloo-Regular',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 4,
   },
   profilePicPlaceholder: {
     width: 140,
