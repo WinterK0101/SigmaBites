@@ -11,6 +11,7 @@ import Swiper from 'react-native-deck-swiper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons, Entypo } from '@expo/vector-icons';
 
+
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
 const cards = [
@@ -35,6 +36,7 @@ const cards = [
 ];
 
 export default function Swiping() {
+    const [currentIndex, setCurrentIndex] = useState(0);
     const swiperRef = useRef<Swiper<any>>(null);
     const router = useRouter();
     const { likedImage } = useLocalSearchParams(); // 👈 capture passed param
@@ -94,6 +96,7 @@ export default function Swiping() {
                 )}
                 onSwipedLeft={handleSwipeLeft}
                 onSwipedRight={handleSwipeRight}
+                onSwiped={(index) => setCurrentIndex(index + 1)}
                 onSwipedAll={() => {
                     if (!lastSwipeWasRightRef.current) {
                         router.replace('/NoMatches');
@@ -125,11 +128,22 @@ export default function Swiping() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    style={[styles.circle, styles.infoCircle]}
-                    onPress={() => router.push('/RestaurantDetails')}
+                    onPress={() => {
+                        const currentCard = cards[currentIndex];
+                        router.push({
+                            pathname: "/RestaurantDetails",
+                            params: {
+                                name: currentCard.name,
+                                image: Array.isArray(currentCard.image) ? currentCard.image[0] : currentCard.image,
+                                details: currentCard.details,
+                                rating: currentCard.rating,
+                            },
+                        });
+                    }}
                 >
                     <Entypo name="menu" size={28} color="#000" />
                 </TouchableOpacity>
+
             </View>
         </View>
     );
