@@ -9,6 +9,7 @@ async function getNearbyEateries(lat: number, lng: number, filters: EateryFilter
 
     const requestBody = {
         includedTypes: ["restaurant", "cafeteria", "cafe", "bar", "meal_takeaway", "bakery"],
+        excludedTypes: ["gas_station"],
         locationRestriction: {
             circle: {
                 center: {
@@ -115,14 +116,18 @@ const obtainEateryPhoto = (photosArr: any) => {
     if (!photosArr || !Array.isArray(photosArr) || photosArr.length === 0) {
         return "fallback-image.jpg";
     }
+    let firstPhoto = photosArr[1];
+    if (!firstPhoto) {
+        firstPhoto = photosArr[0];
+    }
+    if (firstPhoto?.name) {
+        const photoUrl = `https://places.googleapis.com/v1/${firstPhoto.name}/media?maxWidthPx=400&key=${API_KEY}`;
+        console.log('Generated photo URL:', photoUrl); // Debug log
+        return photoUrl;
+    }
 
-    const firstPhotoRef = photosArr[0]?.name?.split("/photos/")[1];
-    const photoUrl = firstPhotoRef
-        ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${firstPhotoRef}&key=${API_KEY}`
-        : "fallback-image.jpg";
-    return photoUrl;
+    return "fallback-image.jpg";
 }
-
 const getReviews = (reviewArr: any[]) => {
     if (!Array.isArray(reviewArr)) {
         return [];

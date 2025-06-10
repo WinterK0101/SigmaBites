@@ -27,6 +27,7 @@ export default function Discover() {
     const [selectedCuisines, setSelectedCuisines] = useState(new Set(['All']));
     const [searchOpen, setSearchOpen] = useState(true);
     const [minimumRating, setMinimumRating] = useState(1);
+    const [useDummyData, setUseDummyData] = useState(true); // Toggle for testing
 
     const priceLevelOptions = [1, 2, 3, 4];
     const cuisineOptions = ['All', 'Japanese', 'Korean', 'Chinese', 'Indian', 'Thai', 'American', 'Asian'];
@@ -74,7 +75,7 @@ export default function Discover() {
         setSearchOpen(!searchOpen);
     };
 
-    const startSwiping = () => {
+    const startSwiping = async () => {
         if (!userLocation) {
             Alert.alert("Please select a location");
             return;
@@ -98,26 +99,34 @@ export default function Discover() {
             openNowToggle: searchOpen
         };
 
-        console.log(filters);
+        let eateries = [];
 
-        // getNearbyEateries(
-        //     userLocation.coordinates.latitude,
-        //     userLocation.coordinates.longitude,
-        //     filters
-        // )
-        //     .then((res: any) => {
-        //         console.log('Final result:', res);
-        //     })
-        //     .catch((error) => {
-        //         console.error('API call failed:', error);
-        //     });
+        if (useDummyData) {
+            // Use dummy data for testing
+            eateries = [];
+        } else {
+            try {
+                // Get real data from API
+                eateries = await getNearbyEateries(
+                    userLocation.coordinates.latitude,
+                    userLocation.coordinates.longitude,
+                    filters
+                );
+            } catch (error) {
+                console.error('API call failed:', error);
+                Alert.alert("Error", "Failed to fetch eateries");
+                return;
+            }
+        }
 
-        // Navigate to Swiping screen
+        // Navigate to Swiping screen with eateries data
         router.push({
             pathname: '/Swiping',
             params: {
                 latitude: userLocation.coordinates.latitude.toString(),
-                longitude: userLocation.coordinates.longitude.toString()
+                longitude: userLocation.coordinates.longitude.toString(),
+                eateries: JSON.stringify(eateries),
+                useDummyData: useDummyData.toString()
             }
         });
     }
@@ -130,6 +139,7 @@ export default function Discover() {
                 showsVerticalScrollIndicator={false}
             >
                 <Text className="font-baloo-regular text-accent text-4xl pt-4 pb-2">Discover</Text>
+
                 <LocationSearch onLocationSelect={setUserLocation} />
                 <LocationDisplay
                     selectedLocation={userLocation}
@@ -235,6 +245,18 @@ export default function Discover() {
                         ios_backgroundColor="#d9d9d9"
                         onValueChange={toggleOpenNow}
                         value={searchOpen}
+                    />
+                </View>
+
+                {/* Testing Toggle */}
+                <View className="mt-4 mb-2">
+                    <Text className="font-lexend-bold text-primary text-base mb-3">Use Dummy Data (Testing)</Text>
+                    <Switch
+                        trackColor={{ false: '#767577', true: '#fe724c' }}
+                        thumbColor={useDummyData ? '#ffffff' : '#f4f3f4'}
+                        ios_backgroundColor="#d9d9d9"
+                        onValueChange={setUseDummyData}
+                        value={useDummyData}
                     />
                 </View>
 

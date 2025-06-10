@@ -13,7 +13,7 @@ import {LinearGradient} from "expo-linear-gradient";
 import {distanceFromUser, getOpeningHoursForToday} from "@/services/apiDetailsForUI";
 import {useEffect, useRef, useState} from "react";
 
-const eateries = [
+const dummyEateries = [
     {
         displayName: 'Ajisen Ramen',
         location: {
@@ -88,8 +88,8 @@ const eateries = [
 export default function Swiping() {
     const swiperRef = useRef<Swiper<any>>(null);
     const router = useRouter();
-    const { latitude, longitude, likedImage } = useLocalSearchParams();
-    const [restaurants, setRestaurants] = useState(eateries);
+    const { latitude, longitude, likedImage, eateries, useDummyData } = useLocalSearchParams();
+    const [restaurants, setRestaurants] = useState(dummyEateries);
     const [lastSwipeWasRight, setLastSwipeWasRight] = useState(false);
     const lastSwipeWasRightRef = useRef(false);
 
@@ -101,13 +101,36 @@ export default function Swiping() {
     } : null;
 
     useEffect(() => {
-        if (likedImage) {
-            const filtered = eateries.filter((eatery) => eatery.photo !== likedImage);
-            setRestaurants(filtered);
+        const shouldUseDummy = useDummyData === 'true';
+
+        if (shouldUseDummy) {
+            // Use dummy data
+            if (likedImage) {
+                const filtered = dummyEateries.filter((eatery) => eatery.photo !== likedImage);
+                setRestaurants(filtered);
+            } else {
+                setRestaurants(dummyEateries);
+            }
         } else {
-            setRestaurants(eateries);
+            // Use API data
+            if (eateries) {
+                try {
+                    const parsedEateries = JSON.parse(eateries as string);
+                    if (likedImage) {
+                        const filtered = parsedEateries.filter((eatery: any) => eatery.photo !== likedImage);
+                        setRestaurants(filtered);
+                    } else {
+                        setRestaurants(parsedEateries);
+                    }
+                } catch (error) {
+                    console.error('Failed to parse eateries:', error);
+                    setRestaurants(dummyEateries); // Fallback to dummy data
+                }
+            } else {
+                setRestaurants(dummyEateries); // Fallback to dummy data
+            }
         }
-    }, [likedImage]);
+    }, [likedImage, eateries, useDummyData]);
 
     const handleSwipeLeft = (index: number) => {
         lastSwipeWasRightRef.current = false;
