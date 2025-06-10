@@ -100,17 +100,17 @@ export default function Discover() {
 
         console.log(filters);
 
-        getNearbyEateries(
-            userLocation.coordinates.latitude,
-            userLocation.coordinates.longitude,
-            filters
-        )
-            .then((res: any) => {
-                console.log('Final result:', res);
-            })
-            .catch((error) => {
-                console.error('API call failed:', error);
-            });
+        // getNearbyEateries(
+        //     userLocation.coordinates.latitude,
+        //     userLocation.coordinates.longitude,
+        //     filters
+        // )
+        //     .then((res: any) => {
+        //         console.log('Final result:', res);
+        //     })
+        //     .catch((error) => {
+        //         console.error('API call failed:', error);
+        //     });
 
         // Navigate to Swiping screen
         router.push('/Swiping');

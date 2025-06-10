@@ -2,7 +2,6 @@ import React, { useRef, useState, useEffect } from 'react';
 import {
     View,
     Text,
-    StyleSheet,
     Image,
     TouchableOpacity,
     Dimensions,
@@ -37,14 +36,13 @@ const cards = [
 export default function Swiping() {
     const swiperRef = useRef<Swiper<any>>(null);
     const router = useRouter();
-    const { likedImage } = useLocalSearchParams(); // 👈 capture passed param
+    const { likedImage } = useLocalSearchParams();
     const [restaurants, setRestaurants] = useState(cards);
     const [lastSwipeWasRight, setLastSwipeWasRight] = useState(false);
     const lastSwipeWasRightRef = useRef(false);
 
     useEffect(() => {
         if (likedImage) {
-            // 👇 filter out already liked restaurant by image URL
             const filtered = cards.filter((restaurant) => restaurant.image !== likedImage);
             setRestaurants(filtered);
         } else {
@@ -80,16 +78,25 @@ export default function Swiping() {
     };
 
     return (
-        <View style={styles.container}>
+        <View className="flex-1 bg-white">
             <Swiper
                 ref={swiperRef}
                 cards={restaurants}
                 renderCard={(card) => (
-                    <View style={styles.card}>
-                        <Image source={{ uri: card.image }} style={styles.image} />
-                        <Text style={styles.title}>{card.name}</Text>
-                        <Text style={styles.details}>{card.details}</Text>
-                        <Text style={styles.subDetails}>{card.rating}</Text>
+                    <View className="rounded-[20px] border-4 border-[#FF6B3E] bg-white h-[500px] p-5 items-center shadow-lg">
+                        <Image
+                            source={{ uri: card.image }}
+                            className="w-full h-[340px] rounded-2xl"
+                        />
+                        <Text className="text-2xl font-bold my-2.5 text-center">
+                            {card.name}
+                        </Text>
+                        <Text className="text-base text-gray-600 mb-1 text-center">
+                            {card.details}
+                        </Text>
+                        <Text className="text-lg font-semibold text-gray-700 text-center">
+                            {card.rating}
+                        </Text>
                     </View>
                 )}
                 onSwipedLeft={handleSwipeLeft}
@@ -105,27 +112,30 @@ export default function Swiping() {
                 verticalSwipe={false}
             />
 
-            <View style={styles.buttonsContainer}>
-                <TouchableOpacity style={styles.circle} onPress={handleSwipeBack}>
+            <View className="absolute bottom-10 w-full flex-row justify-evenly px-5">
+                <TouchableOpacity
+                    className="w-[66px] h-[66px] rounded-full bg-white justify-center items-center shadow-lg"
+                    onPress={handleSwipeBack}
+                >
                     <Ionicons name="arrow-back" size={30} color="#000" />
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    style={[styles.circle, styles.orangeCircle]}
+                    className="w-[66px] h-[66px] rounded-full bg-[#FF6B3E] justify-center items-center shadow-lg"
                     onPress={() => swiperRef.current?.swipeLeft()}
                 >
                     <MaterialCommunityIcons name="thumb-down-outline" size={36} color="white" />
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    style={[styles.circle, styles.orangeCircle]}
+                    className="w-[66px] h-[66px] rounded-full bg-[#FF6B3E] justify-center items-center shadow-lg"
                     onPress={() => swiperRef.current?.swipeRight()}
                 >
                     <MaterialCommunityIcons name="thumb-up-outline" size={36} color="white" />
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    style={[styles.circle, styles.infoCircle]}
+                    className="w-[66px] h-[66px] rounded-full bg-white justify-center items-center shadow-lg border-2 border-white"
                     onPress={() => router.push('/RestaurantDetails')}
                 >
                     <Entypo name="menu" size={28} color="#000" />
@@ -134,70 +144,3 @@ export default function Swiping() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    card: {
-        borderRadius: 20,
-        borderWidth: 4,
-        borderColor: '#FF6B3E',
-        backgroundColor: '#fff',
-        height: 500,
-        padding: 20,
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-        shadowOffset: { width: 0, height: 5 },
-    },
-    image: {
-        width: '100%',
-        height: 340,
-        borderRadius: 16,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginVertical: 10,
-    },
-    details: {
-        fontSize: 16,
-        color: '#555',
-        marginBottom: 4,
-    },
-    subDetails: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#444',
-    },
-    buttonsContainer: {
-        position: 'absolute',
-        bottom: 40,
-        width: '100%',
-        flexDirection: 'row',
-        justifyContent: 'space-evenly',
-        paddingHorizontal: 20,
-    },
-    circle: {
-        width: 66,
-        height: 66,
-        borderRadius: 33,
-        backgroundColor: '#fff',
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 4 },
-    },
-    orangeCircle: {
-        backgroundColor: '#FF6B3E',
-    },
-    infoCircle: {
-        borderWidth: 2,
-        borderColor: 'white',
-    },
-});
