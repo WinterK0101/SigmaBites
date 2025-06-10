@@ -86,6 +86,7 @@ const dummyEateries = [
 ]
 
 export default function Swiping() {
+    const [currentIndex, setCurrentIndex] = useState(0);
     const swiperRef = useRef<Swiper<any>>(null);
     const router = useRouter();
     const { latitude, longitude, likedImage, eateries, useDummyData } = useLocalSearchParams();
@@ -259,7 +260,18 @@ export default function Swiping() {
 
                 <TouchableOpacity
                     className="w-[66px] h-[66px] rounded-full bg-white justify-center items-center shadow-lg border-2 border-white"
-                    onPress={() => router.push('/RestaurantDetails')}
+                    onPress={() => {
+                        const currentCard = eateries[currentIndex];
+                        router.push({
+                            pathname: "/RestaurantDetails",
+                            params: {
+                                name: currentCard.displayname,
+                                image: Array.isArray(currentCard.image) ? currentCard.image[0] : currentCard.image,
+                                details: currentCard.details,
+                                rating: currentCard.rating,
+                            },
+                        });
+                    }}
                 >
                     <Entypo name="menu" size={28} color="#000" />
                 </TouchableOpacity>
