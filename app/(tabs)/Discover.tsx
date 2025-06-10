@@ -1,17 +1,26 @@
-import {View, Text, TouchableOpacity, Alert, Animated, Switch} from 'react-native';
-import {SafeAreaView} from "react-native-safe-area-context";
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    Alert,
+    Animated,
+    Switch
+} from 'react-native';
+import { SafeAreaView } from "react-native-safe-area-context";
 import LocationSearch from "@/components/LocationSearch";
-import {LocationDisplay} from "@/components/LocationDisplay";
-import React, {useState} from 'react';
-import {LocationData} from "@/services/locationService";
-import {getNearbyEateries} from "@/services/eaterySearch";
+import { LocationDisplay } from "@/components/LocationDisplay";
+import React, { useState } from 'react';
+import { LocationData } from "@/services/locationService";
 import Slider from "@react-native-community/slider";
 import ScrollView = Animated.ScrollView;
-import {LinearGradient} from "expo-linear-gradient";
-import {EateryFilters} from "@/interfaces/interfaces";
-import {Ratings} from "@hammim-in/react-native-ratings";
+import { LinearGradient } from "expo-linear-gradient";
+import { EateryFilters } from "@/interfaces/interfaces";
+import { Ratings } from "@hammim-in/react-native-ratings";
+import { useRouter } from 'expo-router';
+import {getNearbyEateries} from "@/services/eaterySearch";
 
 export default function Discover() {
+    const router = useRouter();
     const [userLocation, setUserLocation] = useState<LocationData | null>(null);
     const [searchRadius, setSearchRadius] = useState(2000);
     const [selectedPrices, setSelectedPrices] = useState(new Set([1]));
@@ -20,7 +29,7 @@ export default function Discover() {
     const [minimumRating, setMinimumRating] = useState(1);
 
     const priceLevelOptions = [1, 2, 3, 4];
-    const cuisineOptions = ['All', 'Japanese', 'Korean', 'Chinese', 'Indian', 'Thai', 'American', 'Asian']
+    const cuisineOptions = ['All', 'Japanese', 'Korean', 'Chinese', 'Indian', 'Thai', 'American', 'Asian'];
 
     const handleLocationChange = (location: LocationData | null) => {
         setUserLocation(location);
@@ -63,16 +72,6 @@ export default function Discover() {
 
     const toggleOpenNow = () => {
         setSearchOpen(!searchOpen);
-    }
-
-    // Helper function to get coordinates
-    const getCurrentCoordinates = () => {
-        return userLocation?.coordinates || null;
-    };
-
-    // Helper function to get address
-    const getCurrentAddress = () => {
-        return userLocation?.address || null;
     };
 
     const startSwiping = () => {
@@ -80,14 +79,17 @@ export default function Discover() {
             Alert.alert("Please select a location");
             return;
         }
+
         if (selectedPrices.size === 0) {
             Alert.alert("Please select a price level");
             return;
         }
+
         if (selectedCuisines.size === 0) {
             Alert.alert("Please select a cuisine type");
             return;
         }
+
         const filters: EateryFilters = {
             priceLevels: Array.from(selectedPrices),
             minimumRating: minimumRating,
@@ -109,6 +111,9 @@ export default function Discover() {
             .catch((error) => {
                 console.error('API call failed:', error);
             });
+
+        // Navigate to Swiping screen
+        router.push('/Swiping');
     }
 
     return (
@@ -119,12 +124,13 @@ export default function Discover() {
                 showsVerticalScrollIndicator={false}
             >
                 <Text className="font-baloo-regular text-accent text-4xl pt-4 pb-2">Discover</Text>
-                <LocationSearch onLocationSelect={setUserLocation}/>
+                <LocationSearch onLocationSelect={setUserLocation} />
                 <LocationDisplay
                     selectedLocation={userLocation}
                     onLocationChange={handleLocationChange}
                 />
 
+                {/* Search Radius */}
                 <View className="mt-6">
                     <Text className="font-lexend-bold text-primary text-base">Search Radius</Text>
                     <Slider
@@ -133,14 +139,16 @@ export default function Discover() {
                         minimumTrackTintColor="#fe724c"
                         step={100}
                         value={searchRadius}
-                        onValueChange={setSearchRadius}/>
+                        onValueChange={setSearchRadius}
+                    />
                     <View className="flex-row justify-between">
                         <Text className="text-gray-600 opacity-60 text-base font-lexend-regular">0.5 km</Text>
-                        <Text className="text-accent text-base font-lexend-bold">{searchRadius/1000} km</Text>
+                        <Text className="text-accent text-base font-lexend-bold">{searchRadius / 1000} km</Text>
                         <Text className="text-gray-600 opacity-60 text-base font-lexend-regular">5 km</Text>
                     </View>
                 </View>
 
+                {/* Price Range */}
                 <View className="mt-6">
                     <Text className="font-lexend-bold text-primary text-base mb-3">Price Range</Text>
                     <View className="flex-row justify-between">
@@ -159,8 +167,8 @@ export default function Discover() {
                                 activeOpacity={0.7}
                             >
                                 <Text
-                                    style={{color: selectedPrices.has(price) ? '#ffffff' : '#272d2f',}}
-                                    className = "text-base font-baloo-regular"
+                                    style={{ color: selectedPrices.has(price) ? '#ffffff' : '#272d2f' }}
+                                    className="text-base font-baloo-regular"
                                 >
                                     {'$'.repeat(price)}
                                 </Text>
@@ -169,6 +177,7 @@ export default function Discover() {
                     </View>
                 </View>
 
+                {/* Minimum Rating */}
                 <View className="mt-6">
                     <Text className="font-lexend-bold text-primary text-base mb-2">Minimum Rating</Text>
                     <Ratings
@@ -179,13 +188,14 @@ export default function Discover() {
                     />
                 </View>
 
+                {/* Cuisine Types */}
                 <View className="mt-6">
                     <Text className="font-lexend-bold text-base text-primary mb-3">Cuisine Types</Text>
                     <View className="flex-row flex-wrap">
                         {cuisineOptions.map((cuisine) => (
                             <TouchableOpacity
                                 key={cuisine}
-                                style = {{
+                                style={{
                                     backgroundColor: selectedCuisines.has(cuisine) ? '#fe724c' : '#d9d9d9',
                                     borderRadius: 15,
                                     justifyContent: 'center',
@@ -210,10 +220,11 @@ export default function Discover() {
                     </View>
                 </View>
 
+                {/* Open Now Toggle */}
                 <View className="mt-6">
                     <Text className="font-lexend-bold text-primary text-base mb-3">Show Only Open Eateries?</Text>
                     <Switch
-                        trackColor={{false: '#767577', true: '#fe724c'}}
+                        trackColor={{ false: '#767577', true: '#fe724c' }}
                         thumbColor={searchOpen ? '#ffffff' : '#f4f3f4'}
                         ios_backgroundColor="#d9d9d9"
                         onValueChange={toggleOpenNow}
@@ -221,6 +232,7 @@ export default function Discover() {
                     />
                 </View>
 
+                {/* Start Swiping Button */}
                 <TouchableOpacity
                     activeOpacity={0.8}
                     onPress={startSwiping}

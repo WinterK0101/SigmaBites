@@ -1,9 +1,9 @@
 import { View, Text } from 'react-native';
 
-export default function FriendInfo() {
+export default function SignInPage() {
     return (
         <View>
-            <Text>Friend Info Page</Text>
+            <Text>Sign In Page</Text>
         </View>
     );
 }
