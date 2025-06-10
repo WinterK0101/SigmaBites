@@ -1,18 +1,27 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import {
+    View,
+    Text,
+    StyleSheet,
+    Image,
+    TouchableOpacity,
+    ImageBackground,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 
 export default function NoMatches() {
     const router = useRouter();
 
     return (
-        <View style={styles.container}>
+        <ImageBackground
+            source={require('../assets/images/nomatches-bg.jpg')}
+            style={styles.background}
+            resizeMode="cover"
+        >
             <Text style={styles.title}>Oops!</Text>
 
             <Image
-                source={{
-                    uri: 'https://cdn-icons-png.flaticon.com/512/7436/7436569.png',
-                }}
+                source={require('../assets/images/deadfishwhy.png')}
                 style={styles.fishbone}
             />
 
@@ -24,33 +33,33 @@ export default function NoMatches() {
             >
                 <Text style={styles.buttonText}>Go to Discover</Text>
             </TouchableOpacity>
-        </View>
+        </ImageBackground>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
+    background: {
         flex: 1,
-        backgroundColor: '#D3D3D3',
         alignItems: 'center',
         justifyContent: 'center',
         padding: 20,
     },
     title: {
-        fontSize: 36,
-        fontWeight: 'bold',
-        color: '#222',
+        fontSize: 42,
+        color: 'white',
+        fontFamily: 'Baloo-Regular',
         marginBottom: 20,
     },
     subtitle: {
-        fontSize: 16,
-        color: '#555',
+        fontSize: 20,
+        color: 'white',
+        fontFamily: 'Lexend-Regular',
         marginTop: 10,
         marginBottom: 30,
     },
     fishbone: {
-        width: 160,
-        height: 160,
+        width: 240,
+        height: 240,
         resizeMode: 'contain',
     },
     button: {
@@ -61,7 +70,7 @@ const styles = StyleSheet.create({
     },
     buttonText: {
         color: '#FF6B3E',
-        fontWeight: 'bold',
-        fontSize: 16,
+        fontFamily: 'Baloo-Regular',
+        fontSize: 20,
     },
 });
