@@ -48,7 +48,9 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
+  //<Stack.Screen name="index" options={{ headerShown: false }} />
   return (
+    
       <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
