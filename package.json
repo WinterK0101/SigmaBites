@@ -37,6 +37,7 @@
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.3",
+    "react-native-deck-swiper": "^2.0.17",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-google-places-autocomplete": "^2.5.7",
     "react-native-pager-view": "^6.8.1",

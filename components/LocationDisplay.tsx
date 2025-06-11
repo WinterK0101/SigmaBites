@@ -24,7 +24,7 @@ export const LocationDisplay = ({selectedLocation, onLocationChange}: LocationDi
         setDisplayText('Getting location...');
 
         try {
-            const locationData = await getCurrentLocation();
+            const locationData = await getCurrentLocation(false);
             setDisplayText(locationData.address);
 
             if (onLocationChange) {

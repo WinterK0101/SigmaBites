@@ -23,8 +23,6 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [fontsLoaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    ...FontAwesome.font,
     "Lexend-Bold": require('../assets/fonts/Lexend-Bold.ttf'),
     "Lexend-Regular": require('../assets/fonts/Lexend-Regular.ttf'),
     "Lexend-Variable": require('../assets/fonts/Lexend-Variable.ttf'),
@@ -50,18 +48,36 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-
+  //<Stack.Screen name="index" options={{ headerShown: false }} />
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    
       <Stack>
-        {
-          //<Stack.Screen name="index" options={{ headerShown: false }} />
-        }
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+              name="(modals)"
+              options={{ presentation: 'modal', headerShown: false }}
+          />
+        <Stack.Screen
+            name="(modals)/Swiping"
+            options={{
+              headerShown: false,
+            }}
+        />
+          <Stack.Screen
+              name="(modals)/Matched"
+              options={{
+                  headerShown: false,
+                  animation: "fade",
+              }}
+          />
+        <Stack.Screen
+            name="NoMatches"
+            options={{
+              headerShown: false,
+            }}
+        />
       </Stack>
-    </ThemeProvider>
   );
 }
+
 
