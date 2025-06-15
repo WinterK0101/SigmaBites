@@ -14,10 +14,11 @@ import { LocationData } from "@/services/locationService";
 import Slider from "@react-native-community/slider";
 import ScrollView = Animated.ScrollView;
 import { LinearGradient } from "expo-linear-gradient";
-import { EateryFilters } from "@/interfaces/interfaces";
+import {Eatery, EateryFilters} from "@/interfaces/interfaces";
 import { Ratings } from "@hammim-in/react-native-ratings";
 import { useRouter } from 'expo-router';
 import {getNearbyEateries} from "@/services/eaterySearch";
+import {filterEateries} from "@/services/filterService";
 
 export default function Discover() {
     const router = useRouter();
@@ -119,13 +120,18 @@ export default function Discover() {
             }
         }
 
+        let filteredEateries: Eatery[] = [];
+        if (eateries.length > 0) {
+            filteredEateries = filterEateries(eateries, filters);
+        }
+
         // Navigate to Swiping screen with eateries data
         router.push({
-            pathname: '/(modals)/Swiping',
+            pathname: '/Swiping',
             params: {
                 latitude: userLocation.coordinates.latitude.toString(),
                 longitude: userLocation.coordinates.longitude.toString(),
-                eateries: JSON.stringify(eateries),
+                eateries: JSON.stringify(filteredEateries),
                 useDummyData: useDummyData.toString()
             }
         });
