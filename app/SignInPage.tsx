@@ -1,22 +1,29 @@
-import { Text, StyleSheet, TextInput, TouchableOpacity, Image, SafeAreaView, View } from 'react-native';
+import { Text, StyleSheet, TextInput, TouchableOpacity, Image, SafeAreaView, View, Alert } from 'react-native';
 import React, { useState } from 'react';
-import { auth } from '../FirebaseConfig';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+//import { auth } from '../FirebaseConfig';
+//import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { router } from 'expo-router';
+import { supabase } from '../SupabaseConfig';
+
 
 const SignInScreen = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  const signIn = async () => {
-    try {
-      const user = await signInWithEmailAndPassword(auth, email, password);
-      if (user) router.replace('/(tabs)');
-    } catch (error: any) {
-      console.log(error);
-      alert('Sign in failed: ' + error.message);
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  async function signInWithEmail() {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password,
+    })
+    if (error) 
+    {
+      Alert.alert(error.message)
     }
-  };
+    else{
+      router.push('/(tabs)/Discover')
+    }
+
+  }
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -65,7 +72,7 @@ const SignInScreen = () => {
         />
       
       
-      <TouchableOpacity style={styles.signInButton} onPress={signIn}>
+      <TouchableOpacity style={styles.signInButton} onPress={signInWithEmail}>
         <Text style={styles.signInButtonText}>Sign in</Text>
       </TouchableOpacity>
       </View>

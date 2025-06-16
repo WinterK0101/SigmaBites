@@ -3,10 +3,14 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import './globals.css';
 import { useColorScheme } from '@/components/useColorScheme';
+import { Session } from '@supabase/supabase-js'
+import { supabase } from '../SupabaseConfig';
+import SignInScreen from './SignInPage'
+import Profile from './(tabs)/Profile'
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -29,6 +33,17 @@ export default function RootLayout() {
     "Baloo-Regular": require('../assets/fonts/Baloo-Regular.ttf'),
   });
 
+  const [session, setSession] = useState<Session | null>(null)
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+    })
+    supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+  }, [])
+
+
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
@@ -44,14 +59,10 @@ export default function RootLayout() {
     return null;
   }
 
-  return <RootLayoutNav />;
-}
-
-function RootLayoutNav() {
-  //<Stack.Screen name="index" options={{ headerShown: false }} />
   return (
-    
       <Stack>
+        {session && session.user ? <Profile key={session.user.id} session={session} /> : <SignInScreen />}
+          <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
               name="(modals)"
@@ -78,6 +89,11 @@ function RootLayoutNav() {
         />
       </Stack>
   );
+}
+
+function RootLayoutNav() {
+  //<Stack.Screen name="index" options={{ headerShown: false }} />
+ 
 }
 
 

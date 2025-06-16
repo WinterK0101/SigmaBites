@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import {MaterialCommunityIcons} from "@expo/vector-icons";
+import { supabase } from '../../SupabaseConfig'
+import { Session } from '@supabase/supabase-js'
 
 
 const dummyUser = {
@@ -47,7 +49,7 @@ const dummyUser = {
   ]
 }
 
-export default function Profile() {
+export default function Profile({ session }: { session: Session }) {
   return (
       <View style={styles.container}>
           <LinearGradient colors={['#D03939', '#FE724C']} style={styles.header}>

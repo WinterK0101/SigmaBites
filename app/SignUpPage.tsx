@@ -1,38 +1,89 @@
-import { Text, StyleSheet, TextInput, TouchableOpacity, Image, SafeAreaView, View } from 'react-native';
-import React, { useState } from 'react';
-import { auth } from '../FirebaseConfig';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { Text, StyleSheet, TextInput, TouchableOpacity, Alert, SafeAreaView, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+//import { auth } from '../FirebaseConfig';
+//import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { router } from 'expo-router';
+import { supabase } from '../SupabaseConfig';
+import * as ImagePicker from 'expo-image-picker'
+
+interface Props {
+  size: number
+  url: string | null
+  onUpload: (filePath: string) => void
+}
 
 const SignUpScreen = () => {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const signUp = async () => {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      if (userCredential) {
-        router.replace('/StartupScreen'); 
+  async function signUpWithEmail() {
+    const { data: { session }, error,} = await supabase.auth.signUp({
+      email: email,
+      password: password,
+    })
+    if (error) Alert.alert(error.message)
+    if (session)
+    {
+      const updateUsername = {
+        id: session?.user.id,
+        username: username,
+        name: username,
+        updated_at: new Date(),
+        //avatar_url: path
       }
-    } catch (error: any) {
-      console.log(error);
-      alert('Sign up failed: ' + error.message);
+      const {error} = await supabase.from('profiles').upsert(updateUsername)
+      if (error){
+        Alert.alert(error.message)
+      }
+      router.push('/(tabs)/Discover')
     }
-  };
+      
+  }
+
+  async function uploadAvatar() {
+    const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images, // Restrict to only images
+        allowsMultipleSelection: false, // Can only select one image
+        allowsEditing: true, // Allows the user to crop / rotate their photo before uploading it
+        quality: 1,
+        exif: false, // We don't want nor need that data.
+      })
+      if (result.canceled || !result.assets || result.assets.length === 0) {
+        console.log('User cancelled image picker.')
+        return
+      }
+      const image = result.assets[0]
+      console.log('Got image', image)
+      if (!image.uri) {
+        throw new Error('No image uri!') // Realistically, this should never happen, but just in case...
+      }
+      const arraybuffer = await fetch(image.uri).then((res) => res.arrayBuffer())
+      const fileExt = image.uri?.split('.').pop()?.toLowerCase() ?? 'jpeg'
+      const path = `${Date.now()}.${fileExt}`
+      const { data, error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(path, arraybuffer, {
+          contentType: image.mimeType ?? 'image/jpeg',
+        })
+      if (uploadError) {
+        Alert.alert(uploadError.message)
+      }
+
+  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.cloudWrapper}>
+      <View style={styles.cloudWrapper} >
         <View style={styles.cloudCircle1} />
         <View style={styles.cloudCircle2} />
       </View>
 
       <Text style={styles.title}>Sign Up</Text>
-
-      <View style={styles.profilePicPlaceholder}>
+    
+      <TouchableOpacity style={styles.profilePicPlaceholder} onPress={uploadAvatar}>
         <Text style={styles.profilePicText}>Add a profile{'\n'}picture</Text>
-      </View>
+      </TouchableOpacity>  
 
       <View style={styles.centerAlign}>
         <Text style={styles.inputLabel}>Username</Text>
@@ -61,7 +112,7 @@ const SignUpScreen = () => {
           secureTextEntry
         />
 
-        <TouchableOpacity style={styles.signUpButton} onPress={signUp}>
+        <TouchableOpacity style={styles.signUpButton} onPress={signUpWithEmail}>
           <Text style={styles.signUpButtonText}>Sign up</Text>
         </TouchableOpacity>
       </View>
