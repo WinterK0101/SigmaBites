@@ -10,25 +10,8 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { Alert } from 'react-native';
 
-// Sample recent users (can be dynamic later)
-const recentUsers = [
-    {
-        id: '1',
-        name: 'bubblegumprincess',
-        image: require('../assets/images/personA.png'),
-    },
-    {
-        id: '2',
-        name: 'johnnie',
-        image: require('../assets/images/personB.png'),
-    },
-    {
-        id: '3',
-        name: 'corpseking',
-        image: require('../assets/images/personC.png'),
-    },
-];
 
 type RecentUser = {
     id: string;
@@ -38,14 +21,43 @@ type RecentUser = {
 
 export default function AddFriendScreen() {
     const [search, setSearch] = useState('');
+    const [recentSearches, setRecentSearches] = useState([
+        { id: '1', name: 'bubblegumprincess', image: require('../assets/images/personA.png') },
+        { id: '2', name: 'johnnie', image: require('../assets/images/personB.png') },
+        { id: '3', name: 'corpseking', image: require('../assets/images/personC.png') },
+    ]);
     const router = useRouter();
 
     const renderItem = ({ item }: { item: RecentUser }) => (
-        <View style={styles.userCard}>
+        <TouchableOpacity
+            onLongPress={() => {
+                Alert.alert(
+                    "Remove Recent Search",
+                    `Remove ${item.name} from recent searches?`,
+                    [
+                        {
+                            text: "Cancel",
+                            style: "cancel",
+                        },
+                        {
+                            text: "Remove",
+                            style: "destructive",
+                            onPress: () => {
+                                setRecentSearches(prev => prev.filter(user => user.id !== item.id));
+                            },
+                        },
+                    ],
+                    { cancelable: true }
+                );
+            }}
+
+            style={styles.userCard}
+        >
             <Image source={item.image} style={styles.avatar} />
             <Text style={styles.username}>{item.name}</Text>
-        </View>
+        </TouchableOpacity>
     );
+
 
 
     return (
@@ -55,7 +67,7 @@ export default function AddFriendScreen() {
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Icon name="chevron-back" size={28} color="#FF6B3E" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Add Friend</Text>
+                <Text style={styles.headerTitle}>Add Friends</Text>
             </View>
 
             {/* Search Bar */}
@@ -70,7 +82,7 @@ export default function AddFriendScreen() {
             {/* Recent */}
             <Text style={styles.sectionTitle}>Recent</Text>
             <FlatList
-                data={recentUsers}
+                data={recentSearches}
                 keyExtractor={(item) => item.id}
                 renderItem={renderItem}
                 contentContainerStyle={styles.list}
