@@ -19,6 +19,7 @@ import { Ratings } from "@hammim-in/react-native-ratings";
 import { useRouter } from 'expo-router';
 import {getNearbyEateries} from "@/services/eaterySearch";
 import {filterEateries} from "@/services/filterService";
+import { icons } from '@/constants/icons';
 
 export default function Discover() {
     const router = useRouter();
@@ -32,6 +33,13 @@ export default function Discover() {
 
     const priceLevelOptions = [1, 2, 3, 4];
     const cuisineOptions = ['All', 'Japanese', 'Korean', 'Chinese', 'Indian', 'Thai', 'American', 'Asian'];
+    const filters: EateryFilters = {
+        priceLevels: Array.from(selectedPrices),
+        minimumRating: minimumRating,
+        cuisineTypes: Array.from(selectedCuisines),
+        radius: searchRadius,
+        openNowToggle: searchOpen
+    };
 
     const handleLocationChange = (location: LocationData | null) => {
         setUserLocation(location);
@@ -76,7 +84,8 @@ export default function Discover() {
         setSearchOpen(!searchOpen);
     };
 
-    const startSwiping = async () => {
+
+    const startGroupSession = () => {
         if (!userLocation) {
             Alert.alert("Please select a location");
             return;
@@ -92,13 +101,32 @@ export default function Discover() {
             return;
         }
 
-        const filters: EateryFilters = {
-            priceLevels: Array.from(selectedPrices),
-            minimumRating: minimumRating,
-            cuisineTypes: Array.from(selectedCuisines),
-            radius: searchRadius,
-            openNowToggle: searchOpen
-        };
+        router.push({
+            pathname: "/groupSwiping/StartGroupSession",
+            params: {
+                latitude: userLocation.coordinates.latitude.toString(),
+                longitude: userLocation.coordinates.longitude.toString(),
+                filters: JSON.stringify(filters),
+                useDummyData: useDummyData.toString()
+            }
+        });
+    }
+
+    const startSwiping = async () => {
+        if (!userLocation) {
+            Alert.alert("Please select a location");
+            return;
+        }
+
+        if (selectedPrices.size === 0) {
+            Alert.alert("Please select a price level");
+            return;
+        }
+
+        if (selectedCuisines.size === 0) {
+            Alert.alert("Please select a cuisine type");
+            return;
+        }
 
         let eateries = [];
 
@@ -129,6 +157,7 @@ export default function Discover() {
         router.push({
             pathname: '/Swiping',
             params: {
+                swipingMode: 'solo',
                 latitude: userLocation.coordinates.latitude.toString(),
                 longitude: userLocation.coordinates.longitude.toString(),
                 eateries: JSON.stringify(filteredEateries),
@@ -170,8 +199,29 @@ export default function Discover() {
                     </View>
                 </View>
 
+                {/* Group Session Banner */}
+                <LinearGradient
+                    colors={['#d03939', '#fe724c']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0.8, y: 0.8 }}
+                    style={{
+                        borderRadius: 15,
+                        marginTop: 24,
+                        marginBottom: 20,
+                        padding: 16,
+                        height: 160,
+                    }}
+                >
+                    <Text className="font-lexend-bold text-2xl text-white">Discover Together</Text>
+                    <Text className="font-lexend-regular text-xs text-white mt-2 w-5/6">Find new eateries that you and your friends will love</Text>
+                    <TouchableOpacity className="bg-white w-5/6 rounded-[30] h-[44] mt-2 items-center justify-center flex-row" onPress={startGroupSession}>
+                        <icons.friends height={25} width={25} stroke={'#fe724c'}/>
+                        <Text className="font-lexend-bold text-base text-accent ml-3">Start Group Session</Text>
+                    </TouchableOpacity>
+                </LinearGradient>
+
                 {/* Price Range */}
-                <View className="mt-6">
+                <View className="mt-2">
                     <Text className="font-lexend-bold text-primary text-base mb-3">Price Range</Text>
                     <View className="flex-row justify-between">
                         {priceLevelOptions.map((price) => (
@@ -283,7 +333,7 @@ export default function Discover() {
                         }}
                     >
                         <Text className="font-baloo-regular text-white text-2xl pt-2">
-                            Start Swiping!
+                            Start Solo Swiping
                         </Text>
                     </LinearGradient>
                 </TouchableOpacity>
