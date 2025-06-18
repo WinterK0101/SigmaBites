@@ -2,7 +2,10 @@ import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/Ionicons';
-import HighlightedText from "../components/__tests__/highlightedtexts.js";
+import HighlightedText from "../components/highlightedtexts.js";
+
+const highlightWords = ["friend", "Group Swipe"];
+
 
 // ✅ 1. Define Message type
 type Message = {
@@ -60,7 +63,13 @@ export default function InboxScreen() {
             <Image source={item.image} style={styles.avatar} />
             <View style={styles.textContainer}>
                 <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.message}>{item.message}</Text>
+                <HighlightedText
+                    text={item.message}
+                    highlights={highlightWords}
+                    style={styles.saved}
+                    highlightStyle={styles.restaurant}
+                />
+
             </View>
             <Text style={styles.time}>{item.time}</Text>
         </View>
@@ -70,12 +79,21 @@ export default function InboxScreen() {
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Icon name="chevron-back" size={28} color="#FF6B3E" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Bites Inbox</Text>
-                <View style={{ width: 28 }} /> {/* Placeholder to balance layout */}
             </View>
+
+
+            {/* Section Header */}
+            <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Last 7 Days</Text>
+                <TouchableOpacity onPress={() => {/* Add See More action */ }}>
+                    <Text style={styles.seeMore}>See more</Text>
+                </TouchableOpacity>
+            </View>
+
 
             {/* Inbox List */}
             <FlatList
@@ -92,19 +110,20 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
-        paddingTop: 60,
+        paddingTop: 0,
         paddingHorizontal: 20,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 24,
+        marginBottom: 10,
     },
     headerTitle: {
-        fontSize: 24,
+        fontSize: 44,
         fontWeight: 'bold',
-        color: '#FF6B3E',
+        color: 'black',
+        fontFamily: 'Baloo-Regular',
+        marginLeft: 8,
     },
     list: {
         paddingBottom: 40,
@@ -137,12 +156,49 @@ const styles = StyleSheet.create({
         marginBottom: 2,
     },
     message: {
-        color: '#555',
+        color: '#888',
         fontSize: 14,
+        marginTop: 2,
+        fontFamily: 'Lexend-Regular',
     },
     time: {
         fontSize: 12,
         color: '#999',
         marginLeft: 10,
     },
+    sectionHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingHorizontal: 20,
+        paddingTop: 0,
+        paddingBottom: 5,
+    },
+
+    sectionTitle: {
+        fontSize: 16,
+        fontWeight: "600",
+        color: "#333",
+        fontFamily: 'Baloo-Regular',
+    },
+
+    seeMore: {
+        fontSize: 14,
+        color: "#FF6B3E",
+        fontFamily: 'Lexend-Regular',
+    },
+    backButton: {
+        paddingRight: 4, // optional: tap area around icon
+    },
+    saved: {
+        fontSize: 14,
+        color: '#888',
+        marginTop: 2,
+        fontFamily: 'Lexend-Regular',
+    },
+    restaurant: {
+        color: '#FF6B3E',
+    },
+
+
 });
