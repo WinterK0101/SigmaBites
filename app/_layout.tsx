@@ -11,6 +11,7 @@ import { Session } from '@supabase/supabase-js'
 import { supabase } from '../SupabaseConfig';
 import SignInScreen from './SignInPage'
 import Profile from './(tabs)/Profile'
+import { SessionProvider } from '../context/SessionContext';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -60,8 +61,8 @@ export default function RootLayout() {
   }
 
   return (
+    <SessionProvider>
       <Stack>
-        {session && session.user ? <Profile key={session.user.id} session={session} /> : <SignInScreen />}
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
@@ -88,6 +89,7 @@ export default function RootLayout() {
             }}
         />
       </Stack>
+    </SessionProvider>
   );
 }
 

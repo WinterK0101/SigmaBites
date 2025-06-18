@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,8 +10,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import { supabase } from '../../SupabaseConfig'
-import { Session } from '@supabase/supabase-js'
-
+import { useSession } from '../../context/SessionContext';
 
 const dummyUser = {
   displayName: 'John',
@@ -49,7 +48,59 @@ const dummyUser = {
   ]
 }
 
-export default function Profile({ session }: { session: Session }) {
+export default function Profile() {
+
+  const session = useSession();
+  console.log(session)
+  // State for profile info
+  const [profile, setProfile] = useState({
+    displayName: 'Loading...',
+    username: 'Loading...',
+    avatar_url: 'https://i.pinimg.com/564x/39/33/f6/3933f64de1724bb67264818810e3f2cb.jpg',
+  });
+  const [avatarPath, setAvatarPath] = useState<string | null>(null);
+
+  // Fetch profile on mount or session change
+  useEffect(() => {
+    async function fetchProfile() {
+      if (!session?.user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('username, name, avatar_url')
+          .eq('id', session.user.id)
+          .single();
+
+        if (error) {
+          console.log('Error fetching profile:', error.message);
+          return;
+        }
+
+        if (data) {
+          setProfile({
+            displayName: data.name || 'No name',
+            username: data.username || 'No username',
+            avatar_url: data.avatar_url || 'https://i.pinimg.com/564x/39/33/f6/3933f64de1724bb67264818810e3f2cb.jpg',
+          });
+        }
+      } catch (error) {
+        console.error('Error in fetchProfile:', error);
+      }
+      const { data } = await supabase.storage.from('avatars').download(profile.avatar_url);
+        if (data){
+          const fr = new FileReader()
+            fr.readAsDataURL(data)
+            fr.onload = () => {
+              setAvatarPath(fr.result as string)
+            }
+        }
+    }
+
+    fetchProfile();
+  }, [session]);
+  
+
   return (
       <View style={styles.container}>
           <LinearGradient colors={['#D03939', '#FE724C']} style={styles.header}>
@@ -63,13 +114,14 @@ export default function Profile({ session }: { session: Session }) {
                     borderRadius: 60,
                   }}
               >
-                <Image
-                    source={{
-                      uri: dummyUser.profilePicture,
-                    }}
+                {avatarPath && (
+                  <Image
+                    source={{ uri: avatarPath }}
                     className="w-[120px] h-[120px] rounded-full border-4 border-white"
                     resizeMode="cover"
-                />
+                  />
+                )}
+              
               </View>
 
               <TouchableOpacity
@@ -80,8 +132,8 @@ export default function Profile({ session }: { session: Session }) {
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.name}>{dummyUser.displayName}</Text>
-            <Text style={styles.username}>@ {dummyUser.username}</Text>
+            <Text style={styles.name}>{profile.displayName}</Text>
+            <Text style={styles.username}>@ {profile.username}</Text>
 
             <TouchableOpacity style={styles.editButton}
               activeOpacity={0.8}

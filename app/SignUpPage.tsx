@@ -1,4 +1,4 @@
-import { Text, StyleSheet, TextInput, TouchableOpacity, Alert, SafeAreaView, View } from 'react-native';
+import { Text, StyleSheet, TextInput, TouchableOpacity, Alert, SafeAreaView, View, Image } from 'react-native';
 import React, { useState } from 'react';
 import { router } from 'expo-router';
 import { supabase } from '../SupabaseConfig';
@@ -8,6 +8,7 @@ const SignUpScreen = () => {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [pPath, setPath] = useState<string | null>(null);
   const [avatarPath, setAvatarPath] = useState<string | null>(null);
 
   async function signUpWithEmail() {
@@ -27,7 +28,7 @@ const SignUpScreen = () => {
         username: username,
         name: username,
         updated_at: new Date(),
-        avatar_url: avatarPath, // include avatar URL
+        avatar_url: pPath, // include avatar URL
       };
 
       const { error: profileError } = await supabase
@@ -73,10 +74,18 @@ const SignUpScreen = () => {
       return;
     }
 
-    const { data } = supabase.storage.from('avatars').getPublicUrl(path);
-    if (data?.publicUrl) {
-      setAvatarPath(data.publicUrl);
+    const { data } = await supabase.storage.from('avatars').download(path);
+    console.log("path is" + path)
+    
+    if (data){
+      setPath(path)
+      const fr = new FileReader()
+      fr.readAsDataURL(data)
+      fr.onload = () => {
+        setAvatarPath(fr.result as string)
+      }
     }
+    
   }
 
   return (
@@ -91,6 +100,13 @@ const SignUpScreen = () => {
       <TouchableOpacity style={styles.profilePicPlaceholder} onPress={uploadAvatar}>
         <Text style={styles.profilePicText}>Add a profile{'\n'}picture</Text>
       </TouchableOpacity>
+
+      {avatarPath && (
+      <Image
+        source={{ uri: avatarPath }}
+        style={{ width: 120, height: 120, borderRadius: 60, alignSelf: 'center', marginBottom: 20 }}
+      />
+      )}
 
       <View style={styles.centerAlign}>
         <Text style={styles.inputLabel}>Username</Text>
