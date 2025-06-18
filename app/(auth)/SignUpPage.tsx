@@ -1,25 +1,97 @@
-import { Text, StyleSheet, TextInput, TouchableOpacity, Image, SafeAreaView, View } from 'react-native';
+import { Text, StyleSheet, TextInput, TouchableOpacity, Alert, SafeAreaView, View, Image } from 'react-native';
 import React, { useState } from 'react';
+<<<<<<< HEAD:app/(auth)/SignUpPage.tsx
 import { auth } from '../../FirebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+=======
+>>>>>>> origin/supabase:app/SignUpPage.tsx
 import { router } from 'expo-router';
+import { supabase } from '../SupabaseConfig';
+import * as ImagePicker from 'expo-image-picker';
 
 const SignUpScreen = () => {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [pPath, setPath] = useState<string | null>(null);
+  const [avatarPath, setAvatarPath] = useState<string | null>(null);
 
-  const signUp = async () => {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      if (userCredential) {
-        router.replace('/StartupScreen'); 
-      }
-    } catch (error: any) {
-      console.log(error);
-      alert('Sign up failed: ' + error.message);
+  async function signUpWithEmail() {
+    const { data: { session }, error } = await supabase.auth.signUp({
+      email: email,
+      password: password,
+    });
+
+    if (error) {
+      Alert.alert(error.message);
+      return;
     }
-  };
+
+    if (session) {
+      const updateUsername = {
+        id: session.user.id,
+        username: username,
+        name: username,
+        updated_at: new Date(),
+        avatar_url: pPath, // include avatar URL
+      };
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert(updateUsername);
+
+      if (profileError) {
+        Alert.alert(profileError.message);
+        console.log(profileError.message);
+      } else {
+        router.push('/(tabs)/Discover');
+      }
+    }
+  }
+
+  async function uploadAvatar() {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: false,
+      allowsEditing: true,
+      quality: 1,
+      exif: false,
+    });
+
+    if (result.canceled || !result.assets || result.assets.length === 0) {
+      console.log('User cancelled image picker.');
+      return;
+    }
+
+    const image = result.assets[0];
+    const arraybuffer = await fetch(image.uri).then((res) => res.arrayBuffer());
+    const fileExt = image.uri?.split('.').pop()?.toLowerCase() ?? 'jpeg';
+    const path = `${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(path, arraybuffer, {
+        contentType: image.mimeType ?? 'image/jpeg',
+      });
+
+    if (uploadError) {
+      Alert.alert(uploadError.message);
+      return;
+    }
+
+    const { data } = await supabase.storage.from('avatars').download(path);
+    console.log("path is" + path)
+    
+    if (data){
+      setPath(path)
+      const fr = new FileReader()
+      fr.readAsDataURL(data)
+      fr.onload = () => {
+        setAvatarPath(fr.result as string)
+      }
+    }
+    
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -30,9 +102,16 @@ const SignUpScreen = () => {
 
       <Text style={styles.title}>Sign Up</Text>
 
-      <View style={styles.profilePicPlaceholder}>
+      <TouchableOpacity style={styles.profilePicPlaceholder} onPress={uploadAvatar}>
         <Text style={styles.profilePicText}>Add a profile{'\n'}picture</Text>
-      </View>
+      </TouchableOpacity>
+
+      {avatarPath && (
+      <Image
+        source={{ uri: avatarPath }}
+        style={{ width: 120, height: 120, borderRadius: 60, alignSelf: 'center', marginBottom: 20 }}
+      />
+      )}
 
       <View style={styles.centerAlign}>
         <Text style={styles.inputLabel}>Username</Text>
@@ -61,7 +140,7 @@ const SignUpScreen = () => {
           secureTextEntry
         />
 
-        <TouchableOpacity style={styles.signUpButton} onPress={signUp}>
+        <TouchableOpacity style={styles.signUpButton} onPress={signUpWithEmail}>
           <Text style={styles.signUpButtonText}>Sign up</Text>
         </TouchableOpacity>
       </View>
@@ -88,8 +167,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: -1,
   },
-  cloudCircle1: {
-    position: 'absolute',
+   cloudCircle1: {
+    position:'absolute',
     width: 350,
     height: 300,
     borderRadius: 200,

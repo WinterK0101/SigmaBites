@@ -1,9 +1,14 @@
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import './globals.css';
+import { Session } from '@supabase/supabase-js'
+import { supabase } from '../SupabaseConfig';
+import SignInScreen from './SignInPage'
+import Profile from './(tabs)/Profile'
+import { SessionProvider } from '../context/SessionContext';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -26,6 +31,17 @@ export default function RootLayout() {
     "Baloo-Regular": require('../assets/fonts/Baloo-Regular.ttf'),
   });
 
+  const [session, setSession] = useState<Session | null>(null)
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+    })
+    supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+  }, [])
+
+
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
@@ -41,18 +57,46 @@ export default function RootLayout() {
     return null;
   }
 
-  return <RootLayoutNav />;
+  return (
+    <SessionProvider>
+      <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+              name="(modals)"
+              options={{ presentation: 'modal', headerShown: false }}
+          />
+        <Stack.Screen
+            name="(modals)/Swiping"
+            options={{
+              headerShown: false,
+            }}
+        />
+          <Stack.Screen
+              name="(modals)/Matched"
+              options={{
+                  headerShown: false,
+                  animation: "fade",
+              }}
+          />
+        <Stack.Screen
+            name="NoMatches"
+            options={{
+              headerShown: false,
+            }}
+        />
+      </Stack>
+    </SessionProvider>
+  );
 }
 
 function RootLayoutNav() {
-  return (
-      <Stack screenOptions={{ headerShown: false }}>
-          {/*<Stack.Screen name="index" />*/}
-          {/*<Stack.Screen name="StartupScreen" />*/}
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
-      </Stack>
-  );
+    <Stack screenOptions={{ headerShown: false }}>
+        {/*<Stack.Screen name="index" />*/}
+        {/*<Stack.Screen name="StartupScreen" />*/}
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
+    </Stack>
 }
 
 
