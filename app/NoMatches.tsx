@@ -8,7 +8,7 @@ import {
     ImageBackground,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import {images} from "@/constants/images";
+import { images } from "@/constants/images";
 
 export default function NoMatches() {
     const router = useRouter();
@@ -25,7 +25,7 @@ export default function NoMatches() {
                 style={styles.fishbone}
             />
 
-            <Text style={styles.subtitle}>No more matches found</Text>
+            <Text style={styles.subtitle}>No more restaurants found</Text>
 
             <TouchableOpacity
                 style={styles.button}

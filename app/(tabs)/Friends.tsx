@@ -1,4 +1,7 @@
 import React from 'react';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { useRouter } from 'expo-router'; // ✅ Expo Router for navigation
+
 import {
   View,
   Text,
@@ -44,7 +47,8 @@ const friends: Friend[] = [
 ];
 
 export default function FriendsScreen() {
-  // ✅ 3. Type the item in renderItem
+  const router = useRouter(); // ✅ useRouter from expo-router
+
   const renderItem = ({ item }: { item: Friend }) => (
     <View style={styles.friendCard}>
       <Image source={item.image} style={styles.avatar} />
@@ -59,15 +63,26 @@ export default function FriendsScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Header with title and buttons */}
       <View style={styles.header}>
         <Text style={styles.headerText}>Friends</Text>
-        <TouchableOpacity style={styles.addButton}>
-          <Text style={styles.addButtonText}>+ Add Friends</Text>
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          {/* Mail Icon to go to Inbox */}
+          <TouchableOpacity onPress={() => router.push('/inbox')}>
+            <Icon name="mail-outline" size={24} color="#FF6B3E" style={styles.mailIcon} />
+          </TouchableOpacity>
+
+          {/* Add Friend Button */}
+          <TouchableOpacity style={styles.addButton}>
+            <Text style={styles.addButtonText}>+ Add</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <Text style={styles.subHeader}>3 Friends</Text>
+      {/* Subheader */}
+      <Text style={styles.subHeader}>{friends.length} Friends</Text>
 
+      {/* Friend List */}
       <FlatList
         data={friends}
         renderItem={renderItem}
@@ -78,6 +93,7 @@ export default function FriendsScreen() {
   );
 }
 
+// ✅ Styling
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -96,6 +112,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FF6B3E',
   },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  mailIcon: {
+    marginRight: 10,
+  },
   addButton: {
     backgroundColor: '#FF6B3E',
     paddingVertical: 8,
@@ -111,7 +135,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   list: {
-    paddingBottom: 100, // Leave space for tab bar
+    paddingBottom: 100,
   },
   friendCard: {
     flexDirection: 'row',
