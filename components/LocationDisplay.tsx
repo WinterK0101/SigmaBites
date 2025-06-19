@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { getCurrentLocation, LocationData } from "@/services/locationService";
+import { getCurrentLocation} from "@/services/locationService";
+import { LocationData } from '@/interfaces/interfaces';
 import { icons } from "@/constants/icons";
 import { Text, TouchableOpacity, View } from "react-native";
 

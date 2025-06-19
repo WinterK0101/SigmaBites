@@ -1,7 +1,8 @@
 import {View, Text, TextInput, Keyboard, FlatList, TouchableOpacity} from 'react-native'
 import React, {useState, useCallback} from 'react'
 import {icons} from "@/constants/icons";
-import {debouncedLocationSearch, getLocationFromPlaceId, LocationData} from "@/services/locationService";
+import { LocationData } from '@/interfaces/interfaces';
+import {debouncedLocationSearch, getLocationFromPlaceId} from "@/services/locationService";
 
 interface LocationSearchProps {
     onLocationSelect: (locationData: LocationData) => void;

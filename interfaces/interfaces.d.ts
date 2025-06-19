@@ -50,3 +50,12 @@ export interface User {
     profilePicture: string;
     password: string;
 }
+
+export interface LocationData {
+    coordinates: {
+        latitude: number;
+        longitude: number;
+    };
+    address: string;
+    isCurrentLocation: boolean;
+}

@@ -1,13 +1,15 @@
-import {View, Text, TouchableOpacity, Animated} from 'react-native'
+import {View, Text, TouchableOpacity, Animated, ScrollView} from 'react-native'
 import React, {useState} from 'react'
 import {useLocalSearchParams, useRouter} from "expo-router";
 import {LinearGradient} from "expo-linear-gradient";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {Collapsible} from "react-native-fast-collapsible";
+import {LocationData} from "@/interfaces/interfaces";
 
 export default function GroupLobby() {
-    const { latitude, longitude, filters, useDummyData } = useLocalSearchParams();
+    const { locationData, filters, useDummyData } = useLocalSearchParams();
+    const parsedLocationData: LocationData = locationData ? JSON.parse(locationData as string) : null;
     const parsedFilters = filters ? JSON.parse(filters as string) : {};
     const insets = useSafeAreaInsets();
     const router = useRouter();
@@ -56,7 +58,7 @@ export default function GroupLobby() {
                             <View className="h-[2] bg-grey mb-2" />
                             <Text className="text-primary text-xs mt-2 font-lexend-regular">
                                 <Text className="font-lexend-bold">Location: </Text>
-                                <Text>Enter location here</Text>
+                                <Text>{parsedLocationData.address}</Text>
                             </Text>
                             <Text className="text-primary text-xs mt-2 font-lexend-regular">
                                 <Text className="font-lexend-bold">Search Radius: </Text>
@@ -86,7 +88,7 @@ export default function GroupLobby() {
                 </View>
 
                 <Text className="text-accent text-2xl font-lexend-bold mt-6">Members (2/3)</Text>
-                <View className="flex-row justify-between items-center mt-2">
+                <View className="flex-row justify-between items-center">
                     <Text className="text-[#6C6C6C] font-lexend-regular text-base">2 joined, 1 pending</Text>
                     <TouchableOpacity
                         className="bg-white border-2 border-grey rounded-[30] w-[136] h-[36] justify-center items-center"
@@ -94,6 +96,42 @@ export default function GroupLobby() {
                         <Text className="text-accent text-xs font-baloo-regular">Invite More Friends</Text>
                     </TouchableOpacity>
                 </View>
+
+                <View className="flex-1">
+                    <ScrollView
+                        contentContainerStyle={{ padding: 24, paddingBottom: 120 }}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        {/* TODO: Invited friends will be here */}
+                    </ScrollView>
+
+                    {/* Start Group Swiping Button */}
+                    <View
+                        style={{
+                            position: 'absolute',
+                            bottom: insets.bottom + 16,
+                            left: 24,
+                            right: 24,
+                        }}
+                    >
+                        <TouchableOpacity activeOpacity={0.8}>
+                            <LinearGradient
+                                colors={['#d03939', '#fe724c']}
+                                style={{
+                                    borderRadius: 30,
+                                    height: 60,
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
+                            >
+                                <Text className="font-baloo-regular text-white text-2xl pt-2">
+                                    Start Group Swiping
+                                </Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
 
 
 

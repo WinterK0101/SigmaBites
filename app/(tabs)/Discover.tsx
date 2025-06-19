@@ -10,7 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import LocationSearch from "@/components/LocationSearch";
 import { LocationDisplay } from "@/components/LocationDisplay";
 import React, { useState } from 'react';
-import { LocationData } from "@/services/locationService";
+import { LocationData } from '@/interfaces/interfaces';
 import Slider from "@react-native-community/slider";
 import ScrollView = Animated.ScrollView;
 import { LinearGradient } from "expo-linear-gradient";
@@ -104,8 +104,7 @@ export default function Discover() {
         router.push({
             pathname: "/groupSwiping/StartGroupSession",
             params: {
-                latitude: userLocation.coordinates.latitude.toString(),
-                longitude: userLocation.coordinates.longitude.toString(),
+                locationData: JSON.stringify(userLocation),
                 filters: JSON.stringify(filters),
                 useDummyData: useDummyData.toString()
             }

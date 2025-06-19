@@ -1,16 +1,7 @@
 import * as Location from 'expo-location';
 import {Alert, Linking} from 'react-native';
 import debounce from 'lodash.debounce';
-
-// For storing of important location details
-export interface LocationData {
-    coordinates: {
-        latitude: number;
-        longitude: number;
-    };
-    address: string;
-    isCurrentLocation: boolean;
-}
+import { LocationData } from '@/interfaces/interfaces';
 
 // Creates location object with the important location details if user selects current location
 export const getCurrentLocation = async (skipGeocode = false): Promise<LocationData> => {

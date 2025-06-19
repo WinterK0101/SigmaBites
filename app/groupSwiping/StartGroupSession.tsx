@@ -10,7 +10,7 @@ import {useSession} from "@/context/SessionContext";
 import RemoteImage from "@/components/RemoteImage";
 
 export default function StartGroupSession() {
-    const { latitude, longitude, filters, useDummyData } = useLocalSearchParams();
+    const { locationData, filters, useDummyData } = useLocalSearchParams();
     const insets = useSafeAreaInsets();
     const router = useRouter();
     const user = useSession()?.user;
@@ -191,8 +191,7 @@ export default function StartGroupSession() {
                         router.push({
                         pathname: '/groupSwiping/GroupLobby',
                         params: {
-                            latitude,
-                            longitude,
+                            locationData,
                             filters,
                             useDummyData,
                         }
