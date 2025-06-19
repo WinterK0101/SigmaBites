@@ -73,9 +73,10 @@ export default function FriendsScreen() {
           </TouchableOpacity>
 
           {/* Add Friend Button */}
-          <TouchableOpacity style={styles.addButton}>
+          <TouchableOpacity style={styles.addButton} onPress={() => router.push('/Add-friend')}>
             <Text style={styles.addButtonText}>+ Add</Text>
           </TouchableOpacity>
+
         </View>
       </View>
 
@@ -108,9 +109,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   headerText: {
-    fontSize: 28,
+    fontSize: 44,
     fontWeight: 'bold',
     color: '#FF6B3E',
+    fontFamily: 'Baloo-Regular',
   },
   headerRight: {
     flexDirection: 'row',
@@ -163,6 +165,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     marginTop: 2,
+    fontFamily: 'Lexend-Regular',
   },
   restaurant: {
     color: '#FF6B3E',

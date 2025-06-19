@@ -9,9 +9,9 @@ import {
 import Swiper from 'react-native-deck-swiper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons, Entypo } from '@expo/vector-icons';
-import {LinearGradient} from "expo-linear-gradient";
-import {distanceFromUser, getOpeningHoursForToday} from "@/services/apiDetailsForUI";
-import {useEffect, useRef, useState} from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import { distanceFromUser, getOpeningHoursForToday } from "@/services/apiDetailsForUI";
+import { useEffect, useRef, useState } from "react";
 
 const dummyEateries = [
     {
@@ -85,6 +85,18 @@ const dummyEateries = [
     },
 ]
 
+// friendLikedRestaurantPhotos is a mock representation of your friends' likes
+const friendLikedRestaurantPhotos: Record<string, { name: string; image: string }[]> = {
+    'https://ucarecdn.com/14373564-94e1-48f6-bcd5-a99767cbc5f2/-/crop/1867x777/0,294/-/format/auto/-/resize/1024x/': [
+        { name: 'bubblegumprincess', image: 'assets/images/personA.png' },
+    ],
+    'https://moribyan.com/wp-content/uploads/2023/10/Pepper-Lunch-683x1024.jpg': [
+        { name: 'johnnie', image: 'assets/images/personB.png' },
+        { name: 'bubblegumprincess', image: 'assets/images/personA.png' },
+    ],
+    // Josh's Grill has no friend likes
+};
+
 export default function Swiping() {
     const [currentIndex, setCurrentIndex] = useState(0);
     const swiperRef = useRef<Swiper<any>>(null);
@@ -141,14 +153,29 @@ export default function Swiping() {
     const handleSwipeRight = (index: number) => {
         lastSwipeWasRightRef.current = true;
         const likedRestaurant = restaurants[index];
-        console.log('Liked:', likedRestaurant.displayName);
+        const friendMatches = friendLikedRestaurantPhotos[likedRestaurant.photo] || [];
 
-        router.push({
-            pathname: '/(modals)/Matched',
-            params: {
-                restaurantImage: likedRestaurant.photo,
-            },
-        });
+        if (friendMatches.length > 0) {
+            // Extract array of friend images (strings)
+            const friendImagesArray = friendMatches.map(friend => friend.image);
+
+            router.push({
+                pathname: '/(modals)/Matched',
+                params: {
+                    restaurantImage: likedRestaurant.photo,
+                    friendImage: JSON.stringify(friendImagesArray),
+                },
+            });
+
+        } else {
+            router.push({
+                pathname: '/(modals)/Liked',
+                params: {
+                    restaurantImage: likedRestaurant.photo,
+                },
+            });
+        }
+
     };
 
     const handleSwipeBack = () => {
@@ -262,15 +289,21 @@ export default function Swiping() {
                 <TouchableOpacity
                     className="w-[66px] h-[66px] rounded-full bg-white justify-center items-center shadow-lg border-2 border-white"
                     onPress={() => {
-                        const currentCard: any = restaurants[currentIndex];
+                        const currentCard = restaurants[currentIndex];
+                        if (!currentCard) {
+                            console.warn('No current card to view details.');
+                            return;
+                        }
+
                         router.push({
                             pathname: "/RestaurantDetails",
                             params: {
                                 name: currentCard.displayName,
-                                image: currentCard.image,
+                                image: currentCard.photo, // NOTE: use `.photo` not `.image` for your dummy data
                                 rating: currentCard.rating,
                             },
                         });
+
                     }}
                 >
                     <Entypo name="menu" size={28} color="#000" />

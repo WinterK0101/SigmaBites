@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ImageBackground } from 'react-native';
 import { router } from 'expo-router';
 
-import bgImage from '../assets/images/background.png'; 
+import bgImage from '../assets/images/background.png';
 
 export default function StartPage() {
   return (
@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)', 
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     paddingHorizontal: 20,
   },
   logo: {
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
     marginBottom: 150,
-    fontFamily: 'Baloo-Regular', 
+    fontFamily: 'Baloo-Regular',
     textShadowColor: 'rgba(0, 0, 0, 1)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 4,
