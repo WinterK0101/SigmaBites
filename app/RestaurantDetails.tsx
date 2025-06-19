@@ -1,43 +1,22 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, Linking, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import {Eatery} from "@/interfaces/interfaces";
 
 export default function RestaurantDetails() {
     const router = useRouter();
-
-    const { eatery: eateryJson, placeId } = useLocalSearchParams<{
-        eatery?: string;
-        placeId?: string;
+    const { name, image, details, rating } = useLocalSearchParams<{
+        name: string;
+        image: string | string[];
+        details: string;
+        rating: string;
     }>();
-
-    const [eatery, setEatery] = useState<Eatery | null>(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        if (eateryJson) {
-            try {
-                const parsedEatery = JSON.parse(eateryJson);
-                setEatery(parsedEatery);
-                setLoading(false);
-            } catch (err) {
-                console.error('Failed to parse eatery JSON:', err);
-            }
-        } else if (placeId) {
-            // TODO: Fetch the eatery details from Supabase using placeId
-        } else {
-            console.log('No eatery found');
-            setLoading(false);
-        }
-    }, [eateryJson, placeId]);
-
 
 
     return (
         <View style={styles.container}>
             <Image
-                source={{ uri: eatery?.photo || 'https://via.placeholder.com/300' }}
+                source={{ uri: Array.isArray(image) ? image[0] : image || 'https://via.placeholder.com/300' }}
                 style={styles.image}
             />
 
@@ -47,16 +26,16 @@ export default function RestaurantDetails() {
             </TouchableOpacity>
 
             <View style={styles.overlayBox}>
-                <Text style={styles.name}>{eatery?.displayName}</Text>
-                <Text style={styles.details}>{eatery?.editorialSummary ? eatery.editorialSummary : eatery?.generativeSummary}</Text>
-                <Text style={styles.rating}>{eatery?.rating}</Text>
+                <Text style={styles.name}>{name}</Text>
+                <Text style={styles.details}>{details}</Text>
+                <Text style={styles.rating}>{rating}</Text>
             </View>
 
             <ScrollView style={styles.infoSection} contentContainerStyle={{ paddingBottom: 100 }}>
                 <Text style={styles.sectionTitle}>Information</Text>
                 <View style={styles.infoBox}>
                     <Text style={styles.label}>Address:</Text>
-                    <Text style={styles.value}>{eatery?.formattedAddress}</Text>
+                    <Text style={styles.value}>1 Sengkang Square, #62 - 38</Text>
 
                     <Text style={styles.label}>Website:</Text>
                     <Text
@@ -67,7 +46,7 @@ export default function RestaurantDetails() {
                     </Text>
 
                     <Text style={styles.label}>Phone:</Text>
-                    <Text style={styles.value}>{eatery?.internationalPhoneNumber}</Text>
+                    <Text style={styles.value}>6386 3970</Text>
                 </View>
 
                 <Text style={styles.sectionTitle}>Reviews</Text>

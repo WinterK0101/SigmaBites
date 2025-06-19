@@ -128,7 +128,6 @@ const obtainEateryPhoto = (photosArr: any) => {
 
     return "fallback-image.jpg";
 }
-
 const getReviews = (reviewArr: any[]) => {
     if (!Array.isArray(reviewArr)) {
         return [];

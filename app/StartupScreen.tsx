@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, ImageBackground } from 'react-native';
-import {images} from '@/constants/images';
+
+import bgImage from '../assets/images/background.png'; 
 
 export default function StartupScreen() {
   return (
     <ImageBackground
-      source={images.primarybg}
+      source={bgImage}
       style={styles.background}
       resizeMode="cover"
     >
