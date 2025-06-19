@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
-    Image,
     TouchableOpacity,
     StyleSheet,
     Modal,
@@ -13,82 +12,65 @@ import { supabase } from '@/SupabaseConfig';
 import RemoteImage from '@/components/RemoteImage';
 import { useSession } from "@/context/SessionContext";
 
-export default function EditProfileModal({ visible, onClose }) {
+export default function FriendRequestModal({ visible, onClose, user }) {
     const [loading, setLoading] = useState(false);
-    const [name, setName] = useState('');
-    const [username, setUsername] = useState('');
-    const [profilePicUrl, setProfilePicUrl] = useState('');
     const session = useSession();
-    const user = session?.user;
+    const currentUser = session?.user;
 
-    useEffect(() => {
-        if (visible) {
-            fetchUserProfile();
-        }
-    }, [visible]);
-
-    const fetchUserProfile = async () => {
-        try {
-            setLoading(true);
-
-            if (!user) {
-                Alert.alert('Error', 'No user logged in');
-                setLoading(false);
-                return;
-            }
-
-            const userId = user.id;
-
-            let { data, error, status } = await supabase
-                .from('profiles')
-                .select('name, username, avatar_url')
-                .eq('id', userId)
-                .single();
-
-            if (error && status !== 406) throw error;
-
-            if (data) {
-                setName(data.name || '');
-                setUsername(data.username || '');
-                setProfilePicUrl(data.avatar_url || '');
-            }
-        } catch (error) {
-            Alert.alert('Error loading profile', error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleSave = async () => {
+    const handleSendRequest = async () => {
         setLoading(true);
         try {
-            if (!user) {
+            if (!currentUser) {
                 Alert.alert('Error', 'No user logged in');
                 setLoading(false);
                 return;
             }
 
-            const userId = user.id;
+            if (!user) {
+                Alert.alert('Error', 'No user selected');
+                setLoading(false);
+                return;
+            }
 
-            const updates = {
-                id: userId,
-                name,
-                username,
-                updated_at: new Date().toISOString(),
-            };
+            // Check if friend request already exists
+            const { data: existingRequest, error: checkError } = await supabase
+                .from('friendships')
+                .select('id')
+                .or(`and(user_id_1.eq.${currentUser.id},user_id_2.eq.${user.id}),and(user_id_1.eq.${user.id},user_id_2.eq.${currentUser.id})`)
+                .single();
 
-            let { error } = await supabase.from('profiles').upsert(updates);
+            if (checkError && checkError.code !== 'PGRST116') {
+                throw checkError;
+            }
+
+            if (existingRequest) {
+                Alert.alert('Alert', 'Friend request already exists');
+                onClose();
+                return;
+            }
+
+            // Send friend request
+            const { error } = await supabase
+                .from('friendships')
+                .insert({
+                    user_id_1: currentUser.id,
+                    user_id_2: user.id,
+                    status: 'pending',
+                    created_at: new Date().toISOString(),
+                });
 
             if (error) throw error;
 
-            Alert.alert('Success', 'Profile updated!');
+            Alert.alert('Success', `Friend request sent to @${user.username}!`);
             onClose();
         } catch (error) {
-            Alert.alert('Error updating profile', error.message);
+            Alert.alert('Error sending friend request', error.message);
         } finally {
             setLoading(false);
         }
     };
+
+    if (!user) return null;
 
     if (loading) {
         return (
@@ -106,31 +88,27 @@ export default function EditProfileModal({ visible, onClose }) {
                 <View style={styles.modalContent}>
                     {/* Profile Picture */}
                     <View style={styles.profilePictureContainer}>
-                        {profilePicUrl ? (
-                            <RemoteImage
-                                filePath={profilePicUrl}
-                                bucket="avatars"
-                                style={styles.profilePicture}
-                            />
-                        ) : (
-                            <ActivityIndicator/>)
-                        }
+                        <RemoteImage
+                            filePath={user.avatar_url}
+                            bucket="avatars"
+                            style={styles.profilePicture}
+                        />
                     </View>
 
                     {/* Title */}
-                    <Text style={styles.title}>Edit Profile</Text>
+                    <Text style={styles.title}>Send Friend Request</Text>
 
-                    {/* Name Field */}
-                    <View style={styles.fieldRow}>
-                        <Text style={styles.label}>Name</Text>
-                        <Text style={styles.value}>{name}</Text>
+                    {/* User Info */}
+                    <View style={styles.userInfo}>
+                        <Text style={styles.username}>@{user.username}</Text>
+                        {user.name && (
+                            <Text style={styles.displayName}>{user.name}</Text>
+                        )}
                     </View>
 
-                    {/* Username Field */}
-                    <View style={styles.fieldRow}>
-                        <Text style={styles.label}>Username</Text>
-                        <Text style={styles.value}>{username}</Text>
-                    </View>
+                    <Text style={styles.message}>
+                        Do you want to send a friend request to this user?
+                    </Text>
 
                     {/* Buttons */}
                     <View style={styles.buttonRow}>
@@ -142,11 +120,11 @@ export default function EditProfileModal({ visible, onClose }) {
                             <Text style={styles.cancelButtonText}>Cancel</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={styles.editButton}
-                            onPress={handleSave}
+                            style={styles.sendButton}
+                            onPress={handleSendRequest}
                             activeOpacity={0.8}
                         >
-                            <Text style={styles.editButtonText}>Save</Text>
+                            <Text style={styles.sendButtonText}>Send</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -178,11 +156,11 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     profilePicture: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        borderWidth: 4,
-        borderColor: 'white',
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        borderWidth: 3,
+        borderColor: '#FE724C',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
@@ -191,60 +169,76 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 20,
         fontFamily: 'Lexend-Bold',
-        marginBottom: 20,
+        marginBottom: 16,
         textAlign: 'center',
         color: '#FE724C',
     },
-    fieldRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+    userInfo: {
         alignItems: 'center',
         marginBottom: 16,
     },
-    label: {
-        fontSize: 14,
+    username: {
+        fontSize: 18,
         fontFamily: 'Lexend-Medium',
-        color: '#FE724C',
+        color: '#333',
+        marginBottom: 4,
     },
-    value: {
+    displayName: {
         fontSize: 14,
         fontFamily: 'Lexend-Regular',
-        color: '#333',
+        color: '#666',
+    },
+    message: {
+        fontSize: 14,
+        fontFamily: 'Lexend-Regular',
+        color: '#666',
+        textAlign: 'center',
+        marginBottom: 20,
+        lineHeight: 20,
     },
     buttonRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 8,
         gap: 12,
     },
     cancelButton: {
         flex: 1,
-        paddingVertical: 12,
-        paddingHorizontal: 20,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
         borderRadius: 12,
         alignItems: 'center',
+        justifyContent: 'center',
         backgroundColor: 'white',
         borderWidth: 1,
         borderColor: '#FE724C',
+        minHeight: 44,
     },
     cancelButtonText: {
         color: '#FE724C',
         fontFamily: 'Lexend-Medium',
         fontSize: 14,
+        textAlign: 'center',
+        lineHeight: 16,
     },
-    editButton: {
+    sendButton: {
         flex: 1,
-        paddingVertical: 12,
-        paddingHorizontal: 20,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
         borderRadius: 12,
         alignItems: 'center',
+        justifyContent: 'center',
         backgroundColor: '#FE724C',
         borderWidth: 1,
         borderColor: '#FE724C',
+        minHeight: 44,
     },
-    editButtonText: {
+    sendButtonText: {
         color: 'white',
         fontFamily: 'Lexend-Medium',
         fontSize: 14,
+        textAlign: 'center',
+        lineHeight: 16,
     },
 });

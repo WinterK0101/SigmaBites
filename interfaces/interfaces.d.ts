@@ -44,10 +44,11 @@ export interface EateryFilters {
 }
 
 export interface User {
+    id: string;
     displayName: string;
     username: string;
     email: string;
-    profilePicture: string;
+    avatar_url: string;
     password: string;
 }
 
