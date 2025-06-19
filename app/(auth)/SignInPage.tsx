@@ -1,14 +1,7 @@
 import { Text, StyleSheet, TextInput, TouchableOpacity, Image, SafeAreaView, View, Alert } from 'react-native';
 import React, { useState } from 'react';
-<<<<<<< HEAD:app/(auth)/SignInPage.tsx
-import { auth } from '../../FirebaseConfig';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-=======
-//import { auth } from '../FirebaseConfig';
-//import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
->>>>>>> origin/supabase:app/SignInPage.tsx
 import { router } from 'expo-router';
-import { supabase } from '../SupabaseConfig';
+import { supabase } from '@/SupabaseConfig';
 
 
 const SignInScreen = () => {
@@ -19,7 +12,7 @@ const SignInScreen = () => {
       email: email,
       password: password,
     })
-    if (error) 
+    if (error)
     {
       Alert.alert(error.message)
     }
@@ -28,60 +21,60 @@ const SignInScreen = () => {
     }
 
   }
-  
+
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.cloudWrapper}>
-        <View style={styles.cloudCircle1} />
-        <View style={styles.cloudCircle2} />
-      </View>
-
-
-      <Text style={styles.title}>Sign In</Text>
-      
-      <View style={styles.centerAlign}>
-      <TouchableOpacity style={styles.googleButton}>
-        <View style={styles.googleButtonContent}>
-        <Image 
-          source={{ uri: 'https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png' }} 
-          style={styles.googleIcon}
-        />
-        <Text style={styles.googleButtonText}>Sign in with Google</Text>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.cloudWrapper}>
+          <View style={styles.cloudCircle1} />
+          <View style={styles.cloudCircle2} />
         </View>
-      </TouchableOpacity>
 
-      </View>
 
-      <View style={styles.centerAlign}>
-      <View style={styles.dividerContainer}>
-        <View style={styles.dividerLine} />
-        <Text style={styles.dividerText}>or</Text>
-        <View style={styles.dividerLine} />
-      </View>
-        <Text style={styles.inputLabel}>Username or Email</Text>
-        <TextInput 
-          style={styles.textInput} 
-          placeholder="Username or Email" 
-          value={email} 
-          onChangeText={setEmail} 
-          autoCapitalize="none"
-        />
-        <Text style={styles.inputLabel}>Password</Text>
-        <TextInput 
-          style={styles.textInput} 
-          placeholder="Password" 
-          value={password} 
-          onChangeText={setPassword} 
-          secureTextEntry
-        />
-      
-      
-      <TouchableOpacity style={styles.signInButton} onPress={signInWithEmail}>
-        <Text style={styles.signInButtonText}>Sign in</Text>
-      </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+        <Text style={styles.title}>Sign In</Text>
+
+        <View style={styles.centerAlign}>
+          <TouchableOpacity style={styles.googleButton}>
+            <View style={styles.googleButtonContent}>
+              <Image
+                  source={{ uri: 'https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png' }}
+                  style={styles.googleIcon}
+              />
+              <Text style={styles.googleButtonText}>Sign in with Google</Text>
+            </View>
+          </TouchableOpacity>
+
+        </View>
+
+        <View style={styles.centerAlign}>
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+          <Text style={styles.inputLabel}>Username or Email</Text>
+          <TextInput
+              style={styles.textInput}
+              placeholder="Username or Email"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+          />
+          <Text style={styles.inputLabel}>Password</Text>
+          <TextInput
+              style={styles.textInput}
+              placeholder="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+          />
+
+
+          <TouchableOpacity style={styles.signInButton} onPress={signInWithEmail}>
+            <Text style={styles.signInButtonText}>Sign in</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
   );
 };
 
@@ -104,7 +97,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: -1,
   },
-  
+
   cloudCircle1: {
     position: 'absolute',
     width: 350,
@@ -189,7 +182,7 @@ const styles = StyleSheet.create({
   },
   centerAlign: {
     alignItems: 'center',
-  },  
+  },
   inputLabel: {
     fontSize: 16,
     fontWeight: '600',
@@ -207,5 +200,5 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     marginRight: 10,
   },
-  
+
 });

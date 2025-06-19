@@ -5,8 +5,8 @@ import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import './globals.css';
 import { Session } from '@supabase/supabase-js'
-import { supabase } from '../SupabaseConfig';
-import { SessionProvider } from '../context/SessionContext';
+import { supabase } from '@/SupabaseConfig';
+import { SessionProvider } from '@/context/SessionContext';
 
 export {
     // Catch any errors thrown by the Layout component.
@@ -57,44 +57,14 @@ export default function RootLayout() {
 
     return (
         <SessionProvider>
-            <Stack>
-                <Stack.Screen name="index" options={{ headerShown: false }} />
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen
-                    name="(modals)"
-                    options={{ presentation: 'modal', headerShown: false }}
-                />
-                <Stack.Screen
-                    name="(modals)/Swiping"
-                    options={{
-                        headerShown: false,
-                    }}
-                />
-                <Stack.Screen
-                    name="(modals)/Matched"
-                    options={{
-                        headerShown: false,
-                        animation: "fade",
-                    }}
-                />
-                <Stack.Screen
-                    name="NoMatches"
-                    options={{
-                        headerShown: false,
-                    }}
-                />
+            <Stack screenOptions={{ headerShown: false }}>
+                {/*<Stack.Screen name="index" />*/}
+                {/*<Stack.Screen name="StartupScreen" />*/}
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
             </Stack>
         </SessionProvider>
     );
-}
-
-function RootLayoutNav() {
-    <Stack screenOptions={{ headerShown: false }}>
-        {/*<Stack.Screen name="index" />*/}
-        {/*<Stack.Screen name="StartupScreen" />*/}
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
-    </Stack>
 }
 
 

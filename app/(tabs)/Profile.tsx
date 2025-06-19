@@ -9,12 +9,10 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import {MaterialCommunityIcons} from "@expo/vector-icons";
-import { supabase } from '../../SupabaseConfig'
-import { useSession } from '../../context/SessionContext';
+import { supabase } from '@/SupabaseConfig'
+import { useSession } from '@/context/SessionContext';
 
 const dummyUser = {
-  displayName: 'John',
-  username: 'username',
   profilePicture: 'https://i.pinimg.com/564x/39/33/f6/3933f64de1724bb67264818810e3f2cb.jpg',
   friendCount: 3,
   savedEateries: 15,
@@ -67,10 +65,10 @@ export default function Profile() {
 
       try {
         const { data, error } = await supabase
-          .from('profiles')
-          .select('username, name, avatar_url')
-          .eq('id', session.user.id)
-          .single();
+            .from('profiles')
+            .select('username, name, avatar_url')
+            .eq('id', session.user.id)
+            .single();
 
         if (error) {
           console.log('Error fetching profile:', error.message);
@@ -78,111 +76,135 @@ export default function Profile() {
         }
 
         if (data) {
-          setProfile({
+          const newProfile = {
             displayName: data.name || 'No name',
             username: data.username || 'No username',
             avatar_url: data.avatar_url || 'https://i.pinimg.com/564x/39/33/f6/3933f64de1724bb67264818810e3f2cb.jpg',
-          });
+          };
+
+          setProfile(newProfile);
+
+          // Now download the avatar using the freshly fetched avatar_url
+          if (data.avatar_url) {
+            try {
+              const { data: avatarData, error: avatarError } = await supabase.storage
+                  .from('avatars')
+                  .download(data.avatar_url);
+
+              if (avatarError) {
+                console.log('Error downloading avatar:', avatarError.message);
+                return;
+              }
+
+              if (avatarData) {
+                const fr = new FileReader();
+                fr.readAsDataURL(avatarData);
+                fr.onload = () => {
+                  setAvatarPath(fr.result as string);
+                };
+              }
+            } catch (avatarDownloadError) {
+              console.error('Error in avatar download:', avatarDownloadError);
+            }
+          }
         }
       } catch (error) {
         console.error('Error in fetchProfile:', error);
       }
-      const { data } = await supabase.storage.from('avatars').download(profile.avatar_url);
-        if (data){
-          const fr = new FileReader()
-            fr.readAsDataURL(data)
-            fr.onload = () => {
-              setAvatarPath(fr.result as string)
-            }
-        }
     }
 
     fetchProfile();
   }, [session]);
-  
+
 
   return (
       <View style={styles.container}>
-          <LinearGradient colors={['#D03939', '#FE724C']} style={styles.header}>
-            <View className="relative mt-12">
-              <View
-                  style={{
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 5,
-                    borderRadius: 60,
-                  }}
-              >
-                {avatarPath && (
-                  <Image
-                    source={{ uri: avatarPath }}
-                    className="w-[120px] h-[120px] rounded-full border-4 border-white"
-                    resizeMode="cover"
-                  />
-                )}
-              
-              </View>
-
-              <TouchableOpacity
-                  className="w-9 h-9 rounded-full bg-white items-center justify-center absolute bottom-0 right-0"
-                  activeOpacity={0.8}
-              >
-                <MaterialCommunityIcons name="pencil" size={20} color="#fe724c" />
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.name}>{profile.displayName}</Text>
-            <Text style={styles.username}>@ {profile.username}</Text>
-
-            <TouchableOpacity style={styles.editButton}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.editButtonText}>Edit Profile</Text>
-            </TouchableOpacity>
-
-            <View className="flex-row justify-center items-center">
-              <View className="flex-col items-center mr-10">
-                <Text className="font-lexend-bold text-xl text-white">{dummyUser.savedEateries}</Text>
-                <Text className="font-lexend-regular text-sm text-white">Eateries</Text>
-              </View>
-              <View className="flex-col items-center">
-                <Text className="font-lexend-bold text-xl text-white">{dummyUser.friendCount}</Text>
-                <Text className="font-lexend-regular text-sm text-white">Friends</Text>
-              </View>
-            </View>
-
-          </LinearGradient>
-
-          {/* Recently Saved */}
-          <View className="flex-col bg-white w-[350px] h-[145px] self-center rounded-2xl py-2 px-4"
+        <LinearGradient colors={['#D03939', '#FE724C']} style={styles.header}>
+          <View className="relative mt-12">
+            <View
                 style={{
                   shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 4,
-                  marginTop: -40,
-                }}>
-            <Text className="font-lexend-bold text-primary text-base mb-3">Recently Saved</Text>
-            <View className="flex-row items-center justify-between">
-              {dummyUser.recentEateries.map((eatery: any) => (
-                  <TouchableOpacity
-                      key={eatery.displayName}
-                      activeOpacity={0.8}
-                      className="mr-3 items-center"
-                  >
-                    <Image
-                        source={{ uri: eatery.photo }}
-                        className="w-[70px] h-[70px] rounded-full"
-                        resizeMode="cover"
-                    />
-                    <Text className="text-xs w-[80px] font-lexend-regular text-primary text-center mt-2" numberOfLines={1}>{eatery.displayName}</Text>
-                  </TouchableOpacity>
-              ))}
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 5,
+                  borderRadius: 60,
+                }}
+            >
+              {avatarPath ? (
+                  <Image
+                      source={{ uri: avatarPath }}
+                      className="w-[120px] h-[120px] rounded-full border-4 border-white"
+                      resizeMode="cover"
+                  />
+              ) : (
+                  <Image
+                      source={{ uri: profile.avatar_url }}
+                      className="w-[120px] h-[120px] rounded-full border-4 border-white"
+                      resizeMode="cover"
+                  />
+              )}
+
+            </View>
+
+            <TouchableOpacity
+                className="w-9 h-9 rounded-full bg-white items-center justify-center absolute bottom-0 right-0"
+                activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons name="pencil" size={20} color="#fe724c" />
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.name}>{profile.displayName}</Text>
+          <Text style={styles.username}>@{profile.username}</Text>
+
+          <TouchableOpacity style={styles.editButton}
+                            activeOpacity={0.8}
+          >
+            <Text style={styles.editButtonText}>Edit Profile</Text>
+          </TouchableOpacity>
+
+          <View className="flex-row justify-center items-center">
+            <View className="flex-col items-center mr-10">
+              <Text className="font-lexend-bold text-xl text-white">{dummyUser.savedEateries}</Text>
+              <Text className="font-lexend-regular text-sm text-white">Eateries</Text>
+            </View>
+            <View className="flex-col items-center">
+              <Text className="font-lexend-bold text-xl text-white">{dummyUser.friendCount}</Text>
+              <Text className="font-lexend-regular text-sm text-white">Friends</Text>
             </View>
           </View>
 
-          {/* Favourites */}
+        </LinearGradient>
+
+        {/* Recently Saved */}
+        <View className="flex-col bg-white w-[350px] h-[145px] self-center rounded-2xl py-2 px-4"
+              style={{
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                marginTop: -40,
+              }}>
+          <Text className="font-lexend-bold text-primary text-base mb-3">Recently Saved</Text>
+          <View className="flex-row items-center justify-between">
+            {dummyUser.recentEateries.map((eatery: any) => (
+                <TouchableOpacity
+                    key={eatery.displayName}
+                    activeOpacity={0.8}
+                    className="mr-3 items-center"
+                >
+                  <Image
+                      source={{ uri: eatery.photo }}
+                      className="w-[70px] h-[70px] rounded-full"
+                      resizeMode="cover"
+                  />
+                  <Text className="text-xs w-[80px] font-lexend-regular text-primary text-center mt-2" numberOfLines={1}>{eatery.displayName}</Text>
+                </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Favourites */}
         <View
             className="flex-col bg-white w-[350px] h-[175px] self-center rounded-2xl py-2 px-4 mt-4 mb-4"
             style={{
@@ -230,7 +252,7 @@ export default function Profile() {
                           }}
                       >
                         <Text
-                            className="text-white text-xs font-lexend-regular ml-2 pr-2"
+                            className="text-white text-xs font-lexend-medium ml-2"
                             numberOfLines={2}
                         >
                           {eatery.displayName}

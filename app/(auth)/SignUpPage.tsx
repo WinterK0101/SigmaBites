@@ -1,12 +1,7 @@
 import { Text, StyleSheet, TextInput, TouchableOpacity, Alert, SafeAreaView, View, Image } from 'react-native';
 import React, { useState } from 'react';
-<<<<<<< HEAD:app/(auth)/SignUpPage.tsx
-import { auth } from '../../FirebaseConfig';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-=======
->>>>>>> origin/supabase:app/SignUpPage.tsx
 import { router } from 'expo-router';
-import { supabase } from '../SupabaseConfig';
+import { supabase } from '@/SupabaseConfig';
 import * as ImagePicker from 'expo-image-picker';
 
 const SignUpScreen = () => {
@@ -37,8 +32,8 @@ const SignUpScreen = () => {
       };
 
       const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert(updateUsername);
+          .from('profiles')
+          .upsert(updateUsername);
 
       if (profileError) {
         Alert.alert(profileError.message);
@@ -69,10 +64,10 @@ const SignUpScreen = () => {
     const path = `${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
-      .from('avatars')
-      .upload(path, arraybuffer, {
-        contentType: image.mimeType ?? 'image/jpeg',
-      });
+        .from('avatars')
+        .upload(path, arraybuffer, {
+          contentType: image.mimeType ?? 'image/jpeg',
+        });
 
     if (uploadError) {
       Alert.alert(uploadError.message);
@@ -81,7 +76,7 @@ const SignUpScreen = () => {
 
     const { data } = await supabase.storage.from('avatars').download(path);
     console.log("path is" + path)
-    
+
     if (data){
       setPath(path)
       const fr = new FileReader()
@@ -90,61 +85,64 @@ const SignUpScreen = () => {
         setAvatarPath(fr.result as string)
       }
     }
-    
+
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.cloudWrapper}>
-        <View style={styles.cloudCircle1} />
-        <View style={styles.cloudCircle2} />
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.cloudWrapper}>
+          <View style={styles.cloudCircle1} />
+          <View style={styles.cloudCircle2} />
+        </View>
 
-      <Text style={styles.title}>Sign Up</Text>
+        <Text style={styles.title}>Sign Up</Text>
 
-      <TouchableOpacity style={styles.profilePicPlaceholder} onPress={uploadAvatar}>
-        <Text style={styles.profilePicText}>Add a profile{'\n'}picture</Text>
-      </TouchableOpacity>
+        {/* Conditional rendering: show either placeholder or uploaded image */}
+        {avatarPath ? (
+            <TouchableOpacity onPress={uploadAvatar} style={styles.profilePicContainer}>
+              <Image
+                  source={{ uri: avatarPath }}
+                  style={styles.profilePicImage}
+              />
+            </TouchableOpacity>
+        ) : (
+            <TouchableOpacity style={styles.profilePicPlaceholder} onPress={uploadAvatar}>
+              <Text style={styles.profilePicText}>Add a profile{'\n'}picture</Text>
+            </TouchableOpacity>
+        )}
 
-      {avatarPath && (
-      <Image
-        source={{ uri: avatarPath }}
-        style={{ width: 120, height: 120, borderRadius: 60, alignSelf: 'center', marginBottom: 20 }}
-      />
-      )}
+        <View style={styles.centerAlign}>
+          <Text style={styles.inputLabel}>Username</Text>
+          <TextInput
+              style={styles.textInput}
+              placeholder="username"
+              value={username}
+              onChangeText={setUsername}
+          />
 
-      <View style={styles.centerAlign}>
-        <Text style={styles.inputLabel}>Username</Text>
-        <TextInput
-          style={styles.textInput}
-          placeholder="username"
-          value={username}
-          onChangeText={setUsername}
-        />
+          <Text style={styles.inputLabel}>Email</Text>
+          <TextInput
+              style={styles.textInput}
+              placeholder="email"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+          />
 
-        <Text style={styles.inputLabel}>Email</Text>
-        <TextInput
-          style={styles.textInput}
-          placeholder="email"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-        />
+          <Text style={styles.inputLabel}>Password</Text>
+          <TextInput
+              style={styles.textInput}
+              placeholder="password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+          />
 
-        <Text style={styles.inputLabel}>Password</Text>
-        <TextInput
-          style={styles.textInput}
-          placeholder="password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-
-        <TouchableOpacity style={styles.signUpButton} onPress={signUpWithEmail}>
-          <Text style={styles.signUpButtonText}>Sign up</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+          <TouchableOpacity style={styles.signUpButton} onPress={signUpWithEmail}>
+            <Text style={styles.signUpButtonText}>Sign up</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
   );
 };
 
@@ -167,7 +165,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: -1,
   },
-   cloudCircle1: {
+  cloudCircle1: {
     position:'absolute',
     width: 350,
     height: 300,
@@ -211,6 +209,17 @@ const styles = StyleSheet.create({
     color: '#aaa',
     textAlign: 'center',
     fontSize: 14,
+  },
+  profilePicContainer: {
+    alignSelf: 'center',
+    marginBottom: 40,
+  },
+  profilePicImage: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
   },
   centerAlign: {
     alignItems: 'center',
