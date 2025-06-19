@@ -81,39 +81,77 @@ export default function StartGroupSession() {
                     />
                 </View>
 
+                {/* Invited Friends Display */}
+                {invitedFriends.length > 0 && (
+                    <View className="bg-white rounded-2xl p-4 mt-6 border-grey border-2 shadow-inner">
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                        >
+                            {invitedFriends.map((friend) => (
+                                <View key={friend.id} className="mr-3 items-center" style={{ width: 70 }}>
+                                    <View className="relative">
+                                        <RemoteImage
+                                            filePath={friend.avatar_url}
+                                            bucket="avatars"
+                                            style={{ width: 50, height: 50, borderRadius: 25 }}
+                                        />
+                                        <TouchableOpacity
+                                            onPress={() => uninviteFriend(friend)}
+                                            className="absolute -right-1 bg-accent rounded-full"
+                                            style={{ width: 20, height: 20, justifyContent: 'center', alignItems: 'center' }}
+                                            activeOpacity={0.7}
+                                        >
+                                            <MaterialCommunityIcons name="close" size={14} color="white" />
+                                        </TouchableOpacity>
+                                    </View>
+                                    <Text
+                                        className="font-lexend-regular text-primary text-xs mt-2 text-center"
+                                        numberOfLines={1}
+                                        ellipsizeMode="tail"
+                                    >
+                                        {friend.name}
+                                    </Text>
+                                </View>
+                            ))}
+                        </ScrollView>
+                    </View>
+                )}
+
+                {/*List of Friends*/}
                 <Text className="font-lexend-bold text-base text-primary mt-6">Friends</Text>
 
                 <ScrollView className="mt-2 flex-grow">
-                        {userFriends.length === 0 ? (
-                            <Text>No friends found.</Text>
-                        ) : (
-                            userFriends.map((friend) => (
-                                <TouchableOpacity
-                                    className="rounded-2xl w-full mb-2 h-20 border-2 px-6 flex-row items-center flex-start"
-                                    key={friend.id}
-                                    activeOpacity={0.7}
-                                    onPress={()=>{
-                                        if (!invitedFriends.includes(friend)) inviteFriend(friend);
-                                        else uninviteFriend(friend);
-                                    }}
-                                    style={{
-                                        backgroundColor: invitedFriends.includes(friend) ? '#FFF2F2' : 'white',
-                                        borderColor: invitedFriends.includes(friend) ? '#FE724C' : '#d9d9d9',
-                                    }}
-                                >
-                                    <RemoteImage filePath={friend.avatar_url} bucket="avatars" style={{width: 50, height: 50, borderRadius: 100}} />
-                                    <View className="flex-col ml-6">
-                                        <Text className="font-lexend-bold text-primary text-base">{friend.name}</Text>
-                                        <Text className="font-lexend-regular text-primary text-xs">@{friend.username}</Text>
+                    {userFriends.length === 0 ? (
+                        <Text>No friends found.</Text>
+                    ) : (
+                        userFriends.map((friend) => (
+                            <TouchableOpacity
+                                className="rounded-2xl w-full mb-2 h-20 border-2 px-6 flex-row items-center flex-start"
+                                key={friend.id}
+                                activeOpacity={0.7}
+                                onPress={()=>{
+                                    if (!invitedFriends.includes(friend)) inviteFriend(friend);
+                                    else uninviteFriend(friend);
+                                }}
+                                style={{
+                                    backgroundColor: invitedFriends.includes(friend) ? '#FFF2F2' : 'white',
+                                    borderColor: invitedFriends.includes(friend) ? '#FE724C' : '#d9d9d9',
+                                }}
+                            >
+                                <RemoteImage filePath={friend.avatar_url} bucket="avatars" style={{width: 50, height: 50, borderRadius: 100}} />
+                                <View className="flex-col ml-6">
+                                    <Text className="font-lexend-bold text-primary text-base">{friend.name}</Text>
+                                    <Text className="font-lexend-regular text-primary text-xs">@{friend.username}</Text>
+                                </View>
+                                {invitedFriends.includes(friend) ? (
+                                    <View className="ml-auto rounded-full bg-accent p-2">
+                                        <MaterialCommunityIcons name="check" size={24} color="white" />
                                     </View>
-                                    {invitedFriends.includes(friend) ? (
-                                        <View className="ml-auto rounded-full bg-accent p-2">
-                                            <MaterialCommunityIcons name="check" size={24} color="white" />
-                                        </View>
-                                    ) : null}
-                                </TouchableOpacity>
-                            ))
-                        )}
+                                ) : null}
+                            </TouchableOpacity>
+                        ))
+                    )}
                 </ScrollView>
             </View>
         </View>
