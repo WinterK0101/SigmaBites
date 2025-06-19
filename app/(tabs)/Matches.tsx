@@ -20,35 +20,35 @@ const itemSize = (width - 48) / 2;
 
 export default function Matches() {
   return (
-    <SafeAreaView style={styles.container}>
-      <View className="px-4 pt-8">
-        <Text className="font-baloo-regular text-accent text-4xl py-4">Match History</Text>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View className="px-4 pt-8">
+          <Text className="font-baloo-regular text-accent text-4xl py-4">Match History</Text>
+        </View>
 
-      <FlatList
-        key={'2-columns'}
-        data={matchHistoryData}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        columnWrapperStyle={styles.columnWrapper}
-        renderItem={({ item }) => (
-          <View style={[styles.matchItem, { width: itemSize }]}>
-            <ImageBackground
-              source={{ uri: item.image }}
-              style={styles.imageBackground}
-              imageStyle={styles.imageStyle}
-            >
-              <View style={styles.overlay} />
-              <View style={styles.textContainer}>
-                <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.restaurant}>{item.restaurant}</Text>
-              </View>
-            </ImageBackground>
-          </View>
-        )}        
-        contentContainerStyle={styles.listContent}
-      />
-    </SafeAreaView>
+        <FlatList
+            key={'2-columns'}
+            data={matchHistoryData}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            columnWrapperStyle={styles.columnWrapper}
+            renderItem={({ item }) => (
+                <View style={[styles.matchItem, { width: itemSize }]}>
+                  <ImageBackground
+                      source={{ uri: item.image }}
+                      style={styles.imageBackground}
+                      imageStyle={styles.imageStyle}
+                  >
+                    <View style={styles.overlay} />
+                    <View style={styles.textContainer}>
+                      <Text style={styles.name}>{item.name}</Text>
+                      <Text style={styles.restaurant}>{item.restaurant}</Text>
+                    </View>
+                  </ImageBackground>
+                </View>
+            )}
+            contentContainerStyle={styles.listContent}
+        />
+      </SafeAreaView>
   );
 }
 

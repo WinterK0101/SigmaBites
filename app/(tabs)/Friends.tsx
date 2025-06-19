@@ -1,4 +1,7 @@
 import React from 'react';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { useRouter } from 'expo-router'; // ✅ Expo Router for navigation
+
 import {
   View,
   Text,
@@ -44,40 +47,54 @@ const friends: Friend[] = [
 ];
 
 export default function FriendsScreen() {
-  // ✅ 3. Type the item in renderItem
+  const router = useRouter(); // ✅ useRouter from expo-router
+
   const renderItem = ({ item }: { item: Friend }) => (
-    <View style={styles.friendCard}>
-      <Image source={item.image} style={styles.avatar} />
-      <View>
-        <Text style={styles.name}>{item.name}</Text>
-        <Text style={styles.saved}>
-          Saved <Text style={styles.restaurant}>{item.restaurant}</Text> {item.date}
-        </Text>
+      <View style={styles.friendCard}>
+        <Image source={item.image} style={styles.avatar} />
+        <View>
+          <Text style={styles.name}>{item.name}</Text>
+          <Text style={styles.saved}>
+            Saved <Text style={styles.restaurant}>{item.restaurant}</Text> {item.date}
+          </Text>
+        </View>
       </View>
-    </View>
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Friends</Text>
-        <TouchableOpacity style={styles.addButton}>
-          <Text style={styles.addButtonText}>+ Add Friends</Text>
-        </TouchableOpacity>
+      <View style={styles.container}>
+        {/* Header with title and buttons */}
+        <View style={styles.header}>
+          <Text style={styles.headerText}>Friends</Text>
+          <View style={styles.headerRight}>
+            {/* Mail Icon to go to Inbox */}
+            <TouchableOpacity onPress={() => router.push('/inbox')}>
+              <Icon name="mail-outline" size={24} color="#FF6B3E" style={styles.mailIcon} />
+            </TouchableOpacity>
+
+            {/* Add Friend Button */}
+            <TouchableOpacity style={styles.addButton} onPress={() => router.push('/Add-friend')}>
+              <Text style={styles.addButtonText}>+ Add</Text>
+            </TouchableOpacity>
+
+          </View>
+        </View>
+
+        {/* Subheader */}
+        <Text style={styles.subHeader}>{friends.length} Friends</Text>
+
+        {/* Friend List */}
+        <FlatList
+            data={friends}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.list}
+        />
       </View>
-
-      <Text style={styles.subHeader}>3 Friends</Text>
-
-      <FlatList
-        data={friends}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-      />
-    </View>
   );
 }
 
+// ✅ Styling
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -92,9 +109,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   headerText: {
-    fontSize: 28,
+    fontSize: 44,
     fontWeight: 'bold',
     color: '#FF6B3E',
+    fontFamily: 'Baloo-Regular',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  mailIcon: {
+    marginRight: 10,
   },
   addButton: {
     backgroundColor: '#FF6B3E',
@@ -111,7 +137,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   list: {
-    paddingBottom: 100, // Leave space for tab bar
+    paddingBottom: 100,
   },
   friendCard: {
     flexDirection: 'row',
@@ -139,6 +165,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     marginTop: 2,
+    fontFamily: 'Lexend-Regular',
   },
   restaurant: {
     color: '#FF6B3E',
