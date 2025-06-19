@@ -43,3 +43,10 @@ export interface EateryFilters {
     openNowToggle: boolean;
 }
 
+export interface User {
+    displayName: string;
+    username: string;
+    email: string;
+    profilePicture: string;
+    password: string;
+}
