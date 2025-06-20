@@ -1,40 +1,29 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect} from 'react';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useRouter } from 'expo-router';
+import {useFocusEffect, useRouter} from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { User } from '@/interfaces/interfaces';
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
-import {fetchUserFriends} from "@/services/friendService";
-import {useSession} from "@/context/SessionContext";
+import { useSession } from "@/context/SessionContext";
 import RemoteImage from "@/components/RemoteImage";
+import { useFriendsStore } from "@/store/friendsStore";
 
 export default function FriendsScreen() {
   const router = useRouter();
-
-  // Getting Friends
   const user = useSession()?.user;
-  const [userFriends, setUserFriends] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { friends, isLoading, fetchFriends } = useFriendsStore();
 
+  // Fetch friends upon login
   useEffect(() => {
-    if (!user?.id) return;
-
-    const loadFriends = async () => {
-      setLoading(true);
-      const friends = await fetchUserFriends(user.id);
-      setUserFriends(friends || []);
-      setLoading(false);
-    };
-
-    loadFriends();
+    if (user?.id) fetchFriends(user.id);
   }, [user?.id]);
 
-  const handleFriendPress = (friend: any) => {
+  const handleFriendPress = (friend: User) => {
     router.push({
       pathname: '/(modals)/OtherUserProfile',
       params: { username: friend.username },
@@ -70,14 +59,14 @@ export default function FriendsScreen() {
 
           {/* Subheader */}
           <Text className="text-primary opacity-80 text-base font-lexend-regular mb-6">
-            {userFriends.length} Friends
+            {friends.length} Friends
           </Text>
 
           {/* Friend List */}
           <ScrollView className="mt-2 flex-grow" style={{ paddingBottom: 20 }}>
-            {loading ? (
+            {isLoading ? (
                 <Text className="text-center text-primary opacity-60 mt-10">Loading friends...</Text>
-            ) : userFriends.length === 0 ? (
+            ) : friends.length === 0 ? (
                 <View className="flex-1 justify-center items-center mt-20">
                   <Text className="text-center text-primary opacity-60 text-lg font-lexend-bold">No friends yet</Text>
                   <Text className="text-center text-primary opacity-40 text-sm mt-2 font-lexend-regular">
@@ -85,29 +74,28 @@ export default function FriendsScreen() {
                   </Text>
                 </View>
             ) : (
-                userFriends
-                    .map((friend) => (
-                        <TouchableOpacity
-                            className="rounded-2xl w-full mb-2 h-20 border-2 px-6 flex-row items-center flex-start"
-                            key={friend.id}
-                            activeOpacity={0.7}
-                            style={{
-                              backgroundColor: 'white',
-                              borderColor: '#d9d9d9',
-                            }}
-                            onPress={() => handleFriendPress(friend)}
-                        >
-                          <RemoteImage
-                              filePath={friend.avatar_url}
-                              bucket="avatars"
-                              style={{width: 50, height: 50, borderRadius: 100}}
-                          />
-                          <View className="flex-col ml-6 flex-1">
-                            <Text className="font-lexend-bold text-primary text-base">{friend.name}</Text>
-                            <Text className="font-lexend-regular text-primary text-xs">@{friend.username}</Text>
-                          </View>
-                        </TouchableOpacity>
-                    ))
+                friends.map((friend) => (
+                    <TouchableOpacity
+                        className="rounded-2xl w-full mb-2 h-20 border-2 px-6 flex-row items-center flex-start"
+                        key={friend.id}
+                        activeOpacity={0.7}
+                        style={{
+                          backgroundColor: 'white',
+                          borderColor: '#d9d9d9',
+                        }}
+                        onPress={() => handleFriendPress(friend)}
+                    >
+                      <RemoteImage
+                          filePath={friend.avatar_url}
+                          bucket="avatars"
+                          style={{ width: 50, height: 50, borderRadius: 100 }}
+                      />
+                      <View className="flex-col ml-6 flex-1">
+                        <Text className="font-lexend-bold text-primary text-base">{friend.name}</Text>
+                        <Text className="font-lexend-regular text-primary text-xs">@{friend.username}</Text>
+                      </View>
+                    </TouchableOpacity>
+                ))
             )}
           </ScrollView>
         </View>

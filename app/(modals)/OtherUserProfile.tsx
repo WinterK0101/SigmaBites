@@ -10,16 +10,15 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { supabase } from '@/SupabaseConfig';
 import { useSession } from '@/context/SessionContext';
 import { fetchUserByUsername } from "@/services/userService";
 import {FRIEND_STATUS, FriendStatus} from '@/constants/friendStatus';
 import ConfirmationModal from "@/components/ConfirmationModal";
-import FriendRequestModal from "@/components/FriendRequestModal";
 import RemoteImage from "@/components/RemoteImage";
 import {dummyUser} from "@/data/dummyUser";
-import {cancelFriendRequest, getFriendshipStatus, rejectFriendRequest, removeFriend} from "@/services/friendService";
-import {User} from '@/interfaces/interfaces';
+import {cancelFriendRequest, getFriendshipStatus, removeFriend} from "@/services/friendService";
+import SendFriendRequestModal from "@/app/(modals)/SendFriendRequestModal";
+import AcceptFriendRequestModal from "@/app/(modals)/AcceptFriendRequestModal";
 
 const getFriendButtonText = (status: FriendStatus) => {
     switch (status) {
@@ -300,13 +299,21 @@ export default function OtherUserProfile() {
             </View>
 
             {/* Friend Request Modal (for send/accept) */}
-            <FriendRequestModal
-                visible={showFriendRequestModal}
-                user={profile}
-                action={friendRequestAction}
-                onClose={() => setShowFriendRequestModal(false)}
-                onSuccess={refreshFriendStatus}
-            />
+            {friendRequestAction === 'send' ? (
+                <SendFriendRequestModal
+                    visible={showFriendRequestModal}
+                    user={profile}
+                    onClose={() => setShowFriendRequestModal(false)}
+                    onSuccess={refreshFriendStatus}
+                />
+            ) : (
+                <AcceptFriendRequestModal
+                    visible={showFriendRequestModal}
+                    user={profile}
+                    onClose={() => setShowFriendRequestModal(false)}
+                    onSuccess={refreshFriendStatus}
+                />
+            )}
 
             {/* Unfriend Confirmation Modal */}
             <ConfirmationModal

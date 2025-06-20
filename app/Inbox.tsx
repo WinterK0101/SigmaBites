@@ -8,18 +8,21 @@ import {useSession} from "@/context/SessionContext";
 import {supabase} from "@/SupabaseConfig";
 import {fetchUserByID} from "@/services/userService";
 import RemoteImage from "@/components/RemoteImage";
-import FriendRequestModal from "@/components/FriendRequestModal";
+import AcceptFriendRequestModal from "@/app/(modals)/AcceptFriendRequestModal";
+import { useFriendsStore } from "@/store/friendsStore";
 
 const highlightWords = ["friend", "group swipe"];
 
 type Message = {
-    inboxID: string; // Saves the actual inbox uid
-    requestID: string; // Saves either friendship or invite id
+    inboxID: string;
+    requestID: string;
     senderName: string;
     senderProfilePicture: string;
     time: string;
     messageText: string;
-    type: string; // either friendship or invite
+    type: string;
+    senderID: string;
+    senderUsername: string;
 };
 
 function getTimeAgo(isoString: string): string {
@@ -65,6 +68,8 @@ const retrieveRequests = async (currentUserId: string): Promise<Message[]> => {
                 requestID: messageID,
                 senderName: senderData.name,
                 senderProfilePicture: senderData.avatar_url,
+                senderID: request.sender,
+                senderUsername: senderData.username,
                 time: getTimeAgo(request.created_at),
                 messageText,
                 type: request.type,
@@ -79,6 +84,9 @@ export default function InboxScreen() {
     const router = useRouter();
     const currentUser = useSession()?.user;
     const [messages, setMessages] = useState<Message[]>([]);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
+    const { fetchFriends } = useFriendsStore(); // Get fetchFriends from Zustand store
 
     useEffect(() => {
         if (currentUser) {
@@ -86,8 +94,32 @@ export default function InboxScreen() {
         }
     }, [currentUser]);
 
+    const handleRequestPress = (item: Message) => {
+        if (item.type === 'friendship') {
+            const userForModal = {
+                id: item.senderID,
+                username: item.senderUsername,
+                name: item.senderName,
+                avatar_url: item.senderProfilePicture,
+            };
+
+            setSelectedUser(userForModal);
+            setModalVisible(true);
+        } else if (item.type === 'invite') {
+            console.log('Group invite pressed:', item);
+        }
+    };
+
+    const handleModalSuccess = async () => {
+        if (currentUser) {
+            // Refresh both the inbox and friends list
+            await retrieveRequests(currentUser.id).then(setMessages).catch(console.error);
+            await fetchFriends(currentUser.id); // Update friends list in Zustand store
+        }
+    };
+
     const renderItem = ({ item }: { item: Message }) => (
-        <TouchableOpacity style={styles.messageCard} activeOpacity={0.7} onPress={() => {}}>
+        <TouchableOpacity style={styles.messageCard} activeOpacity={0.7} onPress={() => handleRequestPress(item)}>
             <RemoteImage
                 filePath={item.senderProfilePicture || 'default-profile.png'}
                 bucket="avatars"
@@ -133,6 +165,12 @@ export default function InboxScreen() {
                 />
             </View>
 
+            <AcceptFriendRequestModal
+                visible={modalVisible}
+                onClose={() => setModalVisible(false)}
+                user={selectedUser}
+                onSuccess={handleModalSuccess}
+            />
         </SafeAreaView>
     );
 }
