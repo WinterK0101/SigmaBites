@@ -1,0 +1,352 @@
+import React, { useState, useEffect } from 'react';
+import {
+    View,
+    Text,
+    StyleSheet,
+    ScrollView,
+    Image,
+    TouchableOpacity,
+    Modal,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { supabase } from '@/SupabaseConfig';
+import { useSession } from '@/context/SessionContext';
+import { fetchUserByUsername } from "@/services/userService";
+import { FRIEND_STATUS } from '@/constants/friendStatus';
+import ConfirmationModal from "@/components/ConfirmationModal";
+import RemoteImage from "@/components/RemoteImage";
+import {dummyUser} from "@/data/dummyUser";
+
+const getFriendButtonText = (status) => {
+    switch (status) {
+        case FRIEND_STATUS.NOT_FRIENDS:
+            return 'Add Friend';
+        case FRIEND_STATUS.REQUEST_SENT:
+            return 'Requested';
+        case FRIEND_STATUS.REQUEST_RECEIVED:
+            return 'Accept Request';
+        case FRIEND_STATUS.FRIENDS:
+            return 'Friends';
+        default:
+            return 'Add Friend';
+    }
+};
+
+const getFriendButtonStyle = (status, styles) => {
+    switch (status) {
+        case FRIEND_STATUS.REQUEST_SENT:
+            return [styles.friendButton, styles.requestedButton];
+        case FRIEND_STATUS.FRIENDS:
+            return [styles.friendButton, styles.friendsButton];
+        default:
+            return styles.friendButton;
+    }
+};
+
+const getFriendButtonTextStyle = (status, styles) => {
+    switch (status) {
+        case FRIEND_STATUS.REQUEST_SENT:
+            return [styles.friendButtonText, styles.requestedButtonText];
+        case FRIEND_STATUS.FRIENDS:
+            return [styles.friendButtonText, styles.friendsButtonText];
+        default:
+            return styles.friendButtonText;
+    }
+};
+
+export default function OtherUserProfile() {
+    const router = useRouter();
+    const session = useSession();
+    const { username } = useLocalSearchParams();
+
+    const [profile, setProfile] = useState({
+        displayName: 'Loading...',
+        username: 'Loading...',
+        avatar_url: 'default-profile.png',
+        id: null,
+    });
+    const [friendStatus, setFriendStatus] = useState(FRIEND_STATUS.NOT_FRIENDS);
+    const [isLoading, setIsLoading] = useState(false);
+    const [showUnfriendModal, setShowUnfriendModal] = useState(false);
+
+    useEffect(() => {
+        async function fetchProfileAndFriendStatus() {
+            if (!session?.user || !username) return;
+
+            try {
+                const data = await fetchUserByUsername(username as string);
+
+                if (data) {
+                    const newProfile = {
+                        displayName: data.name || 'No name',
+                        username: data.username || 'No username',
+                        avatar_url: data.avatar_url || 'https://i.pinimg.com/564x/39/33/f6/3933f64de1724bb67264818810e3f2cb.jpg',
+                        id: data.id,
+                    };
+
+                    setProfile(newProfile);
+
+                   // await fetchFriendStatus(data.id);
+                }
+            } catch (error) {
+                console.error('Error in fetchProfileAndFriendStatus:', error);
+            }
+        }
+
+        fetchProfileAndFriendStatus();
+    }, [session, username]);
+
+    const handleFriendAction = () => {
+        // Placeholder for your friend logic (send, cancel, unfriend, etc.)
+        console.log('Friend action triggered.');
+    };
+
+    const handleUnfriend = () => {
+        console.log('Unfriend triggered.');
+        setShowUnfriendModal(false);
+    };
+
+    return (
+        <View style={styles.container}>
+            {/* Back Button */}
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
+            </TouchableOpacity>
+
+            {/* Profile Header */}
+            <LinearGradient colors={['#D03939', '#FE724C']} style={styles.header}>
+                <View className="relative mt-12">
+                    <View style={styles.avatarShadow}>
+                        <RemoteImage
+                            filePath={profile.avatar_url}
+                            style={{
+                                width: 120,
+                                height: 120,
+                                borderRadius: 60,
+                                borderWidth: 4,
+                                borderColor: 'white',
+                            }}
+                        />
+                    </View>
+                </View>
+
+                <Text style={styles.name}>{profile.displayName}</Text>
+                <Text style={styles.username}>@{profile.username}</Text>
+
+                <TouchableOpacity
+                    style={getFriendButtonStyle(friendStatus, styles)}
+                    activeOpacity={0.8}
+                    onPress={handleFriendAction}
+                    disabled={isLoading}
+                >
+                    <Text style={getFriendButtonTextStyle(friendStatus, styles)}>
+                        {isLoading ? 'Loading...' : getFriendButtonText(friendStatus)}
+                    </Text>
+                </TouchableOpacity>
+
+                <View className="flex-row justify-center items-center">
+                    <View className="flex-col items-center mr-10">
+                        <Text className="font-lexend-bold text-xl text-white">{dummyUser.savedEateries}</Text>
+                        <Text className="font-lexend-regular text-sm text-white">Eateries</Text>
+                    </View>
+                    <View className="flex-col items-center">
+                        <Text className="font-lexend-bold text-xl text-white">{dummyUser.friendCount}</Text>
+                        <Text className="font-lexend-regular text-sm text-white">Friends</Text>
+                    </View>
+                </View>
+            </LinearGradient>
+
+            {/* Recently Saved */}
+            <View
+                className="flex-col bg-white w-[350px] h-[145px] self-center rounded-2xl py-2 px-4"
+                style={{
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 4,
+                    marginTop: -40,
+                }}
+            >
+                <Text className="font-lexend-bold text-primary text-base mb-3">Recently Saved</Text>
+                <View className="flex-row items-center justify-between">
+                    {dummyUser.recentEateries.map((eatery) => (
+                        <TouchableOpacity
+                            key={eatery.displayName}
+                            activeOpacity={0.8}
+                            className="mr-3 items-center"
+                        >
+                            <Image
+                                source={{ uri: eatery.photo }}
+                                className="w-[70px] h-[70px] rounded-full"
+                                resizeMode="cover"
+                            />
+                            <Text
+                                className="text-xs w-[80px] font-lexend-regular text-primary text-center mt-2"
+                                numberOfLines={1}
+                            >
+                                {eatery.displayName}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            </View>
+
+            {/* Favourites */}
+            <View
+                className="flex-col bg-white w-[350px] h-[175px] self-center rounded-2xl py-2 px-4 mt-4 mb-4"
+                style={{
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 4,
+                }}
+            >
+                <Text className="font-lexend-bold text-primary text-base">Favourites</Text>
+
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    <View className="flex-row items-center">
+                        {dummyUser.favouriteEateries.map((eatery) => (
+                            <TouchableOpacity
+                                key={eatery.displayName}
+                                activeOpacity={0.8}
+                                className="mr-3 items-center"
+                            >
+                                <View style={{ position: 'relative' }}>
+                                    <Image
+                                        source={{ uri: eatery.photo }}
+                                        className="w-[110px] h-[120px] rounded-2xl"
+                                        resizeMode="cover"
+                                    />
+
+                                    <LinearGradient
+                                        colors={[
+                                            'rgba(0,0,0,0)',
+                                            'rgba(0,0,0,0.3)',
+                                            'rgba(102,51,25,0.8)'
+                                        ]}
+                                        locations={[0, 0.6, 1]}
+                                        style={{
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            width: 110,
+                                            height: 120,
+                                            borderRadius: 16,
+                                            justifyContent: 'flex-end',
+                                            paddingBottom: 8,
+                                        }}
+                                    >
+                                        <Text
+                                            className="text-white text-xs font-lexend-medium ml-2"
+                                            numberOfLines={2}
+                                        >
+                                            {eatery.displayName}
+                                        </Text>
+                                    </LinearGradient>
+                                </View>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </ScrollView>
+            </View>
+
+            {/* Unfriend Modal */}
+            <ConfirmationModal
+                visible={showUnfriendModal}
+                title="Remove Friend"
+                message={`Are you sure you want to remove ${profile.displayName} from your friends?`}
+                confirmText="Remove"
+                cancelText="Cancel"
+                onConfirm={handleUnfriend}
+                onCancel={() => setShowUnfriendModal(false)}
+            />
+        </View>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: 'offwhite',
+        overflow: 'hidden',
+    },
+    backButton: {
+        position: 'absolute',
+        top: 60,
+        left: 20,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 999,
+    },
+    header: {
+        width: 1000,
+        height: 440,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingTop: 50,
+        borderRadius: '100%',
+        alignSelf: 'center',
+        overflow: 'hidden',
+        top: -60,
+    },
+    avatarShadow: {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        borderRadius: 60,
+    },
+    name: {
+        fontSize: 32,
+        color: '#fff',
+        fontFamily: 'Baloo-regular',
+        marginTop: 12,
+    },
+    username: {
+        color: '#fff',
+        marginTop: -12,
+        fontSize: 14,
+        fontFamily: 'Lexend-regular',
+    },
+    friendButton: {
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        paddingHorizontal: 28,
+        paddingVertical: 6,
+        marginVertical: 12,
+    },
+    requestedButton: {
+        backgroundColor: 'rgba(255,255,255,0.3)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.5)',
+    },
+    friendsButton: {
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.4)',
+    },
+    friendButtonText: {
+        color: '#FE724C',
+        fontFamily: 'Baloo-regular',
+        fontSize: 16,
+    },
+    requestedButtonText: {
+        color: 'rgba(255,255,255,0.9)',
+    },
+    friendsButtonText: {
+        color: 'rgba(255,255,255,0.9)',
+    },
+    shadowBox: {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 0},
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        marginTop: -40,
+    },
+});

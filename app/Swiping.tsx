@@ -13,7 +13,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { distanceFromUser, getOpeningHoursForToday } from "@/services/apiDetailsForUI";
 import { useEffect, useRef, useState, useCallback } from "react";
 import {checkIfFriendLiked} from "@/services/checkIfFriendLiked";
-import {dummyEateries} from '@/dummyEateries';
+import {dummyEateries} from '@/data/dummyEateries';
 import {checkGroupSwipingCompleted} from "@/services/groupSwiping";
 
 export default function Swiping() {

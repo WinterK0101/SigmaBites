@@ -1,4 +1,3 @@
-import axios from "axios";
 import {Eatery, EateryFilters, Review} from "@/interfaces/interfaces";
 
 const BASE_URL = "https://maps.googleapis.com/maps/api/places"
@@ -82,7 +81,7 @@ const createEatery = (place: any) => {
         formattedAddress: place.formattedAddress || '',
         location: {
             latitude: place.location?.latitude || 0,
-            longitude: place.location?.longitude || 0, // Fixed: was latitude
+            longitude: place.location?.longitude || 0,
         },
         websiteUri: place.websiteUri || '',
         googleMapsUri: place.googleMapsUri || '',

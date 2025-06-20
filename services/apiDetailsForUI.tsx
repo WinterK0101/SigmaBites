@@ -22,7 +22,6 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
     return distance;
 }
 
-// Remove async since we're not doing any async operations
 export function distanceFromUser(userLocation: any, location: any) {
     // Add null checks to prevent errors
     if (!userLocation || !userLocation.coordinates || !location) {

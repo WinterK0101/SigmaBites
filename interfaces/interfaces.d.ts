@@ -45,7 +45,7 @@ export interface EateryFilters {
 
 export interface User {
     id: string;
-    displayName: string;
+    name: string;
     username: string;
     email: string;
     avatar_url: string;

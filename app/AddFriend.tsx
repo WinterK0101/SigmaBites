@@ -55,7 +55,10 @@ export default function AddFriendScreen() {
         }
 
         setSelectedUser(user);
-        setShowFriendRequestModal(true);
+        router.push({
+            pathname: '/(modals)/OtherUserProfile',
+            params: { username: user.username },
+        });
     };
 
     const removeFromRecentSearches = (userId: string) => {
