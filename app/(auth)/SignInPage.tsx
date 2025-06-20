@@ -15,7 +15,7 @@ const SignInScreen = () => {
     if (error) {
       Alert.alert(error.message)
     } else {
-      router.push('/(tabs)/Discover')
+      router.replace('/(tabs)/Discover')
     }
   }
 

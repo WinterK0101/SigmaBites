@@ -43,7 +43,7 @@ const SignUpScreen = () => {
         Alert.alert(profileError.message);
         console.log(profileError.message);
       } else {
-        router.push('/(tabs)/Discover');
+        router.replace('/(tabs)/Discover');
       }
     }
   }
@@ -148,7 +148,7 @@ const SignUpScreen = () => {
 
           <View style={styles.signInContainer}>
             <Text style={styles.signInText}>Already have an account? </Text>
-            <TouchableOpacity onPress={()=>router.replace('/(auth)/SignUpPage')}>
+            <TouchableOpacity onPress={()=>router.replace('/(auth)/SignInPage')}>
               <Text style={styles.signInLink}>Sign in</Text>
             </TouchableOpacity>
           </View>

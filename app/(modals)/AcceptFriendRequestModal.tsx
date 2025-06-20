@@ -9,19 +9,19 @@ import {
 } from 'react-native';
 import RemoteImage from '@/components/RemoteImage';
 import { useSession } from "@/context/SessionContext";
-import { sendFriendRequest } from "@/services/friendService";
+import { acceptFriendRequest, rejectFriendRequest } from "@/services/friendService";
 
-export default function SendFriendRequestModal({
-                                                   visible,
-                                                   onClose,
-                                                   user,
-                                                   onSuccess
-                                               }) {
+export default function AcceptFriendRequestModal({
+                                                     visible,
+                                                     onClose,
+                                                     user,
+                                                     onSuccess
+                                                 }) {
     const [loading, setLoading] = useState(false);
     const session = useSession();
     const currentUser = session?.user;
 
-    const handleSend = async () => {
+    const handleAccept = async () => {
         if (!currentUser || !user) {
             Alert.alert('Error', 'Missing user information');
             return;
@@ -29,12 +29,32 @@ export default function SendFriendRequestModal({
 
         setLoading(true);
         try {
-            await sendFriendRequest(currentUser.id, user.id);
-            Alert.alert('Success', `Friend request sent to @${user.username}!`);
+            await acceptFriendRequest(user.id, currentUser.id);
+            Alert.alert('Success', `You are now friends with @${user.username}!`);
             onSuccess?.();
             onClose();
         } catch (error) {
-            console.error('Error sending friend request:', error);
+            console.error('Error accepting friend request:', error);
+            Alert.alert('Error', error.message || 'Something went wrong');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleReject = async () => {
+        if (!currentUser || !user) {
+            Alert.alert('Error', 'Missing user information');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await rejectFriendRequest(user.id, currentUser.id);
+            Alert.alert('Friend Request Rejected', `Friend request from @${user.username} has been rejected.`);
+            onSuccess?.();
+            onClose();
+        } catch (error) {
+            console.error('Error rejecting friend request:', error);
             Alert.alert('Error', error.message || 'Something went wrong');
         } finally {
             setLoading(false);
@@ -47,6 +67,16 @@ export default function SendFriendRequestModal({
         <Modal visible={visible} transparent animationType="fade">
             <View style={styles.modalBackground}>
                 <View style={styles.modalContent}>
+                    {/* Close Button */}
+                    <TouchableOpacity
+                        style={styles.closeButton}
+                        onPress={onClose}
+                        activeOpacity={0.8}
+                        disabled={loading}
+                    >
+                        <Text style={styles.closeButtonText}>×</Text>
+                    </TouchableOpacity>
+
                     {/* Profile Picture */}
                     <View style={styles.profilePictureContainer}>
                         <RemoteImage
@@ -57,7 +87,7 @@ export default function SendFriendRequestModal({
                     </View>
 
                     {/* Title */}
-                    <Text style={styles.title}>Send Friend Request</Text>
+                    <Text style={styles.title}>Friend Request</Text>
 
                     {/* User Info */}
                     <View style={styles.userInfo}>
@@ -67,26 +97,28 @@ export default function SendFriendRequestModal({
                         )}
                     </View>
 
-                    <Text style={styles.message}>Do you want to send a friend request to this user?</Text>
+                    <Text style={styles.message}>@{user.username} wants to be your friend</Text>
 
                     {/* Buttons */}
                     <View style={styles.buttonRow}>
                         <TouchableOpacity
-                            style={styles.cancelButton}
-                            onPress={onClose}
+                            style={styles.rejectButton}
+                            onPress={handleReject}
                             activeOpacity={0.8}
                             disabled={loading}
                         >
-                            <Text style={styles.cancelButtonText}>Cancel</Text>
+                            <Text style={styles.rejectButtonText}>
+                                {loading ? 'Loading...' : 'Reject'}
+                            </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={styles.sendButton}
-                            onPress={handleSend}
+                            style={styles.acceptButton}
+                            onPress={handleAccept}
                             activeOpacity={0.8}
                             disabled={loading}
                         >
-                            <Text style={styles.sendButtonText}>
-                                {loading ? 'Loading...' : 'Send'}
+                            <Text style={styles.acceptButtonText}>
+                                {loading ? 'Loading...' : 'Accept'}
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -113,10 +145,32 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.2,
         shadowRadius: 8,
+        position: 'relative',
+    },
+    closeButton: {
+        position: 'absolute',
+        top: 16,
+        left: 16,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#f8f9fa',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1,
+        borderWidth: 1,
+        borderColor: '#e9ecef',
+    },
+    closeButtonText: {
+        fontSize: 20,
+        fontFamily: 'Lexend-Bold',
+        color: '#6c757d',
+        lineHeight: 20,
     },
     profilePictureContainer: {
         alignItems: 'center',
         marginBottom: 16,
+        marginTop: 16,
     },
     profilePicture: {
         width: 100,
@@ -166,7 +220,7 @@ const styles = StyleSheet.create({
         marginTop: 8,
         gap: 12,
     },
-    cancelButton: {
+    rejectButton: {
         flex: 1,
         paddingVertical: 14,
         paddingHorizontal: 16,
@@ -178,14 +232,14 @@ const styles = StyleSheet.create({
         borderColor: '#FE724C',
         minHeight: 44,
     },
-    cancelButtonText: {
+    rejectButtonText: {
         color: '#FE724C',
         fontFamily: 'Lexend-Medium',
         fontSize: 14,
         textAlign: 'center',
         lineHeight: 16,
     },
-    sendButton: {
+    acceptButton: {
         flex: 1,
         paddingVertical: 14,
         paddingHorizontal: 16,
@@ -197,7 +251,7 @@ const styles = StyleSheet.create({
         borderColor: '#FE724C',
         minHeight: 44,
     },
-    sendButtonText: {
+    acceptButtonText: {
         color: 'white',
         fontFamily: 'Lexend-Medium',
         fontSize: 14,

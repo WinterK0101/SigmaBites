@@ -15,14 +15,12 @@ import {icons} from "@/constants/icons";
 import { searchUsersByUsername } from '@/services/userService';
 import {User} from '@/interfaces/interfaces'
 import RemoteImage from "@/components/RemoteImage";
-import FriendRequestModal from "@/app/(modals)/SendFriendRequestModal";
 
 export default function AddFriendScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<User[]>([]);
     const [recentSearches, setRecentSearches] = useState<User[]>([]);
     const router = useRouter();
-    const [showFriendRequestModal, setShowFriendRequestModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
 
     useEffect(() => {
@@ -166,14 +164,6 @@ export default function AddFriendScreen() {
 
                 </View>
             </View>
-            <FriendRequestModal
-                visible={showFriendRequestModal}
-                onClose={() => {
-                    setShowFriendRequestModal(false);
-                    setSelectedUser(null);
-                }}
-                user={selectedUser}
-            />
         </SafeAreaView>
     );
 }

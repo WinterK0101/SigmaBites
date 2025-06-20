@@ -54,7 +54,7 @@ const TabLayout = () => {
             <Tab.Screen name="Matches"
                         component={Matches}
                         options={{
-                            title: "Matches",
+                            title: "Like History",
                             tabBarIcon: ({ focused, color }) => (
                                 <icons.matches height={25} width={25} stroke={color}/>
                             )
