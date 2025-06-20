@@ -58,7 +58,6 @@ export default function RootLayout() {
     return (
         <SessionProvider>
             <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="index" />
                 {/*<Stack.Screen name="StartupScreen" />*/}
                 <Stack.Screen name="index" />
                 <Stack.Screen name="(tabs)" />
