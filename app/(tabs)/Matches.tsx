@@ -1,7 +1,12 @@
 import { View, Text, FlatList, StyleSheet, ImageBackground, Dimensions } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useEffect, useState } from 'react';
+import { supabase } from '@/SupabaseConfig';
+import { useSession } from '@/context/SessionContext';
 
-const matchHistoryData = [
+
+//const matchHistoryData: Array<any> = [];
+/* const matchHistoryData = [
   { id: '1', name: 'Ajisen Ramen', restaurant: '12.0km', image: 'https://ucarecdn.com/14373564-94e1-48f6-bcd5-a99767cbc5f2/-/crop/1867x777/0,294/-/format/auto/-/resize/1024x/' },
   { id: '2', name: 'Pepper Lunch', restaurant: '1.6km', image: 'https://moribyan.com/wp-content/uploads/2023/10/Pepper-Lunch-683x1024.jpg' },
   { id: '3', name: 'Tsukimi Hamburg', restaurant: '2.4km', image: 'https://www.hougangmall.com.sg/content/dam/frasersexperience/hm/store-logos/HM_TsukimiHamburg_Lifestyle4.png' },
@@ -12,13 +17,59 @@ const matchHistoryData = [
   { id: '8', name: 'Pastamania', restaurant: '2.5km', image: 'https://images.deliveryhero.io/image/menu-import-gateway-prd/regions/AS/chains/cwc_pastamania_sg/c492a27f116d0801dd21ca99fe615b6c.jpg?width=%s' },
   { id: '9', name: 'KFC', restaurant: '1.3km', image: 'https://www.hypresslive.com/wp-content/uploads/2021/02/KFC-SPicy-CHips-2.png' },
   { id: '10', name: "Lola's Cafe", restaurant: '8.88kkm', image: 'https://gurkhason.wordpress.com/wp-content/uploads/2014/06/lolas-cafe-flat-white-5.jpg' },
-];
+]; */
 
 
 const { width } = Dimensions.get('window');
 const itemSize = (width - 48) / 2;
 
 export default function Matches() {
+  const [products, setProducts] = useState(Array<any>);
+  const session = useSession();
+  const eateries: Array<any> = [];
+  const retrieveProfile = async () =>{
+    try {
+      const { data: fetchedData, error: fetchError } = await supabase
+        .from('profiles')
+        .select('liked_eateries')
+        .eq('id', session?.user.id)
+        .single();
+
+      if (fetchError) {
+        throw fetchError;
+      }
+      for (let index = 0; index < fetchedData.liked_eateries.length; index++) {
+        const element = fetchedData.liked_eateries[index];
+        console.log(index + fetchedData.liked_eateries[index])
+        console.log(element)
+        const {data: currEatery} = await supabase
+          .from("Eatery")
+          .select("*")
+          .eq("placeId", element)
+          .single()
+
+        console.log(currEatery.displayName)
+        console.log(currEatery.photo)
+        eateries.push(
+          {
+            id:element,
+            name:currEatery.displayName,
+            restaurant: "2km",
+            image:currEatery.photo
+          }
+        )
+        console.log(eateries)
+        setProducts(eateries);
+      }
+    } catch (err) {
+      console.log(err.message)
+    }
+  }
+  
+  useEffect(() => {
+    retrieveProfile();
+  }, []);
+
   return (
       <SafeAreaView style={styles.container}>
         <View className="px-4 pt-8">
@@ -27,7 +78,7 @@ export default function Matches() {
 
         <FlatList
             key={'2-columns'}
-            data={matchHistoryData}
+            data={products}
             keyExtractor={(item) => item.id}
             numColumns={2}
             columnWrapperStyle={styles.columnWrapper}

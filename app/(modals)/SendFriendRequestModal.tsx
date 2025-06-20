@@ -50,16 +50,26 @@ export default function FriendRequestModal({ visible, onClose, user }) {
             }
 
             // Send friend request
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('friendships')
                 .insert({
                     user_id_1: currentUser.id,
                     user_id_2: user.id,
                     status: 'pending',
                     created_at: new Date().toISOString(),
-                });
+                }).select("id");
 
             if (error) throw error;
+
+            const test = await supabase
+                .from("Inbox")
+                .insert({
+                    created_at: new Date().toISOString(),
+                    sender: currentUser.id,
+                    receiver: user.id,
+                    friendshipID: data[0].id,
+                    type: "friendship"
+                });
 
             Alert.alert('Success', `Friend request sent to @${user.username}!`);
             onClose();
