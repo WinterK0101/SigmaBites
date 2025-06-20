@@ -15,40 +15,46 @@ import { supabase } from '@/SupabaseConfig';
 import { useSession } from '@/context/SessionContext';
 import { fetchUserByUsername } from "@/services/userService";
 import { FRIEND_STATUS } from '@/constants/friendStatus';
+import ConfirmationModal from "@/components/ConfirmationModal";
+import RemoteImage from "@/components/RemoteImage";
+import {dummyUser} from "@/data/dummyUser";
 
-const dummyUser = {
-    friendCount: 12,
-    savedEateries: 28,
-    recentEateries: [
-        {
-            displayName: 'Din Tai Fung',
-            photo: 'https://images.deliveryhero.io/image/fd-sg/LH/v6s4-hero.jpg',
-        },
-        {
-            displayName: 'Shake Shack',
-            photo: 'https://images.deliveryhero.io/image/fd-sg/LH/b8vo-hero.jpg',
-        },
-        {
-            displayName: 'Gong Cha',
-            photo: 'https://images.deliveryhero.io/image/fd-sg/LH/x7m2-hero.jpg',
-        },
-    ],
-    favouriteEateries: [
-        {
-            displayName: 'Paradise Dynasty',
-            photo: 'https://images.deliveryhero.io/image/fd-sg/LH/m4n8-hero.jpg',
-        },
-        {
-            displayName: 'Crystal Jade',
-            photo: 'https://images.deliveryhero.io/image/fd-sg/LH/p2k9-hero.jpg',
-        },
-        {
-            displayName: 'Tim Ho Wan',
-            photo: 'https://images.deliveryhero.io/image/fd-sg/LH/q5r7-hero.jpg',
-        },
-    ],
+const getFriendButtonText = (status) => {
+    switch (status) {
+        case FRIEND_STATUS.NOT_FRIENDS:
+            return 'Add Friend';
+        case FRIEND_STATUS.REQUEST_SENT:
+            return 'Requested';
+        case FRIEND_STATUS.REQUEST_RECEIVED:
+            return 'Accept Request';
+        case FRIEND_STATUS.FRIENDS:
+            return 'Friends';
+        default:
+            return 'Add Friend';
+    }
 };
 
+const getFriendButtonStyle = (status, styles) => {
+    switch (status) {
+        case FRIEND_STATUS.REQUEST_SENT:
+            return [styles.friendButton, styles.requestedButton];
+        case FRIEND_STATUS.FRIENDS:
+            return [styles.friendButton, styles.friendsButton];
+        default:
+            return styles.friendButton;
+    }
+};
+
+const getFriendButtonTextStyle = (status, styles) => {
+    switch (status) {
+        case FRIEND_STATUS.REQUEST_SENT:
+            return [styles.friendButtonText, styles.requestedButtonText];
+        case FRIEND_STATUS.FRIENDS:
+            return [styles.friendButtonText, styles.friendsButtonText];
+        default:
+            return styles.friendButtonText;
+    }
+};
 
 export default function OtherUserProfile() {
     const router = useRouter();
@@ -58,10 +64,9 @@ export default function OtherUserProfile() {
     const [profile, setProfile] = useState({
         displayName: 'Loading...',
         username: 'Loading...',
-        avatar_url: 'https://i.pinimg.com/564x/39/33/f6/3933f64de1724bb67264818810e3f2cb.jpg',
+        avatar_url: 'default-profile.png',
         id: null,
     });
-    const [avatarPath, setAvatarPath] = useState(null);
     const [friendStatus, setFriendStatus] = useState(FRIEND_STATUS.NOT_FRIENDS);
     const [isLoading, setIsLoading] = useState(false);
     const [showUnfriendModal, setShowUnfriendModal] = useState(false);
@@ -83,30 +88,7 @@ export default function OtherUserProfile() {
 
                     setProfile(newProfile);
 
-                    if (data.avatar_url) {
-                        try {
-                            const { data: avatarData, error: avatarError } = await supabase.storage
-                                .from('avatars')
-                                .download(data.avatar_url);
-
-                            if (avatarError) {
-                                console.log('Error downloading avatar:', avatarError.message);
-                                return;
-                            }
-
-                            if (avatarData) {
-                                const fr = new FileReader();
-                                fr.readAsDataURL(avatarData);
-                                fr.onload = () => {
-                                    setAvatarPath(fr.result);
-                                };
-                            }
-                        } catch (avatarDownloadError) {
-                            console.error('Error in avatar download:', avatarDownloadError);
-                        }
-                    }
-
-                    await fetchFriendStatus(data.id);
+                   // await fetchFriendStatus(data.id);
                 }
             } catch (error) {
                 console.error('Error in fetchProfileAndFriendStatus:', error);
@@ -116,194 +98,37 @@ export default function OtherUserProfile() {
         fetchProfileAndFriendStatus();
     }, [session, username]);
 
-    const fetchFriendStatus = async (targetUserId) => {
-        if (!session?.user || !targetUserId) return;
-
-        const [id1, id2] = [session.user.id, targetUserId].sort();
-
-        try {
-            const { data, error } = await supabase
-                .from('friendships')
-                .select('*')
-                .eq('user_id_1', id1)
-                .eq('user_id_2', id2);
-
-            if (error) {
-                console.log('Error fetching friend status:', error.message);
-                return;
-            }
-
-            if (data && data.length > 0) {
-                const friendship = data[0];
-
-                if (friendship.status === 'accepted') {
-                    setFriendStatus(FRIEND_STATUS.FRIENDS);
-                } else if (friendship.status === 'pending') {
-                    if (session.user.id < profile.id) {
-                        setFriendStatus(FRIEND_STATUS.REQUEST_SENT);
-                    } else {
-                        setFriendStatus(FRIEND_STATUS.REQUEST_RECEIVED);
-                    }
-                }
-            } else {
-                setFriendStatus(FRIEND_STATUS.NOT_FRIENDS);
-            }
-        } catch (error) {
-            console.error('Error in fetchFriendStatus:', error);
-        }
+    const handleFriendAction = () => {
+        // Placeholder for your friend logic (send, cancel, unfriend, etc.)
+        console.log('Friend action triggered.');
     };
 
-    const handleFriendAction = async () => {
-        if (!session?.user || !profile.id || isLoading) return;
-
-        setIsLoading(true);
-        const [id1, id2] = [session.user.id, profile.id].sort();
-
-        try {
-            switch (friendStatus) {
-                case FRIEND_STATUS.NOT_FRIENDS:
-                    const { error: insertError } = await supabase
-                        .from('friendships')
-                        .insert({
-                            user_id_1: id1,
-                            user_id_2: id2,
-                            status: 'pending',
-                        });
-
-                    if (!insertError) {
-                        setFriendStatus(FRIEND_STATUS.REQUEST_SENT);
-                    }
-                    break;
-
-                case FRIEND_STATUS.REQUEST_RECEIVED:
-                    const { error: updateError } = await supabase
-                        .from('friendships')
-                        .update({ status: 'accepted' })
-                        .eq('user_id_1', id1)
-                        .eq('user_id_2', id2);
-
-                    if (!updateError) {
-                        setFriendStatus(FRIEND_STATUS.FRIENDS);
-                    }
-                    break;
-
-                case FRIEND_STATUS.REQUEST_SENT:
-                    const { error: deletePendingError } = await supabase
-                        .from('friendships')
-                        .delete()
-                        .eq('user_id_1', id1)
-                        .eq('user_id_2', id2);
-
-                    if (!deletePendingError) {
-                        setFriendStatus(FRIEND_STATUS.NOT_FRIENDS);
-                    }
-                    break;
-
-                case FRIEND_STATUS.FRIENDS:
-                    setShowUnfriendModal(true);
-                    break;
-            }
-        } catch (error) {
-            console.error('Error in handleFriendAction:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleUnfriend = async () => {
-        if (!session?.user || !profile.id) return;
-
-        const [id1, id2] = [session.user.id, profile.id].sort();
-
-        try {
-            const { error } = await supabase
-                .from('friendships')
-                .delete()
-                .eq('user_id_1', id1)
-                .eq('user_id_2', id2);
-
-            if (!error) {
-                setFriendStatus(FRIEND_STATUS.NOT_FRIENDS);
-            }
-        } catch (error) {
-            console.error('Error in handleUnfriend:', error);
-        } finally {
-            setShowUnfriendModal(false);
-        }
-    };
-
-    const getFriendButtonText = () => {
-        switch (friendStatus) {
-            case FRIEND_STATUS.NOT_FRIENDS:
-                return 'Add Friend';
-            case FRIEND_STATUS.REQUEST_SENT:
-                return 'Requested';
-            case FRIEND_STATUS.REQUEST_RECEIVED:
-                return 'Accept Request';
-            case FRIEND_STATUS.FRIENDS:
-                return 'Friends';
-            default:
-                return 'Add Friend';
-        }
-    };
-
-    const getFriendButtonStyle = () => {
-        switch (friendStatus) {
-            case FRIEND_STATUS.REQUEST_SENT:
-                return [styles.friendButton, styles.requestedButton];
-            case FRIEND_STATUS.FRIENDS:
-                return [styles.friendButton, styles.friendsButton];
-            default:
-                return styles.friendButton;
-        }
-    };
-
-    const getFriendButtonTextStyle = () => {
-        switch (friendStatus) {
-            case FRIEND_STATUS.REQUEST_SENT:
-                return [styles.friendButtonText, styles.requestedButtonText];
-            case FRIEND_STATUS.FRIENDS:
-                return [styles.friendButtonText, styles.friendsButtonText];
-            default:
-                return styles.friendButtonText;
-        }
+    const handleUnfriend = () => {
+        console.log('Unfriend triggered.');
+        setShowUnfriendModal(false);
     };
 
     return (
         <View style={styles.container}>
             {/* Back Button */}
-            <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => router.back()}
-            >
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                 <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
             </TouchableOpacity>
 
             {/* Profile Header */}
             <LinearGradient colors={['#D03939', '#FE724C']} style={styles.header}>
                 <View className="relative mt-12">
-                    <View
-                        style={{
-                            shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 4 },
-                            shadowOpacity: 0.3,
-                            shadowRadius: 5,
-                            borderRadius: 60,
-                        }}
-                    >
-                        {avatarPath ? (
-                            <Image
-                                source={{ uri: avatarPath }}
-                                className="w-[120px] h-[120px] rounded-full border-4 border-white"
-                                resizeMode="cover"
-                            />
-                        ) : (
-                            <Image
-                                source={{ uri: profile.avatar_url }}
-                                className="w-[120px] h-[120px] rounded-full border-4 border-white"
-                                resizeMode="cover"
-                            />
-                        )}
+                    <View style={styles.avatarShadow}>
+                        <RemoteImage
+                            filePath={profile.avatar_url}
+                            style={{
+                                width: 120,
+                                height: 120,
+                                borderRadius: 60,
+                                borderWidth: 4,
+                                borderColor: 'white',
+                            }}
+                        />
                     </View>
                 </View>
 
@@ -311,13 +136,13 @@ export default function OtherUserProfile() {
                 <Text style={styles.username}>@{profile.username}</Text>
 
                 <TouchableOpacity
-                    style={getFriendButtonStyle()}
+                    style={getFriendButtonStyle(friendStatus, styles)}
                     activeOpacity={0.8}
                     onPress={handleFriendAction}
                     disabled={isLoading}
                 >
-                    <Text style={getFriendButtonTextStyle()}>
-                        {isLoading ? 'Loading...' : getFriendButtonText()}
+                    <Text style={getFriendButtonTextStyle(friendStatus, styles)}>
+                        {isLoading ? 'Loading...' : getFriendButtonText(friendStatus)}
                     </Text>
                 </TouchableOpacity>
 
@@ -427,31 +252,16 @@ export default function OtherUserProfile() {
                 </ScrollView>
             </View>
 
-            {/* Unfriend Confirmation Modal */}
-            <Modal visible={showUnfriendModal} transparent animationType="fade">
-                <View style={styles.modalOverlay}>
-                    <View style={styles.confirmationModal}>
-                        <Text style={styles.modalTitle}>Remove Friend</Text>
-                        <Text style={styles.modalText}>
-                            Are you sure you want to remove {profile.displayName} from your friends?
-                        </Text>
-                        <View style={styles.modalButtons}>
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.cancelButton]}
-                                onPress={() => setShowUnfriendModal(false)}
-                            >
-                                <Text style={styles.cancelButtonText}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.confirmButton]}
-                                onPress={handleUnfriend}
-                            >
-                                <Text style={styles.confirmButtonText}>Remove</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
+            {/* Unfriend Modal */}
+            <ConfirmationModal
+                visible={showUnfriendModal}
+                title="Remove Friend"
+                message={`Are you sure you want to remove ${profile.displayName} from your friends?`}
+                confirmText="Remove"
+                cancelText="Cancel"
+                onConfirm={handleUnfriend}
+                onCancel={() => setShowUnfriendModal(false)}
+            />
         </View>
     );
 }
@@ -484,6 +294,13 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         overflow: 'hidden',
         top: -60,
+    },
+    avatarShadow: {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        borderRadius: 60,
     },
     name: {
         fontSize: 32,
@@ -525,67 +342,11 @@ const styles = StyleSheet.create({
     friendsButtonText: {
         color: 'rgba(255,255,255,0.9)',
     },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.4)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    confirmationModal: {
-        backgroundColor: 'white',
-        borderRadius: 20,
-        padding: 24,
-        width: '85%',
-        maxWidth: 320,
+    shadowBox: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 0 },
+        shadowOffset: {width: 0, height: 0},
         shadowOpacity: 0.2,
-        shadowRadius: 8,
-    },
-    modalTitle: {
-        fontSize: 20,
-        fontFamily: 'Lexend-Bold',
-        marginBottom: 8,
-        color: '#FE724C',
-        textAlign: 'center',
-    },
-    modalText: {
-        fontSize: 14,
-        fontFamily: 'Lexend-Regular',
-        marginBottom: 24,
-        color: '#333',
-        textAlign: 'center',
-        lineHeight: 20,
-    },
-    modalButtons: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        gap: 12,
-    },
-    modalButton: {
-        flex: 1,
-        paddingVertical: 12,
-        paddingHorizontal: 20,
-        borderRadius: 12,
-        alignItems: 'center',
-        borderWidth: 1,
-    },
-    cancelButton: {
-        backgroundColor: 'white',
-        borderColor: '#FE724C',
-    },
-    confirmButton: {
-        backgroundColor: '#FE724C',
-        borderColor: '#FE724C',
-    },
-    cancelButtonText: {
-        color: '#FE724C',
-        fontFamily: 'Lexend-Medium',
-        fontSize: 14,
-    },
-    confirmButtonText: {
-        color: 'white',
-        fontFamily: 'Lexend-Medium',
-        fontSize: 14,
+        shadowRadius: 4,
+        marginTop: -40,
     },
 });
