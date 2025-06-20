@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import HighlightedText from "../components/highlightedtexts.js";
 
 const highlightWords = ["friend", "Group Swipe"];
-
 
 // ✅ 1. Define Message type
 type Message = {
@@ -22,35 +22,35 @@ const messages: Message[] = [
         id: '1',
         name: 'bubblegumprincess',
         message: 'Sent a friend request',
-        time: '2h ago',
+        time: '2h',
         image: require('../assets/images/personA.png'),
     },
     {
         id: '3',
         name: 'corpseking',
         message: 'Invited you to Group Swipe',
-        time: '1d ago',
+        time: '1d',
         image: require('../assets/images/personC.png'),
     },
     {
         id: '2',
         name: 'johnnie',
         message: 'Invited you to Ajisen Ramen',
-        time: '1d ago',
+        time: '1d',
         image: require('../assets/images/personB.png'),
     },
     {
-        id: '3',
+        id: '4',
         name: 'corpseking',
         message: 'Accepted your friend request',
-        time: '3d ago',
+        time: '3d',
         image: require('../assets/images/personC.png'),
     },
     {
-        id: '3',
+        id: '5',
         name: 'corpseking',
         message: 'Sent a friend request',
-        time: '3d ago',
+        time: '3d',
         image: require('../assets/images/personC.png'),
     },
 ];
@@ -59,146 +59,151 @@ export default function InboxScreen() {
     const router = useRouter();
 
     const renderItem = ({ item }: { item: Message }) => (
-        <View style={styles.card}>
+        <TouchableOpacity
+            style={styles.messageCard}
+            activeOpacity={0.7}
+        >
             <Image source={item.image} style={styles.avatar} />
             <View style={styles.textContainer}>
                 <Text style={styles.name}>{item.name}</Text>
                 <HighlightedText
                     text={item.message}
                     highlights={highlightWords}
-                    style={styles.saved}
-                    highlightStyle={styles.restaurant}
+                    style={styles.messageText}
+                    highlightStyle={styles.highlightedText}
                 />
-
             </View>
             <Text style={styles.time}>{item.time}</Text>
-        </View>
+        </TouchableOpacity>
     );
 
     return (
-        <View style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                    <Icon name="chevron-back" size={28} color="#FF6B3E" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Bites Inbox</Text>
+        <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+            <View style={styles.innerContainer}>
+                {/* Header */}
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                        <Icon name="chevron-back" size={28} color="#fe724c" />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Bites Inbox</Text>
+                </View>
+
+                {/* Subheader */}
+                <Text style={styles.subheader}>
+                    {messages.length} Messages
+                </Text>
+
+                {/* Section Header */}
+                <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>Last 7 Days</Text>
+                </View>
+
+                {/* Inbox List */}
+                <FlatList
+                    data={messages}
+                    renderItem={renderItem}
+                    keyExtractor={(item) => item.id}
+                    contentContainerStyle={styles.list}
+                    showsVerticalScrollIndicator={false}
+                />
             </View>
-
-
-            {/* Section Header */}
-            <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Last 7 Days</Text>
-                <TouchableOpacity onPress={() => {/* Add See More action */ }}>
-                    <Text style={styles.seeMore}>See more</Text>
-                </TouchableOpacity>
-            </View>
-
-
-            {/* Inbox List */}
-            <FlatList
-                data={messages}
-                renderItem={renderItem}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.list}
-            />
-        </View>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
-        paddingTop: 0,
+        backgroundColor: '#fafafa',
+    },
+    innerContainer: {
+        flex: 1,
         paddingHorizontal: 20,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 10,
+        marginTop: 16,
+        marginBottom: 8,
     },
     headerTitle: {
-        fontSize: 44,
+        fontSize: 36,
         fontWeight: 'bold',
-        color: 'black',
+        color: '#fe724c',
         fontFamily: 'Baloo-Regular',
         marginLeft: 8,
     },
-    list: {
-        paddingBottom: 40,
+    backButton: {
+        paddingRight: 4,
     },
-    card: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 16,
-        paddingHorizontal: 14,
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowRadius: 6,
-        elevation: 3,
-        marginBottom: 16,
-    },
-    avatar: {
-        width: 52,
-        height: 52,
-        borderRadius: 26,
-        marginRight: 14,
-    },
-    textContainer: {
-        flex: 1,
-    },
-    name: {
-        fontWeight: 'bold',
-        fontSize: 15,
-        marginBottom: 2,
-    },
-    message: {
-        color: '#888',
-        fontSize: 14,
-        marginTop: 2,
+    subheader: {
+        fontSize: 16,
+        color: '#333',
+        opacity: 0.8,
         fontFamily: 'Lexend-Regular',
-    },
-    time: {
-        fontSize: 12,
-        color: '#999',
-        marginLeft: 10,
+        marginBottom: 24,
     },
     sectionHeader: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingHorizontal: 20,
-        paddingTop: 0,
-        paddingBottom: 5,
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
     },
-
     sectionTitle: {
         fontSize: 16,
-        fontWeight: "600",
-        color: "#333",
+        fontWeight: '600',
+        color: '#333',
         fontFamily: 'Baloo-Regular',
     },
 
-    seeMore: {
-        fontSize: 14,
-        color: "#FF6B3E",
+    list: {
+        paddingBottom: 20,
+        flexGrow: 1,
+    },
+    messageCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 16,
+        paddingHorizontal: 24,
+        backgroundColor: 'white',
+        borderRadius: 16,
+        marginBottom: 8,
+        height: 80,
+        borderWidth: 2,
+        borderColor: '#d9d9d9',
+    },
+    avatar: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        marginRight: 24,
+        borderColor: '#fe724c',
+        borderWidth: 2,
+    },
+    textContainer: {
+        flex: 1,
+        flexDirection: 'column',
+    },
+    name: {
+        fontWeight: 'bold',
+        fontSize: 16,
+        color: '#333', // primary color
+        fontFamily: 'Lexend-Bold',
+        marginBottom: 2,
+    },
+    messageText: {
+        fontSize: 12,
+        color: '#333',
+        fontFamily: 'Lexend-Regular',
+        opacity: 0.8,
+    },
+    highlightedText: {
+        color: '#fe724c',
+        fontFamily: 'Lexend-Bold',
+    },
+    time: {
+        marginLeft: 16,
+        fontSize: 12,
+        color: '#999',
         fontFamily: 'Lexend-Regular',
     },
-    backButton: {
-        paddingRight: 4, // optional: tap area around icon
-    },
-    saved: {
-        fontSize: 14,
-        color: '#888',
-        marginTop: 2,
-        fontFamily: 'Lexend-Regular',
-    },
-    restaurant: {
-        color: '#FF6B3E',
-    },
-
-
 });
