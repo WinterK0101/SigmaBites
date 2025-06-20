@@ -13,40 +13,56 @@ const SignUpScreen = () => {
   const [avatarPath, setAvatarPath] = useState<string | null>(null);
 
   async function signUpWithEmail() {
-    const { data: { session }, error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: email,
       password: password,
     });
 
     if (error) {
-      Alert.alert(error.message);
+      Alert.alert("Sign up failed", error.message);
+      console.log(error);
       return;
     }
 
-    if (session) {
-      // Use avatarPath if set, else fallback to default-profile.png
-      const avatarToSave = avatarPath ? avatarPath : 'default-profile.png';
+    const userId = data.user?.id;
+    if (!userId) {
+      Alert.alert("User creation failed: No user ID returned.");
+      return;
+    }
 
-      const updateUsername = {
-        id: session.user.id,
-        username: username,
-        name: displayName,
-        updated_at: new Date(),
-        avatar_url: avatarToSave,
-      };
+    const avatarToSave = avatarPath && avatarPath.trim() !== ''
+        ? avatarPath.trim()
+        : 'default-profile.png';
 
-      const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert(updateUsername);
+    const newProfile = {
+      id: userId,
+      username: username,
+      name: displayName,
+      updated_at: new Date().toISOString(),
+      avatar_url: avatarToSave,
+    };
 
-      if (profileError) {
-        Alert.alert(profileError.message);
-        console.log(profileError.message);
-      } else {
-        router.replace('/(tabs)/Discover');
-      }
+    console.log('New profile to upsert:', newProfile);
+
+    const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert(newProfile);
+
+    if (profileError) {
+      Alert.alert("Profile creation failed", profileError.message);
+      console.log(profileError);
+      return;
+    }
+
+
+    if (data.session) {
+      router.replace('/(tabs)/Discover');
+    } else {
+      Alert.alert("Success!", "Check your email to confirm your account.");
+      router.replace('/(auth)/SignInPage');
     }
   }
+
 
   async function uploadAvatar() {
     const result = await ImagePicker.launchImageLibraryAsync({
