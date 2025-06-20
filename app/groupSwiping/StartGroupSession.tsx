@@ -129,7 +129,7 @@ export default function StartGroupSession() {
 
                 <ScrollView className="mt-2 flex-grow" style={{ paddingBottom: 20 }}>
                     {userFriends.length === 0 ? (
-                        <Text>No friends found.</Text>
+                        <Text className="font-lexend-regular text-primary">No friends found.</Text>
                     ) : (
                         userFriends
                             .filter(friend=>friend.username.toLowerCase().includes(searchQuery.toLowerCase()))

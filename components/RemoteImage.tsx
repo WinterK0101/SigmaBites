@@ -4,22 +4,23 @@ import { getSignedImageUrl } from '@/utils/getImageUrl';
 import { StyleProp, ImageStyle } from 'react-native';
 
 type Props = {
-    filePath: string;
+    filePath?: string;
     bucket?: string;
     expiresIn?: number;
     style?: StyleProp<ImageStyle>;
 };
 
 export default function RemoteImage({
-                                               filePath,
-                                               bucket = 'images',
-                                               expiresIn = 60,
-                                               style = { width: 200, height: 200 },
-                                           }: Props) {
+                                        filePath,
+                                        bucket = 'avatars',
+                                        expiresIn = 60,
+                                        style = { width: 200, height: 200 },
+                                    }: Props) {
     const [url, setUrl] = useState<string | null>(null);
 
     useEffect(() => {
-        getSignedImageUrl(bucket, filePath, expiresIn).then(setUrl);
+        const pathToUse = filePath || 'default-profile.png';
+        getSignedImageUrl(bucket, pathToUse, expiresIn).then(setUrl);
     }, [filePath]);
 
     if (!url) return <ActivityIndicator />;

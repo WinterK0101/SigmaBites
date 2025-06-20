@@ -6,14 +6,14 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
-  Modal,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/SupabaseConfig';
 import { useSession } from '@/context/SessionContext';
 import EditProfileModal from '../(modals)/EditProfileModal';
+import ConfirmationModal from '@/components/ConfirmationModal';
+import RemoteImage from "@/components/RemoteImage";
 
 const dummyUser = {
   friendCount: 3,
@@ -56,9 +56,8 @@ export default function Profile() {
   const [profile, setProfile] = useState({
     displayName: 'Loading...',
     username: 'Loading...',
-    avatar_url: 'https://i.pinimg.com/564x/39/33/f6/3933f64de1724bb67264818810e3f2cb.jpg',
+    avatar_url: 'default-profile.png',
   });
-  const [avatarPath, setAvatarPath] = useState(null);
 
   // Modal states
   const [showEditModal, setShowEditModal] = useState(false);
@@ -85,36 +84,12 @@ export default function Profile() {
 
         if (data) {
           const newProfile = {
-            displayName: data.name || 'No name',
-            username: data.username || 'No username',
-            avatar_url: data.avatar_url || 'https://i.pinimg.com/564x/39/33/f6/3933f64de1724bb67264818810e3f2cb.jpg',
+            displayName: data.name,
+            username: data.username,
+            avatar_url: data.avatar_url,
           };
 
           setProfile(newProfile);
-
-          // Download the avatar using the freshly fetched avatar_url
-          if (data.avatar_url) {
-            try {
-              const { data: avatarData, error: avatarError } = await supabase.storage
-                  .from('avatars')
-                  .download(data.avatar_url);
-
-              if (avatarError) {
-                console.log('Error downloading avatar:', avatarError.message);
-                return;
-              }
-
-              if (avatarData) {
-                const fr = new FileReader();
-                fr.readAsDataURL(avatarData);
-                fr.onload = () => {
-                  setAvatarPath(fr.result);
-                };
-              }
-            } catch (avatarDownloadError) {
-              console.error('Error in avatar download:', avatarDownloadError);
-            }
-          }
         }
       } catch (error) {
         console.error('Error in fetchProfile:', error);
@@ -138,6 +113,7 @@ export default function Profile() {
 
   return (
       <View style={styles.container}>
+
         {/* Settings Dropdown */}
         <View style={{ position: 'absolute', top: 60, right: 20, zIndex: 999 }}>
           <TouchableOpacity
@@ -177,7 +153,7 @@ export default function Profile() {
 
         {/* Profile Header */}
         <LinearGradient colors={['#D03939', '#FE724C']} style={styles.header}>
-          <View className="relative mt-12">
+          <View className="relative mt-16">
             <View
                 style={{
                   shadowColor: '#000',
@@ -187,28 +163,12 @@ export default function Profile() {
                   borderRadius: 60,
                 }}
             >
-              {avatarPath ? (
-                  <Image
-                      source={{ uri: avatarPath }}
-                      className="w-[120px] h-[120px] rounded-full border-4 border-white"
-                      resizeMode="cover"
-                  />
-              ) : (
-                  <Image
-                      source={{ uri: profile.avatar_url }}
-                      className="w-[120px] h-[120px] rounded-full border-4 border-white"
-                      resizeMode="cover"
-                  />
-              )}
+              <RemoteImage
+                  filePath={profile.avatar_url ? profile.avatar_url : 'default-profile.png'}
+                  bucket="avatars"
+                  style={{ width: 120, height: 120, borderRadius: 60, borderWidth: 4, borderColor: 'white' }}
+              />
             </View>
-
-            <TouchableOpacity
-                className="w-9 h-9 rounded-full bg-white items-center justify-center absolute bottom-0 right-0"
-                activeOpacity={0.8}
-                onPress={() => setShowEditModal(true)}
-            >
-              <MaterialCommunityIcons name="pencil" size={20} color="#fe724c" />
-            </TouchableOpacity>
           </View>
 
           <Text style={styles.name}>{profile.displayName}</Text>
@@ -329,55 +289,31 @@ export default function Profile() {
         </View>
 
         {/* Edit Profile Modal */}
-        <EditProfileModal visible={showEditModal} onClose={() => setShowEditModal(false)} />
+        <EditProfileModal
+            visible={showEditModal}
+            onClose={() => setShowEditModal(false)}
+        />
 
         {/* Logout Confirmation Modal */}
-        <Modal visible={showLogoutModal} transparent animationType="fade">
-          <View style={styles.modalOverlay}>
-            <View style={styles.confirmationModal}>
-              <Text style={styles.modalTitle}>Log Out</Text>
-              <Text style={styles.modalText}>Are you sure you want to log out?</Text>
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                    style={[styles.modalButton, styles.cancelButton]}
-                    onPress={() => setShowLogoutModal(false)}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.modalButton, styles.confirmButton]}
-                    onPress={handleLogout}
-                >
-                  <Text style={styles.confirmButtonText}>Log Out</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
+        <ConfirmationModal
+            visible={showLogoutModal}
+            title="Log Out"
+            message="Are you sure you want to log out?"
+            confirmText="Log Out"
+            onConfirm={handleLogout}
+            onCancel={() => setShowLogoutModal(false)}
+        />
 
         {/* Delete Confirmation Modal */}
-        <Modal visible={showDeleteModal} transparent animationType="fade">
-          <View style={styles.modalOverlay}>
-            <View style={styles.confirmationModal}>
-              <Text style={styles.modalTitle}>Delete Account</Text>
-              <Text style={styles.modalText}>This action cannot be undone. All your data will be permanently deleted.</Text>
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                    style={[styles.modalButton, styles.cancelButton]}
-                    onPress={() => setShowDeleteModal(false)}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.modalButton, styles.confirmButton]}
-                    onPress={handleDelete}
-                >
-                  <Text style={styles.confirmButtonText}>Delete</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
+        <ConfirmationModal
+            visible={showDeleteModal}
+            title="Delete Account"
+            message="This action cannot be undone. All your data will be permanently deleted."
+            confirmText="Delete"
+            onConfirm={handleDelete}
+            onCancel={() => setShowDeleteModal(false)}
+        />
+
       </View>
   );
 }
@@ -403,7 +339,6 @@ const styles = StyleSheet.create({
     fontSize: 32,
     color: '#fff',
     fontFamily: 'Baloo-regular',
-    marginTop: 12,
   },
   username: {
     color: '#fff',
@@ -466,68 +401,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
     marginVertical: 6,
     marginHorizontal: 12,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  confirmationModal: {
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 24,
-    width: '85%',
-    maxWidth: 320,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontFamily: 'Lexend-Bold',
-    marginBottom: 8,
-    color: '#FE724C',
-    textAlign: 'center',
-  },
-  modalText: {
-    fontSize: 14,
-    fontFamily: 'Lexend-Regular',
-    marginBottom: 24,
-    color: '#333',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  cancelButton: {
-    backgroundColor: 'white',
-    borderColor: '#FE724C',
-  },
-  confirmButton: {
-    backgroundColor: '#FE724C',
-    borderColor: '#FE724C',
-  },
-  cancelButtonText: {
-    color: '#FE724C',
-    fontFamily: 'Lexend-Medium',
-    fontSize: 14,
-  },
-  confirmButtonText: {
-    color: 'white',
-    fontFamily: 'Lexend-Medium',
-    fontSize: 14,
   },
 });
