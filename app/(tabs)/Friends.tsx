@@ -18,10 +18,14 @@ export default function FriendsScreen() {
   const user = useSession()?.user;
   const { friends, isLoading, fetchFriends } = useFriendsStore();
 
-  // Fetch friends upon login
-  useEffect(() => {
-    if (user?.id) fetchFriends(user.id);
-  }, [user?.id]);
+  // Fetch friends when screen is changed
+  useFocusEffect(
+      useCallback(() => {
+        if (user?.id) {
+          fetchFriends(user.id);
+        }
+      }, [user?.id])
+  );
 
   const handleFriendPress = (friend: User) => {
     router.push({
