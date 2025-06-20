@@ -148,7 +148,7 @@ const SignUpScreen = () => {
 
           <View style={styles.signInContainer}>
             <Text style={styles.signInText}>Already have an account? </Text>
-            <TouchableOpacity onPress={()=>router.replace('/(auth)/SignUpPage')}>
+            <TouchableOpacity onPress={()=>router.replace('/(auth)/SignInPage')}>
               <Text style={styles.signInLink}>Sign in</Text>
             </TouchableOpacity>
           </View>
