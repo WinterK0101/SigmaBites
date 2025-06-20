@@ -2,88 +2,61 @@ import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
-    Image,
     TouchableOpacity,
     StyleSheet,
     Modal,
     ActivityIndicator,
     Alert,
+    TextInput,
 } from 'react-native';
-import { supabase } from '@/SupabaseConfig';
 import RemoteImage from '@/components/RemoteImage';
-import { useSession } from "@/context/SessionContext";
 
-export default function EditProfileModal({ visible, onClose }) {
+interface EditProfileModalProps {
+    visible: boolean;
+    onClose: () => void;
+    profile: {
+        displayName: string;
+        username: string;
+        avatar_url: string;
+        favourite_eateries?: string[];
+        liked_eateries?: string[];
+    };
+    onSave: (updatedProfile: {
+        displayName: string;
+        username: string;
+        avatar_url: string;
+    }) => void | Promise<void>;
+}
+
+export default function EditProfileModal({
+    visible,
+    onClose,
+    profile,
+    onSave,
+}: EditProfileModalProps) {
     const [loading, setLoading] = useState(false);
-    const [name, setName] = useState('');
-    const [username, setUsername] = useState('');
-    const [profilePicUrl, setProfilePicUrl] = useState('');
-    const session = useSession();
-    const user = session?.user;
+    const [name, setName] = useState(profile.displayName || '');
+    const [username, setUsername] = useState(profile.username || '');
+    const [profilePicUrl, setProfilePicUrl] = useState(profile.avatar_url || '');
 
     useEffect(() => {
-        if (visible) {
-            fetchUserProfile();
+        if (visible && profile) {
+            setName(profile.displayName || '');
+            setUsername(profile.username || '');
+            setProfilePicUrl(profile.avatar_url || '');
         }
-    }, [visible]);
-
-    const fetchUserProfile = async () => {
-        try {
-            setLoading(true);
-
-            if (!user) {
-                Alert.alert('Error', 'No user logged in');
-                setLoading(false);
-                return;
-            }
-
-            const userId = user.id;
-
-            let { data, error, status } = await supabase
-                .from('profiles')
-                .select('name, username, avatar_url')
-                .eq('id', userId)
-                .single();
-
-            if (error && status !== 406) throw error;
-
-            if (data) {
-                setName(data.name || '');
-                setUsername(data.username || '');
-                setProfilePicUrl(data.avatar_url || '');
-            }
-        } catch (error) {
-            Alert.alert('Error loading profile', error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+    }, [visible, profile]);
 
     const handleSave = async () => {
         setLoading(true);
         try {
-            if (!user) {
-                Alert.alert('Error', 'No user logged in');
-                setLoading(false);
-                return;
-            }
-
-            const userId = user.id;
-
-            const updates = {
-                id: userId,
-                name,
+            await onSave({
+                displayName: name,
                 username,
-                updated_at: new Date().toISOString(),
-            };
-
-            let { error } = await supabase.from('profiles').upsert(updates);
-
-            if (error) throw error;
-
-            Alert.alert('Success', 'Profile updated!');
+                avatar_url: profilePicUrl,
+            });
             onClose();
-        } catch (error) {
+        } catch (error: any) {
             Alert.alert('Error updating profile', error.message);
         } finally {
             setLoading(false);
@@ -113,8 +86,8 @@ export default function EditProfileModal({ visible, onClose }) {
                                 style={styles.profilePicture}
                             />
                         ) : (
-                            <ActivityIndicator/>)
-                        }
+                            <ActivityIndicator />
+                        )}
                     </View>
 
                     {/* Title */}
@@ -123,13 +96,24 @@ export default function EditProfileModal({ visible, onClose }) {
                     {/* Name Field */}
                     <View style={styles.fieldRow}>
                         <Text style={styles.label}>Name</Text>
-                        <Text style={styles.value}>{name}</Text>
+                        <TextInput
+                            style={styles.input}
+                            value={name}
+                            onChangeText={setName}
+                            placeholder="Enter your name"
+                        />
                     </View>
 
                     {/* Username Field */}
                     <View style={styles.fieldRow}>
                         <Text style={styles.label}>Username</Text>
-                        <Text style={styles.value}>{username}</Text>
+                        <TextInput
+                            style={styles.input}
+                            value={username}
+                            onChangeText={setUsername}
+                            placeholder="Enter your username"
+                            autoCapitalize="none"
+                        />
                     </View>
 
                     {/* Buttons */}
@@ -205,11 +189,18 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontFamily: 'Lexend-Medium',
         color: '#FE724C',
+        width: 80,
     },
-    value: {
+    input: {
+        flex: 1,
         fontSize: 14,
         fontFamily: 'Lexend-Regular',
         color: '#333',
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        marginLeft: 8,
     },
     buttonRow: {
         flexDirection: 'row',
