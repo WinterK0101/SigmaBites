@@ -1,73 +1,102 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import HighlightedText from "../components/highlightedtexts.js";
+import {useSession} from "@/context/SessionContext";
+import {supabase} from "@/SupabaseConfig";
+import {fetchUserByID} from "@/services/userService";
+import RemoteImage from "@/components/RemoteImage";
+import FriendRequestModal from "@/components/FriendRequestModal";
 
-const highlightWords = ["friend", "Group Swipe"];
+const highlightWords = ["friend", "group swipe"];
 
-// ✅ 1. Define Message type
 type Message = {
-    id: string;
-    name: string;
-    message: string;
+    inboxID: string; // Saves the actual inbox uid
+    requestID: string; // Saves either friendship or invite id
+    senderName: string;
+    senderProfilePicture: string;
     time: string;
-    image: any;
+    messageText: string;
+    type: string; // either friendship or invite
 };
 
-// ✅ 2. Sample data
-const messages: Message[] = [
-    {
-        id: '1',
-        name: 'bubblegumprincess',
-        message: 'Sent a friend request',
-        time: '2h',
-        image: require('../assets/images/personA.png'),
-    },
-    {
-        id: '3',
-        name: 'corpseking',
-        message: 'Invited you to Group Swipe',
-        time: '1d',
-        image: require('../assets/images/personC.png'),
-    },
-    {
-        id: '2',
-        name: 'johnnie',
-        message: 'Invited you to Ajisen Ramen',
-        time: '1d',
-        image: require('../assets/images/personB.png'),
-    },
-    {
-        id: '4',
-        name: 'corpseking',
-        message: 'Accepted your friend request',
-        time: '3d',
-        image: require('../assets/images/personC.png'),
-    },
-    {
-        id: '5',
-        name: 'corpseking',
-        message: 'Sent a friend request',
-        time: '3d',
-        image: require('../assets/images/personC.png'),
-    },
-];
+function getTimeAgo(isoString: string): string {
+    const past = new Date(isoString);
+    const now = new Date();
+
+    const diffInMs = now.getTime() - past.getTime();
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+
+    if (diffInMinutes < 1) return "just now";
+    if (diffInMinutes < 60) return `${diffInMinutes} m`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} h`;
+    return `${Math.floor(diffInMinutes / 1440)} d`;
+}
+
+const retrieveRequests = async (currentUserId: string): Promise<Message[]> => {
+    const { data: requests, error } = await supabase
+        .from('inbox')
+        .select('id, friendshipID, inviteID, type, sender, created_at')
+        .eq('receiver', currentUserId);
+
+    if (!requests) {
+        throw new Error('Failed to fetch requests');
+    }
+
+    const messages = await Promise.all(
+        requests.map(async (request) => {
+            const senderData = await fetchUserByID(request.sender);
+            if (!senderData) return null;
+
+            let messageText = '';
+            let messageID = '';
+            if (request.type === 'friendship') {
+                messageText = 'Sent a friend request';
+                messageID = request.friendshipID;
+            } else if (request.type === 'invite') {
+                messageText = 'Invited you to group swipe';
+                messageID = request.inviteID;
+            }
+
+            return {
+                inboxID: request.id,
+                requestID: messageID,
+                senderName: senderData.name,
+                senderProfilePicture: senderData.avatar_url,
+                time: getTimeAgo(request.created_at),
+                messageText,
+                type: request.type,
+            };
+        })
+    );
+
+    return messages.filter(Boolean) as Message[];
+};
 
 export default function InboxScreen() {
     const router = useRouter();
+    const currentUser = useSession()?.user;
+    const [messages, setMessages] = useState<Message[]>([]);
+
+    useEffect(() => {
+        if (currentUser) {
+            retrieveRequests(currentUser.id).then(setMessages).catch(console.error);
+        }
+    }, [currentUser]);
 
     const renderItem = ({ item }: { item: Message }) => (
-        <TouchableOpacity
-            style={styles.messageCard}
-            activeOpacity={0.7}
-        >
-            <Image source={item.image} style={styles.avatar} />
+        <TouchableOpacity style={styles.messageCard} activeOpacity={0.7} onPress={() => {}}>
+            <RemoteImage
+                filePath={item.senderProfilePicture || 'default-profile.png'}
+                bucket="avatars"
+                style={styles.avatar}
+            />
             <View style={styles.textContainer}>
-                <Text style={styles.name}>{item.name}</Text>
+                <Text style={styles.name}>{item.senderName}</Text>
                 <HighlightedText
-                    text={item.message}
+                    text={item.messageText}
                     highlights={highlightWords}
                     style={styles.messageText}
                     highlightStyle={styles.highlightedText}
@@ -80,7 +109,6 @@ export default function InboxScreen() {
     return (
         <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
             <View style={styles.innerContainer}>
-                {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                         <Icon name="chevron-back" size={28} color="#fe724c" />
@@ -88,25 +116,23 @@ export default function InboxScreen() {
                     <Text style={styles.headerTitle}>Bites Inbox</Text>
                 </View>
 
-                {/* Subheader */}
                 <Text style={styles.subheader}>
-                    {messages.length} Messages
+                    {messages.length} Message{messages.length !== 1 ? 's' : ''}
                 </Text>
 
-                {/* Section Header */}
                 <View style={styles.sectionHeader}>
                     <Text style={styles.sectionTitle}>Last 7 Days</Text>
                 </View>
 
-                {/* Inbox List */}
                 <FlatList
                     data={messages}
                     renderItem={renderItem}
-                    keyExtractor={(item) => item.id}
+                    keyExtractor={(item) => item.inboxID}
                     contentContainerStyle={styles.list}
                     showsVerticalScrollIndicator={false}
                 />
             </View>
+
         </SafeAreaView>
     );
 }

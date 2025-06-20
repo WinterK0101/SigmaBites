@@ -1,6 +1,27 @@
 import { supabase } from '@/SupabaseConfig';
 import { User } from '@/interfaces/interfaces';
 
+
+export async function fetchUserByID(id: string): Promise<User | null> {
+    if (!id) {
+        console.error('No ID provided');
+        return null;
+    }
+
+    const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (error) {
+        console.error('Error fetching user by username:', error);
+        return null;
+    }
+
+    return data as User;
+}
+
 export async function fetchUserByUsername(username: string): Promise<User | null> {
     if (!username) {
         console.error('No username provided');

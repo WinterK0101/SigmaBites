@@ -60,3 +60,5 @@ export interface LocationData {
     address: string;
     isCurrentLocation: boolean;
 }
+
+export interface Inbox
