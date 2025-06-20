@@ -43,7 +43,7 @@ const SignUpScreen = () => {
         Alert.alert(profileError.message);
         console.log(profileError.message);
       } else {
-        router.push('/(tabs)/Discover');
+        router.replace('/(tabs)/Discover');
       }
     }
   }
