@@ -267,6 +267,8 @@ export default function Profile() {
             style={styles.scrollView}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
+            bounces={false} // Disable bounce effect on iOS
+            overScrollMode="never" // Disable overscroll on Android
         >
           {/* Profile Header */}
           <LinearGradient colors={['#D03939', '#FE724C']} style={styles.header}>

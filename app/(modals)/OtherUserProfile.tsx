@@ -270,9 +270,8 @@ export default function OtherUserProfile() {
                 <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
             </TouchableOpacity>
 
-            <ScrollView
+            <View
                 style={styles.scrollView}
-                showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
             >
                 {/* Profile Header */}
@@ -422,7 +421,7 @@ export default function OtherUserProfile() {
                         </ScrollView>
                     )}
                 </View>
-            </ScrollView>
+            </View>
 
             {/* Friend Request Modal (for send/accept) */}
             {friendRequestAction === 'send' ? (
