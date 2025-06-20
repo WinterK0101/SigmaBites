@@ -14,6 +14,7 @@ import { useSession } from '@/context/SessionContext';
 import EditProfileModal from '../(modals)/EditProfileModal';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import RemoteImage from "@/components/RemoteImage";
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function Profile() {
   const router = useRouter();
@@ -29,14 +30,14 @@ export default function Profile() {
   });
 
   const [favouriteEateries, setFavouriteEateries] = useState<
-    { placeId: string; displayName: string; photo: string }[]
+      { placeId: string; displayName: string; photo: string }[]
   >([]);
 
   // Eateries count state
   const [eateryCount, setEateryCount] = useState(0);
 
   const [recentlySaved, setRecentlySaved] = useState<
-    { placeId: string; displayName: string; photo: string }[]
+      { placeId: string; displayName: string; photo: string }[]
   >([]);
   // Friends state
   const [friendCount, setFriendCount] = useState(0);
@@ -54,10 +55,10 @@ export default function Profile() {
 
       try {
         const { data, error } = await supabase
-          .from('profiles')
-          .select('username, name, avatar_url, favourite_eateries, liked_eateries')
-          .eq('id', session.user.id)
-          .single();
+            .from('profiles')
+            .select('username, name, avatar_url, favourite_eateries, liked_eateries')
+            .eq('id', session.user.id)
+            .single();
 
         if (error) {
           console.log('Error fetching profile:', error.message);
@@ -80,17 +81,17 @@ export default function Profile() {
           const favIds = Array.isArray(data.favourite_eateries) ? data.favourite_eateries : [];
           if (favIds.length > 0) {
             const { data: favs, error: favsError } = await supabase
-              .from('Eatery')
-              .select('placeId, displayName, photo')
-              .in('placeId', favIds);
+                .from('Eatery')
+                .select('placeId, displayName, photo')
+                .in('placeId', favIds);
 
             if (favsError || !Array.isArray(favs)) {
               setFavouriteEateries([]);
             } else {
               // Order to match the order in favIds
               const orderedFavs = favIds
-                .map(id => favs.find(e => e.placeId === id))
-                .filter((e): e is { placeId: string; displayName: string; photo: string } => Boolean(e));
+                  .map(id => favs.find(e => e.placeId === id))
+                  .filter((e): e is { placeId: string; displayName: string; photo: string } => Boolean(e));
               setFavouriteEateries(orderedFavs);
             }
           } else {
@@ -103,17 +104,17 @@ export default function Profile() {
 
           if (lastThree.length > 0) {
             const { data: eateries, error: eateryError } = await supabase
-              .from('Eatery')
-              .select('placeId, displayName, photo')
-              .in('placeId', lastThree);
+                .from('Eatery')
+                .select('placeId, displayName, photo')
+                .in('placeId', lastThree);
 
             if (eateryError || !Array.isArray(eateries)) {
               setRecentlySaved([]);
             } else {
               // Order the eateries to match the order of lastThree
               const ordered = lastThree
-                .map(id => eateries.find(e => e.placeId === id))
-                .filter((e): e is { placeId: string; displayName: string; photo: string } => Boolean(e));
+                  .map(id => eateries.find(e => e.placeId === id))
+                  .filter((e): e is { placeId: string; displayName: string; photo: string } => Boolean(e));
               setRecentlySaved(ordered);
             }
           } else {
@@ -130,10 +131,10 @@ export default function Profile() {
       const userId = session.user.id;
 
       const { count, error } = await supabase
-        .from('friendships')
-        .select('*', { count: 'exact', head: true })
-        .or(`user_id_1.eq.${userId},user_id_2.eq.${userId}`)
-        .eq('status', 'accepted');
+          .from('friendships')
+          .select('*', { count: 'exact', head: true })
+          .or(`user_id_1.eq.${userId},user_id_2.eq.${userId}`)
+          .eq('status', 'accepted');
 
       if (error) {
         console.error('Error fetching friend count:', error.message);
@@ -165,9 +166,9 @@ export default function Profile() {
 
     // Delete friendships where user is user_id_1 or user_id_2
     const { error: friendshipError } = await supabase
-      .from('friendships')
-      .delete()
-      .or(`user_id_1.eq.${userId},user_id_2.eq.${userId}`);
+        .from('friendships')
+        .delete()
+        .or(`user_id_1.eq.${userId},user_id_2.eq.${userId}`);
 
     if (friendshipError) {
       console.error('Error deleting friendships:', friendshipError.message);
@@ -176,9 +177,9 @@ export default function Profile() {
 
     // Delete profile
     const { error: profileError } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', userId);
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
 
     if (profileError) {
       console.error('Error deleting profile:', profileError.message);
@@ -214,243 +215,286 @@ export default function Profile() {
     router.replace('/');
   };
 
-  return (
-    <View style={styles.container}>
-
-      {/* Settings Dropdown */}
-      <View style={{ position: 'absolute', top: 60, right: 20, zIndex: 999 }}>
-        <TouchableOpacity
-          onPress={() => setShowDropdown(!showDropdown)}
-          style={styles.settingsIcon}
-        >
-          <Image
-            source={{
-              uri: 'https://www.iconpacks.net/icons/2/free-settings-icon-3110-thumb.png',
-            }}
-            style={styles.settingsImage}
+  const EmptyRecentlySavedState = () => (
+      <View style={styles.emptyStateContainer}>
+        <View style={styles.emptyIconContainer}>
+          <MaterialCommunityIcons
+              name="bookmark-outline"
+              size={28}
+              color="#FE724C"
           />
-        </TouchableOpacity>
-
-        {showDropdown && (
-          <View style={styles.dropdownMenu}>
-            <TouchableOpacity
-              onPress={() => {
-                setShowDropdown(false);
-                setShowLogoutModal(true);
-              }}
-            >
-              <Text style={styles.dropdownItem}>Log out</Text>
-            </TouchableOpacity>
-            <View style={styles.divider} />
-            <TouchableOpacity
-              onPress={() => {
-                setShowDropdown(false);
-                setShowDeleteModal(true);
-              }}
-            >
-              <Text style={styles.dropdownItem}>Delete</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        </View>
+        <Text style={styles.emptyStateTitle}>No Recent Saves</Text>
+        <Text style={styles.emptyStateSubtitle}>
+          Start exploring and save eateries you love!
+        </Text>
       </View>
+  );
 
-      {/* Profile Header */}
-      <LinearGradient colors={['#D03939', '#FE724C']} style={styles.header}>
-        <View className="relative mt-16">
-          <View
-            style={{
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 5,
-              borderRadius: 60,
-            }}
+  const EmptyFavouritesState = () => (
+      <View style={styles.emptyStateContainer}>
+        <View style={styles.emptyIconContainer}>
+          <MaterialCommunityIcons
+              name="heart-outline"
+              size={28}
+              color="#FE724C"
+          />
+        </View>
+        <Text style={styles.emptyStateTitle}>No Favourites Yet</Text>
+        <Text style={styles.emptyStateSubtitle}>
+          Heart eateries you discover to add them here
+        </Text>
+      </View>
+  );
+
+  return (
+      <View style={styles.container}>
+
+        {/* Settings Dropdown */}
+        <View style={{ position: 'absolute', top: 60, right: 20, zIndex: 999 }}>
+          <TouchableOpacity
+              onPress={() => setShowDropdown(!showDropdown)}
+              style={styles.settingsIcon}
           >
-            <RemoteImage
-              filePath={profile.avatar_url ? profile.avatar_url : 'default-profile.png'}
-              bucket="avatars"
-              style={{ width: 120, height: 120, borderRadius: 60, borderWidth: 4, borderColor: 'white' }}
+            <Image
+                source={{
+                  uri: 'https://www.iconpacks.net/icons/2/free-settings-icon-3110-thumb.png',
+                }}
+                style={styles.settingsImage}
             />
-          </View>
-        </View>
+          </TouchableOpacity>
 
-        <Text style={styles.name}>{profile.displayName}</Text>
-        <Text style={styles.username}>@{profile.username}</Text>
-
-        <TouchableOpacity
-          style={styles.editButton}
-          activeOpacity={0.8}
-          onPress={() => setShowEditModal(true)}
-        >
-          <Text style={styles.editButtonText}>Edit Profile</Text>
-        </TouchableOpacity>
-
-        <View className="flex-row justify-center items-center">
-          <View className="flex-col items-center mr-10">
-            <Text className="font-lexend-bold text-xl text-white">{eateryCount}</Text>
-            <Text className="font-lexend-regular text-sm text-white">Eateries</Text>
-          </View>
-          <View className="flex-col items-center">
-            <Text className="font-lexend-bold text-xl text-white">{friendCount}</Text>
-            <Text className="font-lexend-regular text-sm text-white">Friends</Text>
-          </View>
-        </View>
-      </LinearGradient>
-
-      {/* Recently Saved */}
-      <View
-        className="flex-col bg-white w-[350px] h-[145px] self-center rounded-2xl py-2 px-4"
-        style={{
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.2,
-          shadowRadius: 4,
-          marginTop: -40,
-        }}
-      >
-        <Text className="font-lexend-bold text-primary text-base mb-3">Recently Saved</Text>
-        <View className="flex-row items-center">
-          {recentlySaved.length === 0 ? (
-            <Text className="text-xs text-gray-400">No recently saved eateries</Text>
-          ) : (
-            recentlySaved.map((eatery) => (
-              <TouchableOpacity
-                key={eatery.displayName}
-                activeOpacity={0.8}
-                className="mr-3 items-center"
-              >
-                <Image
-                  source={{ uri: eatery.photo }}
-                  className="w-[70px] h-[70px] rounded-full"
-                  resizeMode="cover"
-                />
-                <Text
-                  className="text-xs w-[80px] font-lexend-regular text-primary text-center mt-2"
-                  numberOfLines={1}
+          {showDropdown && (
+              <View style={styles.dropdownMenu}>
+                <TouchableOpacity
+                    onPress={() => {
+                      setShowDropdown(false);
+                      setShowLogoutModal(true);
+                    }}
                 >
-                  {eatery.displayName}
-                </Text>
-              </TouchableOpacity>
-            ))
+                  <Text style={styles.dropdownItem}>Log out</Text>
+                </TouchableOpacity>
+                <View style={styles.divider} />
+                <TouchableOpacity
+                    onPress={() => {
+                      setShowDropdown(false);
+                      setShowDeleteModal(true);
+                    }}
+                >
+                  <Text style={styles.dropdownItem}>Delete</Text>
+                </TouchableOpacity>
+              </View>
           )}
         </View>
-      </View>
 
-      {/* Favourites */}
-      <View
-        className="flex-col bg-white w-[350px] h-[175px] self-center rounded-2xl py-2 px-4 mt-4 mb-4"
-        style={{
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.2,
-          shadowRadius: 4,
-        }}
-      >
-        <Text className="font-lexend-bold text-primary text-base">Favourites</Text>
+        <ScrollView
+            style={styles.scrollView}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+            bounces={false} // Disable bounce effect on iOS
+            overScrollMode="never" // Disable overscroll on Android
+        >
+          {/* Profile Header */}
+          <LinearGradient colors={['#D03939', '#FE724C']} style={styles.header}>
+            <View className="relative mt-16">
+              <View
+                  style={{
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 5,
+                    borderRadius: 60,
+                  }}
+              >
+                <RemoteImage
+                    filePath={profile.avatar_url ? profile.avatar_url : 'default-profile.png'}
+                    bucket="avatars"
+                    style={{ width: 120, height: 120, borderRadius: 60, borderWidth: 4, borderColor: 'white' }}
+                />
+              </View>
+            </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View className="flex-row items-center">
-            {favouriteEateries.length === 0 ? (
-              <Text className="text-xs text-gray-400">No favourites yet</Text>
+            <Text style={styles.name}>{profile.displayName}</Text>
+            <Text style={styles.username}>@{profile.username}</Text>
+
+            <TouchableOpacity
+                style={styles.editButton}
+                activeOpacity={0.8}
+                onPress={() => setShowEditModal(true)}
+            >
+              <Text style={styles.editButtonText}>Edit Profile</Text>
+            </TouchableOpacity>
+
+            <View className="flex-row justify-center items-center">
+              <View className="flex-col items-center mr-10">
+                <Text className="font-lexend-bold text-xl text-white">{eateryCount}</Text>
+                <Text className="font-lexend-regular text-sm text-white">Eateries</Text>
+              </View>
+              <View className="flex-col items-center">
+                <Text className="font-lexend-bold text-xl text-white">{friendCount}</Text>
+                <Text className="font-lexend-regular text-sm text-white">Friends</Text>
+              </View>
+            </View>
+          </LinearGradient>
+
+          {/* Recently Saved */}
+          <View
+              className="flex-col bg-white w-[350px] self-center rounded-2xl py-4 px-4"
+              style={{
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                marginTop: -40,
+                minHeight: 110,
+              }}
+          >
+            <Text className="font-lexend-bold text-primary text-base mb-3">Recently Saved</Text>
+
+            {recentlySaved.length === 0 ? (
+                <EmptyRecentlySavedState />
             ) : (
-              favouriteEateries.map((eatery) => (
-                <TouchableOpacity
-                  key={eatery.placeId}
-                  activeOpacity={0.8}
-                  className="mr-3 items-center"
-                >
-                  <View style={{ position: 'relative' }}>
-                    <Image
-                      source={{ uri: eatery.photo }}
-                      className="w-[110px] h-[120px] rounded-2xl"
-                      resizeMode="cover"
-                    />
-
-                    <LinearGradient
-                      colors={[
-                        'rgba(0,0,0,0)',
-                        'rgba(0,0,0,0.3)',
-                        'rgba(102,51,25,0.8)'
-                      ]}
-                      locations={[0, 0.6, 1]}
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: 110,
-                        height: 120,
-                        borderRadius: 16,
-                        justifyContent: 'flex-end',
-                        paddingBottom: 8,
-                      }}
-                    >
-                      <Text
-                        className="text-white text-xs font-lexend-medium ml-2"
-                        numberOfLines={2}
+                <View className="flex-row items-center">
+                  {recentlySaved.map((eatery) => (
+                      <TouchableOpacity
+                          key={eatery.displayName}
+                          activeOpacity={0.8}
+                          className="mr-3 items-center"
                       >
-                        {eatery.displayName}
-                      </Text>
-                    </LinearGradient>
+                        <Image
+                            source={{ uri: eatery.photo }}
+                            className="w-[70px] h-[70px] rounded-full"
+                            resizeMode="cover"
+                        />
+                        <Text
+                            className="text-xs w-[80px] font-lexend-regular text-primary text-center mt-2"
+                            numberOfLines={1}
+                        >
+                          {eatery.displayName}
+                        </Text>
+                      </TouchableOpacity>
+                  ))}
+                </View>
+            )}
+          </View>
+
+          {/* Favourites */}
+          <View
+              className="flex-col bg-white w-[350px] self-center rounded-2xl py-4 px-4 mt-4"
+              style={{
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                minHeight: 135,
+              }}
+          >
+            <Text className="font-lexend-bold text-primary text-base mb-3">Favourites</Text>
+
+            {favouriteEateries.length === 0 ? (
+                <EmptyFavouritesState />
+            ) : (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View className="flex-row items-center">
+                    {favouriteEateries.map((eatery) => (
+                        <TouchableOpacity
+                            key={eatery.placeId}
+                            activeOpacity={0.8}
+                            className="mr-3 items-center"
+                        >
+                          <View style={{ position: 'relative' }}>
+                            <Image
+                                source={{ uri: eatery.photo }}
+                                className="w-[110px] h-[120px] rounded-2xl"
+                                resizeMode="cover"
+                            />
+
+                            <LinearGradient
+                                colors={[
+                                  'rgba(0,0,0,0)',
+                                  'rgba(0,0,0,0.3)',
+                                  'rgba(102,51,25,0.8)'
+                                ]}
+                                locations={[0, 0.6, 1]}
+                                style={{
+                                  position: 'absolute',
+                                  top: 0,
+                                  left: 0,
+                                  width: 110,
+                                  height: 120,
+                                  borderRadius: 16,
+                                  justifyContent: 'flex-end',
+                                  paddingBottom: 8,
+                                }}
+                            >
+                              <Text
+                                  className="text-white text-xs font-lexend-medium ml-2"
+                                  numberOfLines={2}
+                              >
+                                {eatery.displayName}
+                              </Text>
+                            </LinearGradient>
+                          </View>
+                        </TouchableOpacity>
+                    ))}
                   </View>
-                </TouchableOpacity>
-              ))
+                </ScrollView>
             )}
           </View>
         </ScrollView>
+
+        {/* Edit Profile Modal */}
+        <EditProfileModal
+            visible={showEditModal}
+            onClose={() => setShowEditModal(false)}
+            profile={profile}
+            onSave={async (updatedProfile) => {
+              if (!session?.user) return;
+              const { error } = await supabase
+                  .from('profiles')
+                  .update({
+                    name: updatedProfile.displayName,
+                    username: updatedProfile.username,
+                    avatar_url: updatedProfile.avatar_url,
+                  })
+                  .eq('id', session.user.id);
+
+              if (!error) {
+                setProfile((prev) => ({
+                  ...prev,
+                  displayName: updatedProfile.displayName,
+                  username: updatedProfile.username,
+                  avatar_url: updatedProfile.avatar_url,
+                }));
+                setShowEditModal(false);
+              } else {
+                // Optionally show an error message
+                console.error('Error updating profile:', error.message);
+              }
+            }}
+        />
+
+        {/* Logout Confirmation Modal */}
+        <ConfirmationModal
+            visible={showLogoutModal}
+            title="Log Out"
+            message="Are you sure you want to log out?"
+            confirmText="Log Out"
+            onConfirm={handleLogout}
+            onCancel={() => setShowLogoutModal(false)}
+        />
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmationModal
+            visible={showDeleteModal}
+            title="Delete Account"
+            message="This action cannot be undone. All your data will be permanently deleted."
+            confirmText="Delete"
+            onConfirm={handleDelete}
+            onCancel={() => setShowDeleteModal(false)}
+        />
+
       </View>
-
-      {/* Edit Profile Modal */}
-      <EditProfileModal
-        visible={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        profile={profile}
-        onSave={async (updatedProfile) => {
-          if (!session?.user) return;
-          const { error } = await supabase
-            .from('profiles')
-            .update({
-              name: updatedProfile.displayName,
-              username: updatedProfile.username,
-              avatar_url: updatedProfile.avatar_url,
-            })
-            .eq('id', session.user.id);
-
-          if (!error) {
-            setProfile((prev) => ({
-              ...prev,
-              displayName: updatedProfile.displayName,
-              username: updatedProfile.username,
-              avatar_url: updatedProfile.avatar_url,
-            }));
-            setShowEditModal(false);
-          } else {
-            // Optionally show an error message
-            console.error('Error updating profile:', error.message);
-          }
-        }}
-      />
-
-      {/* Logout Confirmation Modal */}
-      <ConfirmationModal
-        visible={showLogoutModal}
-        title="Log Out"
-        message="Are you sure you want to log out?"
-        confirmText="Log Out"
-        onConfirm={handleLogout}
-        onCancel={() => setShowLogoutModal(false)}
-      />
-
-      {/* Delete Confirmation Modal */}
-      <ConfirmationModal
-        visible={showDeleteModal}
-        title="Delete Account"
-        message="This action cannot be undone. All your data will be permanently deleted."
-        confirmText="Delete"
-        onConfirm={handleDelete}
-        onCancel={() => setShowDeleteModal(false)}
-      />
-
-    </View>
   );
 }
 
@@ -458,7 +502,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fafafa',
-    overflow: 'hidden',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
   },
   header: {
     width: 1000,
@@ -537,5 +587,37 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
     marginVertical: 6,
     marginHorizontal: 12,
+  },
+  // Empty state styles
+  emptyStateContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  emptyIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#FFF5F2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  emptyStateTitle: {
+    fontSize: 14,
+    fontFamily: 'Lexend-medium',
+    color: '#333',
+    marginBottom: 2,
+    textAlign: 'center',
+  },
+  emptyStateSubtitle: {
+    fontSize: 11,
+    fontFamily: 'Lexend-regular',
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 6,
+    lineHeight: 14,
+    maxWidth: 250,
   },
 });
