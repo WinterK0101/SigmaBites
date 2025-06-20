@@ -15,7 +15,7 @@ import {icons} from "@/constants/icons";
 import { searchUsersByUsername } from '@/services/userService';
 import {User} from '@/interfaces/interfaces'
 import RemoteImage from "@/components/RemoteImage";
-import FriendRequestModal from "@/app/(modals)/SendFriendRequestModal";
+import FriendRequestModal from "@/components/FriendRequestModal";
 
 export default function AddFriendScreen() {
     const [searchQuery, setSearchQuery] = useState('');

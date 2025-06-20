@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
-import {fetchUserFriends} from "@/services/friends";
+import {fetchUserFriends} from "@/services/friendService";
 import {useSession} from "@/context/SessionContext";
 import RemoteImage from "@/components/RemoteImage";
 

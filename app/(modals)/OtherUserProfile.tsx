@@ -6,7 +6,6 @@ import {
     ScrollView,
     Image,
     TouchableOpacity,
-    Modal,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -14,12 +13,15 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/SupabaseConfig';
 import { useSession } from '@/context/SessionContext';
 import { fetchUserByUsername } from "@/services/userService";
-import { FRIEND_STATUS } from '@/constants/friendStatus';
+import {FRIEND_STATUS, FriendStatus} from '@/constants/friendStatus';
 import ConfirmationModal from "@/components/ConfirmationModal";
+import FriendRequestModal from "@/components/FriendRequestModal";
 import RemoteImage from "@/components/RemoteImage";
 import {dummyUser} from "@/data/dummyUser";
+import {cancelFriendRequest, getFriendshipStatus, rejectFriendRequest, removeFriend} from "@/services/friendService";
+import {User} from '@/interfaces/interfaces';
 
-const getFriendButtonText = (status) => {
+const getFriendButtonText = (status: FriendStatus) => {
     switch (status) {
         case FRIEND_STATUS.NOT_FRIENDS:
             return 'Add Friend';
@@ -34,7 +36,7 @@ const getFriendButtonText = (status) => {
     }
 };
 
-const getFriendButtonStyle = (status, styles) => {
+const getFriendButtonStyle = (status: FriendStatus, styles) => {
     switch (status) {
         case FRIEND_STATUS.REQUEST_SENT:
             return [styles.friendButton, styles.requestedButton];
@@ -45,7 +47,7 @@ const getFriendButtonStyle = (status, styles) => {
     }
 };
 
-const getFriendButtonTextStyle = (status, styles) => {
+const getFriendButtonTextStyle = (status: FriendStatus, styles) => {
     switch (status) {
         case FRIEND_STATUS.REQUEST_SENT:
             return [styles.friendButtonText, styles.requestedButtonText];
@@ -58,54 +60,99 @@ const getFriendButtonTextStyle = (status, styles) => {
 
 export default function OtherUserProfile() {
     const router = useRouter();
-    const session = useSession();
+    const currentUser = useSession()?.user;
+    if (!currentUser) return;
     const { username } = useLocalSearchParams();
 
     const [profile, setProfile] = useState({
         displayName: 'Loading...',
         username: 'Loading...',
         avatar_url: 'default-profile.png',
-        id: null,
+        id: '',
     });
-    const [friendStatus, setFriendStatus] = useState(FRIEND_STATUS.NOT_FRIENDS);
+    const [friendStatus, setFriendStatus] = useState<FriendStatus>(FRIEND_STATUS.NOT_FRIENDS);
     const [isLoading, setIsLoading] = useState(false);
+
+    // Modal states
     const [showUnfriendModal, setShowUnfriendModal] = useState(false);
+    const [showFriendRequestModal, setShowFriendRequestModal] = useState(false);
+    const [showCancelRequestModal, setShowCancelRequestModal] = useState(false);
+    const [friendRequestAction, setFriendRequestAction] = useState('send'); // 'send' or 'accept'
 
     useEffect(() => {
         async function fetchProfileAndFriendStatus() {
-            if (!session?.user || !username) return;
+            if (!currentUser || !username) return;
 
             try {
                 const data = await fetchUserByUsername(username as string);
 
                 if (data) {
-                    const newProfile = {
-                        displayName: data.name || 'No name',
-                        username: data.username || 'No username',
-                        avatar_url: data.avatar_url || 'https://i.pinimg.com/564x/39/33/f6/3933f64de1724bb67264818810e3f2cb.jpg',
+                    const userProfile = {
+                        displayName: data.name,
+                        username: data.username,
+                        avatar_url: data.avatar_url,
                         id: data.id,
                     };
 
-                    setProfile(newProfile);
+                    setProfile(userProfile);
 
-                   // await fetchFriendStatus(data.id);
+                    const status = await getFriendshipStatus(currentUser.id, data.id);
+                    setFriendStatus(status);
                 }
             } catch (error) {
                 console.error('Error in fetchProfileAndFriendStatus:', error);
             }
         }
-
         fetchProfileAndFriendStatus();
-    }, [session, username]);
+    }, [currentUser, username]);
 
-    const handleFriendAction = () => {
-        // Placeholder for your friend logic (send, cancel, unfriend, etc.)
-        console.log('Friend action triggered.');
+    const refreshFriendStatus = async () => {
+        try {
+            const status = await getFriendshipStatus(currentUser.id, profile.id);
+            setFriendStatus(status);
+        } catch (error) {
+            console.error('Error refreshing friend status:', error);
+        }
     };
 
-    const handleUnfriend = () => {
-        console.log('Unfriend triggered.');
-        setShowUnfriendModal(false);
+
+    const handleFriendAction = () => {
+        switch (friendStatus) {
+            case FRIEND_STATUS.REQUEST_SENT:
+                setShowCancelRequestModal(true);
+                break;
+            case FRIEND_STATUS.FRIENDS:
+                setShowUnfriendModal(true);
+                break;
+            case FRIEND_STATUS.NOT_FRIENDS:
+                setFriendRequestAction('send');
+                setShowFriendRequestModal(true);
+                break;
+            case FRIEND_STATUS.REQUEST_RECEIVED:
+                setFriendRequestAction('accept');
+                setShowFriendRequestModal(true);
+                break;
+        }
+    };
+
+    const handleCancelRequest = async () => {
+        try {
+            await cancelFriendRequest(currentUser.id, profile.id);
+            await refreshFriendStatus();
+            setShowCancelRequestModal(false);
+        } catch (error) {
+            console.error('Error canceling request:', error);
+        }
+    };
+
+    const handleUnfriend = async () => {
+        try {
+            await removeFriend(currentUser.id, profile.id);
+            await refreshFriendStatus();
+            setShowUnfriendModal(false);
+        } catch (error) {
+            console.error('Error unfriending:', error);
+        }
     };
 
     return (
@@ -166,7 +213,7 @@ export default function OtherUserProfile() {
                     shadowOffset: { width: 0, height: 0 },
                     shadowOpacity: 0.2,
                     shadowRadius: 4,
-                    marginTop: -40,
+                    marginTop: -30,
                 }}
             >
                 <Text className="font-lexend-bold text-primary text-base mb-3">Recently Saved</Text>
@@ -195,7 +242,7 @@ export default function OtherUserProfile() {
 
             {/* Favourites */}
             <View
-                className="flex-col bg-white w-[350px] h-[175px] self-center rounded-2xl py-2 px-4 mt-4 mb-4"
+                className="flex-col bg-white w-[350px] h-[175px] self-center rounded-2xl py-2 px-4 mt-8 mb-4"
                 style={{
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: 0 },
@@ -252,15 +299,35 @@ export default function OtherUserProfile() {
                 </ScrollView>
             </View>
 
-            {/* Unfriend Modal */}
+            {/* Friend Request Modal (for send/accept) */}
+            <FriendRequestModal
+                visible={showFriendRequestModal}
+                user={profile}
+                action={friendRequestAction}
+                onClose={() => setShowFriendRequestModal(false)}
+                onSuccess={refreshFriendStatus}
+            />
+
+            {/* Unfriend Confirmation Modal */}
             <ConfirmationModal
                 visible={showUnfriendModal}
                 title="Remove Friend"
-                message={`Are you sure you want to remove ${profile.displayName} from your friends?`}
+                message={`Are you sure you want to remove @${profile.username} from your friends?`}
                 confirmText="Remove"
                 cancelText="Cancel"
                 onConfirm={handleUnfriend}
                 onCancel={() => setShowUnfriendModal(false)}
+            />
+
+            {/* Cancel Friend Request Confirmation Modal */}
+            <ConfirmationModal
+                visible={showCancelRequestModal}
+                title="Cancel Request"
+                message={`Are you sure you want to cancel your friend request to @${profile.username}?`}
+                confirmText="Confirm"
+                cancelText="Keep"
+                onConfirm={handleCancelRequest}
+                onCancel={() => setShowCancelRequestModal(false)}
             />
         </View>
     );
@@ -306,7 +373,6 @@ const styles = StyleSheet.create({
         fontSize: 32,
         color: '#fff',
         fontFamily: 'Baloo-regular',
-        marginTop: 12,
     },
     username: {
         color: '#fff',
@@ -341,12 +407,5 @@ const styles = StyleSheet.create({
     },
     friendsButtonText: {
         color: 'rgba(255,255,255,0.9)',
-    },
-    shadowBox: {
-        shadowColor: '#000',
-        shadowOffset: {width: 0, height: 0},
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        marginTop: -40,
     },
 });

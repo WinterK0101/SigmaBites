@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { icons } from '@/constants/icons';
-import { fetchUserFriends } from '@/services/friends';
+import { fetchUserFriends } from '@/services/friendService';
 import {useSession} from "@/context/SessionContext";
 import RemoteImage from "@/components/RemoteImage";
 

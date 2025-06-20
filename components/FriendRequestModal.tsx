@@ -5,66 +5,73 @@ import {
     TouchableOpacity,
     StyleSheet,
     Modal,
-    ActivityIndicator,
     Alert,
 } from 'react-native';
-import { supabase } from '@/SupabaseConfig';
 import RemoteImage from '@/components/RemoteImage';
 import { useSession } from "@/context/SessionContext";
+import { sendFriendRequest, acceptFriendRequest } from "@/services/friendService";
 
-export default function FriendRequestModal({ visible, onClose, user }) {
+export default function FriendRequestModal({
+                                               visible,
+                                               onClose,
+                                               user,
+                                               action = 'send', // 'send' or 'accept'
+                                               onSuccess
+                                           }) {
     const [loading, setLoading] = useState(false);
     const session = useSession();
     const currentUser = session?.user;
 
-    const handleSendRequest = async () => {
+    const getModalConfig = () => {
+        switch (action) {
+            case 'send':
+                return {
+                    title: 'Send Friend Request',
+                    message: 'Do you want to send a friend request to this user?',
+                    confirmText: 'Send',
+                    confirmStyle: styles.sendButton,
+                    confirmTextStyle: styles.sendButtonText
+                };
+            case 'accept':
+                return {
+                    title: 'Accept Friend Request',
+                    message: `Accept friend request from @${user?.username}?`,
+                    confirmText: 'Accept',
+                    confirmStyle: styles.acceptButton,
+                    confirmTextStyle: styles.acceptButtonText
+                };
+            default:
+                return {
+                    title: 'Send Friend Request',
+                    message: 'Do you want to send a friend request to this user?',
+                    confirmText: 'Send',
+                    confirmStyle: styles.sendButton,
+                    confirmTextStyle: styles.sendButtonText
+                };
+        }
+    };
+
+    const handleAction = async () => {
+        if (!currentUser || !user) {
+            Alert.alert('Error', 'Missing user information');
+            return;
+        }
+
         setLoading(true);
         try {
-            if (!currentUser) {
-                Alert.alert('Error', 'No user logged in');
-                setLoading(false);
-                return;
+            if (action === 'send') {
+                await sendFriendRequest(currentUser.id, user.id);
+                Alert.alert('Success', `Friend request sent to @${user.username}!`);
+            } else if (action === 'accept') {
+                await acceptFriendRequest(user.id, currentUser.id);
+                Alert.alert('Success', `You are now friends with @${user.username}!`);
             }
 
-            if (!user) {
-                Alert.alert('Error', 'No user selected');
-                setLoading(false);
-                return;
-            }
-
-            // Check if friend request already exists
-            const { data: existingRequest, error: checkError } = await supabase
-                .from('friendships')
-                .select('id')
-                .or(`and(user_id_1.eq.${currentUser.id},user_id_2.eq.${user.id}),and(user_id_1.eq.${user.id},user_id_2.eq.${currentUser.id})`)
-                .single();
-
-            if (checkError && checkError.code !== 'PGRST116') {
-                throw checkError;
-            }
-
-            if (existingRequest) {
-                Alert.alert('Alert', 'Friend request already exists');
-                onClose();
-                return;
-            }
-
-            // Send friend request
-            const { error } = await supabase
-                .from('friendships')
-                .insert({
-                    user_id_1: currentUser.id,
-                    user_id_2: user.id,
-                    status: 'pending',
-                    created_at: new Date().toISOString(),
-                });
-
-            if (error) throw error;
-
-            Alert.alert('Success', `Friend request sent to @${user.username}!`);
+            onSuccess?.(); // Call success callback if provided
             onClose();
         } catch (error) {
-            Alert.alert('Error sending friend request', error.message);
+            console.error('Error with friend action:', error);
+            Alert.alert('Error', error.message || 'Something went wrong');
         } finally {
             setLoading(false);
         }
@@ -72,15 +79,7 @@ export default function FriendRequestModal({ visible, onClose, user }) {
 
     if (!user) return null;
 
-    if (loading) {
-        return (
-            <Modal visible={visible} transparent animationType="fade">
-                <View style={styles.modalBackground}>
-                    <ActivityIndicator size="large" color="#FE724C" />
-                </View>
-            </Modal>
-        );
-    }
+    const config = getModalConfig();
 
     return (
         <Modal visible={visible} transparent animationType="fade">
@@ -96,7 +95,7 @@ export default function FriendRequestModal({ visible, onClose, user }) {
                     </View>
 
                     {/* Title */}
-                    <Text style={styles.title}>Send Friend Request</Text>
+                    <Text style={styles.title}>{config.title}</Text>
 
                     {/* User Info */}
                     <View style={styles.userInfo}>
@@ -106,9 +105,7 @@ export default function FriendRequestModal({ visible, onClose, user }) {
                         )}
                     </View>
 
-                    <Text style={styles.message}>
-                        Do you want to send a friend request to this user?
-                    </Text>
+                    <Text style={styles.message}>{config.message}</Text>
 
                     {/* Buttons */}
                     <View style={styles.buttonRow}>
@@ -116,15 +113,19 @@ export default function FriendRequestModal({ visible, onClose, user }) {
                             style={styles.cancelButton}
                             onPress={onClose}
                             activeOpacity={0.8}
+                            disabled={loading}
                         >
                             <Text style={styles.cancelButtonText}>Cancel</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={styles.sendButton}
-                            onPress={handleSendRequest}
+                            style={config.confirmStyle}
+                            onPress={handleAction}
                             activeOpacity={0.8}
+                            disabled={loading}
                         >
-                            <Text style={styles.sendButtonText}>Send</Text>
+                            <Text style={config.confirmTextStyle}>
+                                {loading ? 'Loading...' : config.confirmText}
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -235,6 +236,25 @@ const styles = StyleSheet.create({
         minHeight: 44,
     },
     sendButtonText: {
+        color: 'white',
+        fontFamily: 'Lexend-Medium',
+        fontSize: 14,
+        textAlign: 'center',
+        lineHeight: 16,
+    },
+    acceptButton: {
+        flex: 1,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#fe724c',
+        borderWidth: 1,
+        borderColor: '#28a745',
+        minHeight: 44,
+    },
+    acceptButtonText: {
         color: 'white',
         fontFamily: 'Lexend-Medium',
         fontSize: 14,
