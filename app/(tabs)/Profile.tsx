@@ -15,10 +15,12 @@ import EditProfileModal from '../(modals)/EditProfileModal';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import RemoteImage from "@/components/RemoteImage";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import {useFriendsStore} from "@/store/friendsStore";
 
 export default function Profile() {
   const router = useRouter();
   const session = useSession();
+  const { friendCount, fetchFriendCount, fetchFriends } = useFriendsStore(); // Get from store
 
   // Profile state
   const [profile, setProfile] = useState({
@@ -39,8 +41,6 @@ export default function Profile() {
   const [recentlySaved, setRecentlySaved] = useState<
       { placeId: string; displayName: string; photo: string }[]
   >([]);
-  // Friends state
-  const [friendCount, setFriendCount] = useState(0);
 
   // Modal states
   const [showEditModal, setShowEditModal] = useState(false);
@@ -48,7 +48,6 @@ export default function Profile() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  // Fetch profile on mount or session change
   useEffect(() => {
     async function fetchProfile() {
       if (!session?.user) return;
@@ -88,37 +87,29 @@ export default function Profile() {
             if (favsError || !Array.isArray(favs)) {
               setFavouriteEateries([]);
             } else {
-              // Order to match the order in favIds
               const orderedFavs = favIds
                   .map(id => favs.find(e => e.placeId === id))
                   .filter((e): e is { placeId: string; displayName: string; photo: string } => Boolean(e));
               setFavouriteEateries(orderedFavs);
             }
-          } else {
-            setFavouriteEateries([]);
           }
 
-          // Fetch details for last 3 liked eateries
+          // Fetch recently saved
           const liked = Array.isArray(data.liked_eateries) ? data.liked_eateries : [];
-          const lastThree = liked.slice(-3).reverse(); // Get last 3, most recent first
+          const lastThree = liked.slice(-3).reverse();
 
           if (lastThree.length > 0) {
-            const { data: eateries, error: eateryError } = await supabase
+            const { data: eateries } = await supabase
                 .from('Eatery')
                 .select('placeId, displayName, photo')
                 .in('placeId', lastThree);
 
-            if (eateryError || !Array.isArray(eateries)) {
-              setRecentlySaved([]);
-            } else {
-              // Order the eateries to match the order of lastThree
+            if (Array.isArray(eateries)) {
               const ordered = lastThree
                   .map(id => eateries.find(e => e.placeId === id))
                   .filter((e): e is { placeId: string; displayName: string; photo: string } => Boolean(e));
               setRecentlySaved(ordered);
             }
-          } else {
-            setRecentlySaved([]);
           }
         }
       } catch (error) {
@@ -126,27 +117,18 @@ export default function Profile() {
       }
     }
 
-    async function fetchFriendCount() {
-      if (!session?.user) return;
-      const userId = session.user.id;
-
-      const { count, error } = await supabase
-          .from('friendships')
-          .select('*', { count: 'exact', head: true })
-          .or(`user_id_1.eq.${userId},user_id_2.eq.${userId}`)
-          .eq('status', 'accepted');
-
-      if (error) {
-        console.error('Error fetching friend count:', error.message);
-        setFriendCount(0);
-        return;
+    const loadData = async () => {
+      if (session?.user?.id) {
+        await Promise.all([
+          fetchProfile(),
+          fetchFriends(session.user.id),  // This will automatically update friendCount in the store
+          fetchFriendCount(session.user.id) // Optional: explicit count refresh
+        ]);
       }
-      setFriendCount(count || 0);
-    }
+    };
 
-    fetchProfile();
-    fetchFriendCount();
-  }, [session]);
+    loadData();
+  }, [session?.user?.id]);
 
   const handleLogout = async () => {
     setShowLogoutModal(false);

@@ -50,6 +50,8 @@ export interface User {
     email: string;
     avatar_url: string;
     password: string;
+    favourite_eateries: string[];
+    liked_eateries: string[];
 }
 
 export interface LocationData {

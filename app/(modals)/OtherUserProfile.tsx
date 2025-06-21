@@ -16,7 +16,7 @@ import { supabase } from '@/SupabaseConfig';
 import {FRIEND_STATUS, FriendStatus} from '@/constants/friendStatus';
 import ConfirmationModal from "@/components/ConfirmationModal";
 import RemoteImage from "@/components/RemoteImage";
-import {cancelFriendRequest, getFriendshipStatus, removeFriend} from "@/services/friendService";
+import {cancelFriendRequest, fetchFriendCount, getFriendshipStatus, removeFriend} from "@/services/friendService";
 import SendFriendRequestModal from "@/app/(modals)/SendFriendRequestModal";
 import AcceptFriendRequestModal from "@/app/(modals)/AcceptFriendRequestModal";
 
@@ -63,7 +63,14 @@ export default function OtherUserProfile() {
     if (!currentUser) return;
     const { username } = useLocalSearchParams();
 
-    const [profile, setProfile] = useState({
+    const [profile, setProfile] = useState<{
+        displayName: string;
+        username: string;
+        avatar_url: string;
+        id: string;
+        favourite_eateries: string[];
+        liked_eateries: string[];
+    }>({
         displayName: 'Loading...',
         username: 'Loading...',
         avatar_url: 'default-profile.png',
@@ -162,18 +169,8 @@ export default function OtherUserProfile() {
                     setFriendStatus(status);
 
                     // Fetch friend count
-                    const { count, error: friendError } = await supabase
-                        .from('friendships')
-                        .select('*', { count: 'exact', head: true })
-                        .or(`user_id_1.eq.${data.id},user_id_2.eq.${data.id}`)
-                        .eq('status', 'accepted');
-
-                    if (friendError) {
-                        console.error('Error fetching friend count:', friendError.message);
-                        setFriendCount(0);
-                    } else {
-                        setFriendCount(count || 0);
-                    }
+                    const count = await fetchFriendCount(data.id);
+                    setFriendCount(count);
                 }
             } catch (error) {
                 console.error('Error in fetchProfileAndFriendStatus:', error);
@@ -270,8 +267,9 @@ export default function OtherUserProfile() {
                 <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
             </TouchableOpacity>
 
-            <View
+            <ScrollView
                 style={styles.scrollView}
+                showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
             >
                 {/* Profile Header */}
@@ -421,7 +419,7 @@ export default function OtherUserProfile() {
                         </ScrollView>
                     )}
                 </View>
-            </View>
+            </ScrollView>
 
             {/* Friend Request Modal (for send/accept) */}
             {friendRequestAction === 'send' ? (

@@ -175,7 +175,9 @@ export const acceptFriendRequest = async (senderId: string, currentUserId: strin
             .single();
 
         if (newFriend) {
-            useFriendsStore.getState().addFriend(newFriend);
+            const store = useFriendsStore.getState();
+            store.addFriend(newFriend);
+            await store.fetchFriendCount(currentUserId);
         }
 
         return updated;
@@ -225,11 +227,28 @@ export const removeFriend = async (currentUserId: string, otherUserId: string) =
 
         if (error) throw error;
 
-        useFriendsStore.getState().removeFriend(otherUserId);
+        const store = useFriendsStore.getState();
+        store.removeFriend(otherUserId);
+        // Refresh the count from server to ensure accuracy
+        await store.fetchFriendCount(currentUserId);
 
         return true;
     } catch (error) {
         console.error('Failed to remove friend:', error);
         throw error;
     }
+};
+
+export const fetchFriendCount = async (userId: string): Promise<number> => {
+    const { count, error } = await supabase
+        .from('friendships')
+        .select('*', { count: 'exact', head: true })
+        .or(`user_id_1.eq.${userId},user_id_2.eq.${userId}`)
+        .eq('status', 'accepted');
+
+    if (error) {
+        console.error('Error fetching friend count:', error);
+        return 0;
+    }
+    return count || 0;
 };
