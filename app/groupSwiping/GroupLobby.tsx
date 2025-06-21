@@ -12,14 +12,31 @@ import {
     getGroup,
     getParticipants,
     listenToGroup,
-    leaveGroup
+    leaveGroup,
+    updateSwipingSessionStatus
 } from "@/services/groupSwiping";
 
+// Helper function to safely parse JSON from database
+const safeJsonParse = (str: string | undefined | null, fallback: any = null) => {
+    if (!str) return fallback;
+
+    try {
+        return JSON.parse(str);
+    } catch (error) {
+        console.warn('Failed to parse JSON from database:', str, error);
+        return fallback;
+    }
+};
+
 export default function GroupLobby() {
-    const { groupID, useDummyData } = useLocalSearchParams<{
+    const params = useLocalSearchParams<{
         groupID: string;
         useDummyData?: string;
     }>();
+
+    // Only extract what we actually need from route params
+    const { groupID, useDummyData } = params;
+
     const insets = useSafeAreaInsets();
     const router = useRouter();
     const session = useSession();
@@ -32,13 +49,16 @@ export default function GroupLobby() {
     const [isFiltersVisible, setFiltersVisible] = useState(false);
     const [isStarting, setIsStarting] = useState(false);
 
-    // Parsed data
+    // Get data directly from group session (much cleaner!)
     const parsedLocationData: LocationData = groupSession?.location
-        ? JSON.parse(groupSession.location)
+        ? safeJsonParse(groupSession.location)
         : null;
+
     const parsedFilters = groupSession?.filters
-        ? JSON.parse(groupSession.filters)
+        ? safeJsonParse(groupSession.filters, {})
         : {};
+
+    const isUsingDummyData = useDummyData === 'true';
 
     // Load initial data
     const loadGroupData = async () => {
@@ -60,6 +80,22 @@ export default function GroupLobby() {
             setIsLoading(false);
         }
     };
+
+    // Navigate to swiping screen (shared function for host and participants)
+    const navigateToSwiping = useCallback(async () => {
+        if (!parsedLocationData) return;
+
+        router.push({
+            pathname: '/Swiping',
+            params: {
+                swipingMode: 'group',
+                latitude: parsedLocationData.coordinates.latitude.toString(),
+                longitude: parsedLocationData.coordinates.longitude.toString(),
+                useDummyData: isUsingDummyData.toString(),
+                groupID: groupID as string,
+            }
+        });
+    }, [parsedLocationData, isUsingDummyData, groupID, router]);
 
     // Handle realtime updates with better debugging
     const handleGroupUpdate = useCallback(async (payload: any) => {
@@ -88,11 +124,21 @@ export default function GroupLobby() {
             }
         } else if (payload.table === 'group_sessions') {
             console.log('Group session updated:', payload.new);
-            setGroupSession(prev => prev ? { ...prev, ...payload.new } : payload.new);
+            const updatedSession = payload.new;
+
+            setGroupSession(prev => prev ? { ...prev, ...updatedSession } : updatedSession);
+
+            // Check if swiping has started and current user is not the host
+            if (updatedSession.status === 'active' && user?.id !== updatedSession.hostID) {
+                console.log('Swiping started by host, navigating to swiping screen...');
+
+                // Navigate to swiping screen - each user will fetch their own eateries data
+                await navigateToSwiping();
+            }
         }
 
         console.log('=== END GROUP UPDATE ===');
-    }, []);
+    }, [user?.id, navigateToSwiping]);
 
     // Setup realtime subscriptions
     useEffect(() => {
@@ -144,8 +190,24 @@ export default function GroupLobby() {
     };
 
     const handleStartSwiping = async () => {
-        // Just show placeholder for now - no backend implementation
-        Alert.alert('Coming Soon', 'Group swiping will start soon!');
+        if (!groupID || !user?.id) return;
+
+        setIsStarting(true);
+
+        try {
+            // Update the group status to 'active'
+            // This will trigger the realtime update for other participants
+            await updateSwipingSessionStatus(groupID as string, 'active');
+
+            // Navigate host to swiping screen
+            await navigateToSwiping();
+
+        } catch (error) {
+            console.error('Error starting swiping session:', error);
+            Alert.alert('Error', 'Failed to start swiping session');
+        } finally {
+            setIsStarting(false);
+        }
     };
 
     const isHost = user?.id === groupSession?.hostID;
@@ -156,7 +218,7 @@ export default function GroupLobby() {
         return (
             <View className="flex-1 justify-center items-center">
                 <ActivityIndicator size="large" color="#FE724C" />
-                <Text className="font-lexend-regular text-black mt-4">Loading...</Text>
+                <Text className="font-lexend-regular text-primary mt-4">Loading...</Text>
             </View>
         );
     }

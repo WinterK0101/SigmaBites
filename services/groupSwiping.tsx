@@ -148,11 +148,11 @@ export async function leaveGroup(groupId: string, userId: string) {
 }
 
 // Update Session Status
-export async function updateSwipingSessionStatus(groupId: string, hostId: string) {
+export async function updateSwipingSessionStatus(groupId: string, status: string) {
     // Update status to active
     const { error } = await supabase
         .from('group_sessions')
-        .update({ status: 'active' })
+        .update({ status: status })
         .eq('id', groupId);
 
     if (error) throw error;
