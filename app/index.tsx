@@ -15,6 +15,10 @@ export default function StartPage() {
             <Text style={styles.logo}>Sigma Bites</Text>
           </View>
 
+          <TouchableOpacity onPress={() => router.push('(modals)/Waiting')}>
+            <Text style={styles.linkText}>Go to Waiting Screen</Text>
+          </TouchableOpacity>
+
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.button} onPress={() => router.push('(auth)/SignInPage')}>
               <Text style={styles.buttonText}>Sign in</Text>

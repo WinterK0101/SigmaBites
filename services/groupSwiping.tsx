@@ -147,19 +147,8 @@ export async function leaveGroup(groupId: string, userId: string) {
     if (error) throw error;
 }
 
-// Start swiping (host only)
-export async function startSwiping(groupId: string, hostId: string) {
-    // Check if user is host
-    const { data: group } = await supabase
-        .from('group_sessions')
-        .select('hostID')
-        .eq('id', groupId)
-        .single();
-
-    if (group?.hostID !== hostId) {
-        throw new Error('Only host can start swiping');
-    }
-
+// Update Session Status
+export async function updateSwipingSessionStatus(groupId: string, hostId: string) {
     // Update status to active
     const { error } = await supabase
         .from('group_sessions')
@@ -232,7 +221,6 @@ export async function getUserInvites(userId: string) {
     return data || [];
 }
 
-// IMPROVED: Listen to group changes (realtime) - handles all participant changes
 export const listenToGroup = (groupID: string, callback: (payload: any) => void) => {
     console.log('Setting up subscription for groupID:', groupID);
 
@@ -313,25 +301,72 @@ export const listenToGroup = (groupID: string, callback: (payload: any) => void)
         });
 };
 
-//Listen to user invites (realtime)
-export function listenToInvites(userId: string, callback: (data: any) => void) {
-    console.log('Setting up invite subscription for userID:', userId);
+// To get the group members who are still swiping and whether all swiping is completed
+export async function getWaitingStatus(groupId: string) {
+    const { data: participants, error } = await supabase
+        .from('group_participants')
+        .select('memberID, swipingStatus')
+        .eq('groupID', groupId);
 
-    return supabase
-        .channel(`invites_${userId}`)
-        .on('postgres_changes',
+    if (error) throw error;
+
+    const stillWaiting = [];
+
+    for (const participant of participants || []) {
+        if (participant.swipingStatus === 'incomplete') {
+            const user = await fetchUserByID(participant.memberID);
+            stillWaiting.push(user);
+        }
+    }
+
+    const everyoneReady = stillWaiting.length === 0;
+
+    return {
+        stillWaitingFor: stillWaiting,
+        everyoneReady
+    };
+}
+
+export function subscribeToWaitingUpdates(groupId: string, onUpdate: (update: any) => void) {
+    console.log('Setting up waiting screen subscription for group:', groupId);
+
+    const fetchAndUpdate = async () => {
+        try {
+            const update = await getWaitingStatus(groupId);
+            onUpdate(update);
+        } catch (error) {
+            console.error('Error fetching waiting status:', error);
+        }
+    };
+
+    // Subscribe to changes in group_participants table
+    const channel = supabase
+        .channel(`waiting_${groupId}`)
+        .on(
+            'postgres_changes',
             {
                 event: '*',
                 schema: 'public',
-                table: 'invites',
-                filter: `receiver=eq.${userId}` // Fixed: was receiverID, should match your column name
+                table: 'group_participants',
+                filter: `groupID=eq.${groupId}`
             },
             (payload) => {
-                console.log('Invite update received:', payload);
-                callback(payload);
+                console.log('Participant status changed:', payload);
+                fetchAndUpdate();
             }
         )
         .subscribe((status) => {
-            console.log('Invite subscription status:', status);
+            console.log('Waiting screen subscription status:', status);
+            if (status === 'SUBSCRIBED') {
+                fetchAndUpdate();
+            }
         });
+
+    return channel;
+}
+
+export function unsubscribeWaiting(channel: any) {
+    if (channel) {
+        supabase.removeChannel(channel);
+    }
 }

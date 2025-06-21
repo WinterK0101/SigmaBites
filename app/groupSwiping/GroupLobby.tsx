@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Collapsible } from "react-native-fast-collapsible";
-import {GroupParticipant, GroupSession, LocationData, User} from "@/interfaces/interfaces";
+import {GroupParticipant, GroupSession, LocationData} from "@/interfaces/interfaces";
 import { useSession } from '@/context/SessionContext';
 import RemoteImage from '@/components/RemoteImage';
 import {

@@ -14,18 +14,22 @@ import { distanceFromUser, getOpeningHoursForToday } from "@/services/apiDetails
 import { useEffect, useRef, useState, useCallback } from "react";
 import { checkIfFriendLiked } from "@/services/checkIfFriendLiked";
 import { dummyEateries } from '@/data/dummyEateries';
-import { checkGroupSwipingCompleted } from "@/services/groupSwiping";
+import {completeSwiping, getWaitingStatus} from "@/services/groupSwiping";
 import { supabase } from '@/SupabaseConfig';
+import {addVote} from "@/services/votingService";
+import {useSession} from "@/context/SessionContext";
 
 export default function Swiping() {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [eateries, setEateries] = useState(dummyEateries);
-
     const swiperRef = useRef<Swiper<any>>(null);
     const [lastSwipeWasRight, setLastSwipeWasRight] = useState(false);
     const router = useRouter();
-
-    const { swipingMode, latitude, longitude, eateries: eateriesParam, useDummyData } = useLocalSearchParams();
+    const currentUser = useSession()?.user;
+    if (!currentUser) {
+        return;
+    }
+    const { swipingMode, latitude, longitude, eateries: eateriesParam, useDummyData, groupID} = useLocalSearchParams();
 
     const userLocation = latitude && longitude ? {
         coordinates: {
@@ -158,9 +162,8 @@ export default function Swiping() {
             }
         }
         else if (swipingMode === 'group') {
-            // TODO: Add function to handle the voting count
+            await addVote(groupID as string, currentUser.id, likedEatery.placeId);
         }
-        // TODO: Add function to add liked eatery to the database and to the user's like history
     }, [eateries, router, swipingMode]);
 
     const handleSwipeBack = useCallback(() => {
@@ -186,18 +189,39 @@ export default function Swiping() {
         });
     }, [eateries, currentIndex, router]);
 
-    const handleSwipedAll = useCallback(() => {
-        if (!lastSwipeWasRight && swipingMode === 'solo') {
-            router.replace('/(modals)/NoMatches');
-        } else if (swipingMode === 'group') {
-            // TODO: Implement checkGroupSwipingCompleted function
-            if (checkGroupSwipingCompleted()) {
-                router.replace('/(modals)/Waiting');
-            } else {
-                router.replace('/(modals)/VotedEateries');
+    const handleSwipedAll = useCallback(async () => {
+        try {
+            if (swipingMode === 'solo') {
+                if (!lastSwipeWasRight) {
+                    router.replace('/(modals)/NoMatches');
+                }
+            } else if (swipingMode === 'group') {
+                if (!groupID) {
+                    console.error('No group ID available');
+                    return;
+                }
+
+                // Mark current user's swiping as completed
+                await completeSwiping(groupID as string, currentUser.id);
+
+                // Check if all participants have completed swiping
+                const waitingStatus = await getWaitingStatus(groupID as string);
+
+                if (waitingStatus.everyoneReady) {
+                    // All users have completed swiping, go to results
+                    router.replace('/(modals)/VotedEateries');
+                } else {
+                    // Still waiting for others, go to waiting screen
+                    router.replace({
+                        pathname: '/(modals)/Waiting',
+                        params: { groupID: groupID as string }
+                    });
+                }
             }
+        } catch (error) {
+            console.error('Error handling swipe completion:', error);
         }
-    }, [lastSwipeWasRight, router]);
+    }, [lastSwipeWasRight, router, swipingMode, groupID, currentUser.id]);
 
     // Function for creating the cards
     const renderCard = useCallback((eatery) => {
