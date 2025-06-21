@@ -11,16 +11,23 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/SupabaseConfig';
 import { useSession } from '@/context/SessionContext';
+import { useFriendsStore } from '@/store/friendsStore';
 import EditProfileModal from '../(modals)/EditProfileModal';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import RemoteImage from "@/components/RemoteImage";
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import {useFriendsStore} from "@/store/friendsStore";
+import {MaterialCommunityIcons} from "@expo/vector-icons";
 
 export default function Profile() {
   const router = useRouter();
   const session = useSession();
-  const { friendCount, fetchFriendCount, fetchFriends } = useFriendsStore(); // Get from store
+
+  // Use the friends store for friend count and real-time updates
+  const {
+    friendCount,
+    fetchFriendCount,
+    subscribeToFriendChanges,
+    unsubscribe
+  } = useFriendsStore();
 
   // Profile state
   const [profile, setProfile] = useState({
@@ -48,6 +55,7 @@ export default function Profile() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+  // Fetch profile on mount or session change
   useEffect(() => {
     async function fetchProfile() {
       if (!session?.user) return;
@@ -87,29 +95,37 @@ export default function Profile() {
             if (favsError || !Array.isArray(favs)) {
               setFavouriteEateries([]);
             } else {
+              // Order to match the order in favIds
               const orderedFavs = favIds
                   .map(id => favs.find(e => e.placeId === id))
                   .filter((e): e is { placeId: string; displayName: string; photo: string } => Boolean(e));
               setFavouriteEateries(orderedFavs);
             }
+          } else {
+            setFavouriteEateries([]);
           }
 
-          // Fetch recently saved
+          // Fetch details for last 3 liked eateries
           const liked = Array.isArray(data.liked_eateries) ? data.liked_eateries : [];
-          const lastThree = liked.slice(-3).reverse();
+          const lastThree = liked.slice(-3).reverse(); // Get last 3, most recent first
 
           if (lastThree.length > 0) {
-            const { data: eateries } = await supabase
+            const { data: eateries, error: eateryError } = await supabase
                 .from('Eatery')
                 .select('placeId, displayName, photo')
                 .in('placeId', lastThree);
 
-            if (Array.isArray(eateries)) {
+            if (eateryError || !Array.isArray(eateries)) {
+              setRecentlySaved([]);
+            } else {
+              // Order the eateries to match the order of lastThree
               const ordered = lastThree
                   .map(id => eateries.find(e => e.placeId === id))
                   .filter((e): e is { placeId: string; displayName: string; photo: string } => Boolean(e));
               setRecentlySaved(ordered);
             }
+          } else {
+            setRecentlySaved([]);
           }
         }
       } catch (error) {
@@ -117,21 +133,33 @@ export default function Profile() {
       }
     }
 
-    const loadData = async () => {
-      if (session?.user?.id) {
-        await Promise.all([
-          fetchProfile(),
-          fetchFriends(session.user.id),  // This will automatically update friendCount in the store
-          fetchFriendCount(session.user.id) // Optional: explicit count refresh
-        ]);
-      }
-    };
+    fetchProfile();
+  }, [session]);
 
-    loadData();
-  }, [session?.user?.id]);
+  // Setup friend count and real-time subscription
+  useEffect(() => {
+    if (!session?.user) return;
+
+    const userId = session.user.id;
+
+    // Fetch initial friend count
+    fetchFriendCount(userId);
+
+    // Subscribe to real-time changes
+    subscribeToFriendChanges(userId);
+
+    // Cleanup subscription on unmount
+    return () => {
+      unsubscribe();
+    };
+  }, [session?.user?.id, fetchFriendCount, subscribeToFriendChanges, unsubscribe]);
 
   const handleLogout = async () => {
     setShowLogoutModal(false);
+
+    // Unsubscribe from real-time updates before logout
+    unsubscribe();
+
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('Logout error:', error.message);
@@ -145,6 +173,9 @@ export default function Profile() {
     setShowDeleteModal(false);
     if (!session?.user) return;
     const userId = session.user.id;
+
+    // Unsubscribe from real-time updates before deletion
+    unsubscribe();
 
     // Delete friendships where user is user_id_1 or user_id_2
     const { error: friendshipError } = await supabase

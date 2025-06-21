@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     View,
     Text,
@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useSession } from '@/context/SessionContext';
 import { fetchUserByUsername } from "@/services/userService";
 import { supabase } from '@/SupabaseConfig';
@@ -63,6 +63,10 @@ export default function OtherUserProfile() {
     if (!currentUser) return;
     const { username } = useLocalSearchParams();
 
+    // Refs for subscriptions
+    const friendshipSubscription = useRef<ReturnType<typeof supabase.channel> | null>(null);
+    const userProfileSubscription = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
     const [profile, setProfile] = useState<{
         displayName: string;
         username: string;
@@ -100,84 +104,179 @@ export default function OtherUserProfile() {
     const [showCancelRequestModal, setShowCancelRequestModal] = useState(false);
     const [friendRequestAction, setFriendRequestAction] = useState('send'); // 'send' or 'accept'
 
-    useEffect(() => {
-        async function fetchProfileAndFriendStatus() {
-            if (!currentUser || !username) return;
+    // Function to fetch eatery details
+    const fetchEateryDetails = async (eateryIds: string[]) => {
+        if (eateryIds.length === 0) return [];
 
-            try {
-                const data = await fetchUserByUsername(username as string);
+        const { data, error } = await supabase
+            .from('Eatery')
+            .select('placeId, displayName, photo')
+            .in('placeId', eateryIds);
 
-                if (data) {
-                    const userProfile = {
-                        displayName: data.name,
-                        username: data.username,
-                        avatar_url: data.avatar_url,
-                        id: data.id,
-                        favourite_eateries: data.favourite_eateries || [],
-                        liked_eateries: data.liked_eateries || [],
-                    };
-
-                    setProfile(userProfile);
-                    setEateryCount(Array.isArray(data.favourite_eateries) ? data.favourite_eateries.length : 0);
-
-                    // Fetch favourite eateries details
-                    const favIds = Array.isArray(data.favourite_eateries) ? data.favourite_eateries : [];
-                    if (favIds.length > 0) {
-                        const { data: favs, error: favsError } = await supabase
-                            .from('Eatery')
-                            .select('placeId, displayName, photo')
-                            .in('placeId', favIds);
-
-                        if (favsError || !Array.isArray(favs)) {
-                            setFavouriteEateries([]);
-                        } else {
-                            // Order to match the order in favIds
-                            const orderedFavs = favIds
-                                .map(id => favs.find(e => e.placeId === id))
-                                .filter((e): e is { placeId: string; displayName: string; photo: string } => Boolean(e));
-                            setFavouriteEateries(orderedFavs);
-                        }
-                    } else {
-                        setFavouriteEateries([]);
-                    }
-
-                    // Fetch details for last 3 liked eateries
-                    const liked = Array.isArray(data.liked_eateries) ? data.liked_eateries : [];
-                    const lastThree = liked.slice(-3).reverse(); // Get last 3, most recent first
-
-                    if (lastThree.length > 0) {
-                        const { data: eateries, error: eateryError } = await supabase
-                            .from('Eatery')
-                            .select('placeId, displayName, photo')
-                            .in('placeId', lastThree);
-
-                        if (eateryError || !Array.isArray(eateries)) {
-                            setRecentlySaved([]);
-                        } else {
-                            // Order the eateries to match the order of lastThree
-                            const ordered = lastThree
-                                .map(id => eateries.find(e => e.placeId === id))
-                                .filter((e): e is { placeId: string; displayName: string; photo: string } => Boolean(e));
-                            setRecentlySaved(ordered);
-                        }
-                    } else {
-                        setRecentlySaved([]);
-                    }
-
-                    // Fetch friend status
-                    const status = await getFriendshipStatus(currentUser.id, data.id);
-                    setFriendStatus(status);
-
-                    // Fetch friend count
-                    const count = await fetchFriendCount(data.id);
-                    setFriendCount(count);
-                }
-            } catch (error) {
-                console.error('Error in fetchProfileAndFriendStatus:', error);
-            }
+        if (error || !Array.isArray(data)) {
+            console.error('Error fetching eatery details:', error);
+            return [];
         }
-        fetchProfileAndFriendStatus();
+
+        return data;
+    };
+
+    // Function to refresh profile data
+    const refreshProfileData = async () => {
+        if (!currentUser || !username) return;
+
+        try {
+            const data = await fetchUserByUsername(username as string);
+
+            if (data) {
+                const userProfile = {
+                    displayName: data.name,
+                    username: data.username,
+                    avatar_url: data.avatar_url,
+                    id: data.id,
+                    favourite_eateries: data.favourite_eateries || [],
+                    liked_eateries: data.liked_eateries || [],
+                };
+
+                setProfile(userProfile);
+                setEateryCount(Array.isArray(data.favourite_eateries) ? data.favourite_eateries.length : 0);
+
+                // Fetch favourite eateries details
+                const favIds = Array.isArray(data.favourite_eateries) ? data.favourite_eateries : [];
+                if (favIds.length > 0) {
+                    const favs = await fetchEateryDetails(favIds);
+                    // Order to match the order in favIds
+                    const orderedFavs = favIds
+                        .map(id => favs.find(e => e.placeId === id))
+                        .filter((e): e is { placeId: string; displayName: string; photo: string } => Boolean(e));
+                    setFavouriteEateries(orderedFavs);
+                } else {
+                    setFavouriteEateries([]);
+                }
+
+                // Fetch details for last 3 liked eateries
+                const liked = Array.isArray(data.liked_eateries) ? data.liked_eateries : [];
+                const lastThree = liked.slice(-3).reverse(); // Get last 3, most recent first
+
+                if (lastThree.length > 0) {
+                    const eateries = await fetchEateryDetails(lastThree);
+                    // Order the eateries to match the order of lastThree
+                    const ordered = lastThree
+                        .map(id => eateries.find(e => e.placeId === id))
+                        .filter((e): e is { placeId: string; displayName: string; photo: string } => Boolean(e));
+                    setRecentlySaved(ordered);
+                } else {
+                    setRecentlySaved([]);
+                }
+
+                // Fetch friend status and count
+                const status = await getFriendshipStatus(currentUser.id, data.id);
+                setFriendStatus(status);
+
+                const count = await fetchFriendCount(data.id);
+                setFriendCount(count);
+            }
+        } catch (error) {
+            console.error('Error in refreshProfileData:', error);
+        }
+    };
+
+    // Set up real-time subscriptions
+    const setupRealtimeSubscriptions = () => {
+        if (!profile.id || !currentUser) return;
+
+        // Clean up existing subscriptions
+        cleanupSubscriptions();
+
+        // 1. Subscribe to friendship changes affecting this user relationship
+        friendshipSubscription.current = supabase
+            .channel(`friendship_user_${profile.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'friendships',
+                },
+                async (payload) => {
+                    console.log('[Realtime] Friendship change detected:', payload);
+
+                    const newRecord = payload.new as any;
+                    const oldRecord = payload.old as any;
+
+                    // Check if this change affects the current user-profile relationship
+                    const isRelevant =
+                        (newRecord && ((newRecord.user_id_1 === currentUser.id && newRecord.user_id_2 === profile.id) ||
+                            (newRecord.user_id_1 === profile.id && newRecord.user_id_2 === currentUser.id))) ||
+                        (oldRecord && ((oldRecord.user_id_1 === currentUser.id && oldRecord.user_id_2 === profile.id) ||
+                            (oldRecord.user_id_1 === profile.id && oldRecord.user_id_2 === currentUser.id)));
+
+                    if (isRelevant) {
+                        console.log('[Realtime] Refreshing friendship status and count');
+                        const [status, count] = await Promise.all([
+                            getFriendshipStatus(currentUser.id, profile.id),
+                            fetchFriendCount(profile.id)
+                        ]);
+                        setFriendStatus(status);
+                        setFriendCount(count);
+                    }
+                }
+            )
+            .subscribe();
+
+        // 2. Subscribe to profile user's data changes
+        userProfileSubscription.current = supabase
+            .channel(`user_profile_${profile.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'profiles',
+                    filter: `id=eq.${profile.id}`,
+                },
+                async (payload) => {
+                    console.log('[Realtime] User profile change detected:', payload);
+
+                    // Refresh profile data when the user's profile is updated
+                    await refreshProfileData();
+                }
+            )
+            .subscribe();
+    };
+
+    // Clean up subscriptions
+    const cleanupSubscriptions = () => {
+        if (friendshipSubscription.current) {
+            supabase.removeChannel(friendshipSubscription.current);
+            friendshipSubscription.current = null;
+        }
+        if (userProfileSubscription.current) {
+            supabase.removeChannel(userProfileSubscription.current);
+            userProfileSubscription.current = null;
+        }
+    };
+
+    // Initial data fetch
+    useEffect(() => {
+        refreshProfileData();
     }, [currentUser, username]);
+
+    // Set up subscriptions when profile ID is available
+    useEffect(() => {
+        if (profile.id && profile.id !== '') {
+            setupRealtimeSubscriptions();
+        }
+
+        return cleanupSubscriptions;
+    }, [profile.id, currentUser?.id]);
+
+    // Focus effect to refresh data when screen comes into focus
+    useFocusEffect(
+        React.useCallback(() => {
+            refreshProfileData();
+        }, [username])
+    );
 
     const refreshFriendStatus = async () => {
         try {

@@ -16,15 +16,30 @@ import { useFriendsStore } from "@/store/friendsStore";
 export default function FriendsScreen() {
   const router = useRouter();
   const user = useSession()?.user;
-  const { friends, isLoading, fetchFriends } = useFriendsStore();
+  const {
+    friends,
+    isLoading,
+    fetchFriends,
+    subscribeToFriendChanges,
+    unsubscribe
+  } = useFriendsStore();
 
-  // Fetch friends when screen is changed
+  // Fetch friends and set up real-time subscription when screen is focused
   useFocusEffect(
       useCallback(() => {
         if (user?.id) {
+          // Fetch initial friends data
           fetchFriends(user.id);
+
+          // Set up real-time subscription
+          subscribeToFriendChanges(user.id);
         }
-      }, [user?.id])
+
+        // Cleanup function - runs when screen loses focus
+        return () => {
+          unsubscribe();
+        };
+      }, [user?.id, fetchFriends, subscribeToFriendChanges, unsubscribe])
   );
 
   const handleFriendPress = (friend: User) => {
