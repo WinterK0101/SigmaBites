@@ -12,9 +12,10 @@ import { Ionicons, MaterialCommunityIcons, Entypo } from '@expo/vector-icons';
 import { LinearGradient } from "expo-linear-gradient";
 import { distanceFromUser, getOpeningHoursForToday } from "@/services/apiDetailsForUI";
 import { useEffect, useRef, useState, useCallback } from "react";
-import {checkIfFriendLiked} from "@/services/checkIfFriendLiked";
-import {dummyEateries} from '@/data/dummyEateries';
-import {checkGroupSwipingCompleted} from "@/services/groupSwiping";
+import { checkIfFriendLiked } from "@/services/checkIfFriendLiked";
+import { dummyEateries } from '@/data/dummyEateries';
+import { checkGroupSwipingCompleted } from "@/services/groupSwiping";
+import { supabase } from '@/SupabaseConfig';
 
 export default function Swiping() {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -58,10 +59,84 @@ export default function Swiping() {
         console.log('Disliked:', eateries[index]?.displayName); // For testing and debugging
     }, [eateries]);
 
-    const handleSwipeRight = useCallback((index: number) => {
+    const handleSwipeRight = useCallback(async (index: number) => {
         setLastSwipeWasRight(true);
         const likedEatery = eateries[index];
         console.log('Liked:', likedEatery.displayName); // For testing and debugging
+
+        // --- Check if eatery exists in Eatery table, insert if not ---
+        if (likedEatery?.placeId) {
+            const { data: existing, error: checkError } = await supabase
+                .from('Eatery')
+                .select('placeId')
+                .eq('placeId', likedEatery.placeId)
+                .single();
+
+            if (checkError && checkError.code !== 'PGRST116') {
+                // Only log error if not "no rows found"
+                console.error('Error checking Eatery table:', checkError.message);
+            } else if (!existing) {
+                const { error: insertError } = await supabase
+                    .from('Eatery')
+                    .insert([{
+                        placeId: likedEatery.placeId ?? null,
+                        displayName: likedEatery.displayName ?? null,
+                        formattedAddress: likedEatery.formattedAddress ?? null,
+                        location: likedEatery.location ?? null,
+                        websiteUri: likedEatery.websiteUri ?? null,
+                        googleMapsUri: likedEatery.googleMapsUri ?? null,
+                        currentOpeningHours: likedEatery.currentOpeningHours ?? null,
+                        types: likedEatery.types ?? null,
+                        primaryTypeDisplayName: likedEatery.primaryTypeDisplayName ?? null,
+                        rating: likedEatery.rating ?? null,
+                        userRatingCount: likedEatery.userRatingCount ?? null,
+                        priceLevel: likedEatery.priceLevel ?? null,
+                        photo: likedEatery.photo ?? null,
+                        editorialSummary: likedEatery.editorialSummary ?? null,
+                        generativeSummary: likedEatery.generativeSummary ?? null,
+                        internationalPhoneNumber: likedEatery.internationalPhoneNumber ?? null,
+                    }]);
+                if (insertError) {
+                    console.error('Error inserting Eatery:', insertError.message);
+                }
+            }
+
+            // --- Update liked_eateries in profiles table ---
+            // Get current user id
+            const { data: userData, error: userError } = await supabase.auth.getUser();
+            if (userError || !userData?.user?.id) {
+                console.error('Could not get current user:', userError?.message);
+            } else {
+                const userId = userData.user.id;
+                // 1. Fetch current liked_eateries
+                const { data: profileData, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('liked_eateries')
+                    .eq('id', userId)
+                    .single();
+
+                if (profileError) {
+                    console.error('Error fetching profile:', profileError.message);
+                } else {
+                    let likedEateriesArr = Array.isArray(profileData?.liked_eateries)
+                        ? profileData.liked_eateries
+                        : [];
+                    // 2. Add placeId if not already present
+                    if (!likedEateriesArr.includes(likedEatery.placeId)) {
+                        likedEateriesArr = [...likedEateriesArr, likedEatery.placeId];
+                        // 3. Update the profile
+                        const { error: updateError } = await supabase
+                            .from('profiles')
+                            .update({ liked_eateries: likedEateriesArr })
+                            .eq('id', userId);
+                        if (updateError) {
+                            console.error('Error updating liked_eateries:', updateError.message);
+                        }
+                    }
+                }
+            }
+        }
+
         if (swipingMode === 'solo') {
             // TODO: Create checkIfFriendLiked function
             const mutualLikes = checkIfFriendLiked(likedEatery);
@@ -69,9 +144,9 @@ export default function Swiping() {
                 router.push({
                     pathname: '/(modals)/MatchedWithFriends',
                     params: {
-                            restaurantImage: likedEatery.photo,
-                            matchedFriends: JSON.stringify(mutualLikes),
-                        },
+                        restaurantImage: likedEatery.photo,
+                        matchedFriends: JSON.stringify(mutualLikes),
+                    },
                 });
             } else {
                 router.push({
@@ -86,7 +161,7 @@ export default function Swiping() {
             // TODO: Add function to handle the voting count
         }
         // TODO: Add function to add liked eatery to the database and to the user's like history
-    }, [eateries, router]);
+    }, [eateries, router, swipingMode]);
 
     const handleSwipeBack = useCallback(() => {
         if (!swiperRef.current) return;
@@ -174,11 +249,11 @@ export default function Swiping() {
                         {distanceFromUser(userLocation, eatery.location)}  •  {eatery.primaryTypeDisplayName}  •  {getOpeningHoursForToday(eatery)}
                     </Text>
                     <Text className="font-lexend-regular text-sm text-white/80 mt-2">
-                        ★ {eatery.rating.toFixed(1)}  •  {'$'.repeat(eatery.priceLevel)}
+                        ★ {eatery.rating?.toFixed?.(1) ?? 'N/A'}  •  {'$'.repeat(eatery.priceLevel ?? 0)}
                     </Text>
                     <View className="flex-row mt-2 items-center">
                         <Text className="bg-white/20 font-lexend-regular px-3 py-1 rounded-full text-white text-xs">
-                            {eatery.currentOpeningHours.openNow ? 'Open now' : 'Closed'}
+                            {eatery.currentOpeningHours?.openNow ? 'Open now' : 'Closed'}
                         </Text>
                     </View>
                 </View>

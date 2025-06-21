@@ -199,6 +199,30 @@ export default function Profile() {
       return;
     }
 
+    // Delete Auth user via Edge Function (add Authorization header for dev/test)
+    try {
+      const res = await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/delete-user`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.EXPO_PUBLIC_SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+        body: JSON.stringify({ userId }),
+      });
+      const resultText = await res.text();
+      let result;
+      try {
+        result = JSON.parse(resultText);
+      } catch {
+        result = {};
+      }
+      if (!res.ok) {
+        console.error('Error deleting Auth user:', result.error, 'Raw response:', resultText);
+      }
+    } catch (err) {
+      console.error('Error calling delete-user function:', err);
+    }
+
     // Sign out and redirect
     await supabase.auth.signOut();
     router.replace('/');
