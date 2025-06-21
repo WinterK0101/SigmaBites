@@ -9,6 +9,7 @@ import { useSession } from '@/context/SessionContext';
 import RemoteImage from '@/components/RemoteImage';
 import { useFriendsStore } from '@/store/friendsStore';
 import {User} from '@/interfaces/interfaces';
+import {createGroup} from "@/services/groupSwiping";
 
 export default function StartGroupSession() {
     const { locationData, filters, useDummyData } = useLocalSearchParams();
@@ -182,19 +183,27 @@ export default function StartGroupSession() {
                         elevation: 4,
                     }}
                     activeOpacity={0.9}
-                    onPress={() => {
+                    onPress={async () => {
                         if (invitedFriends.length === 0) {
                             alert('You have not invited any friends!');
                             return;
                         }
-                        router.push({
-                            pathname: '/groupSwiping/GroupLobby',
-                            params: {
-                                locationData,
-                                filters,
-                                useDummyData,
-                            },
-                        });
+                        const parsedFilters = typeof filters === 'string' ? JSON.parse(filters) : {};
+                        const parsedLocation = typeof locationData === 'string' ? JSON.parse(locationData) : {};
+                        console.log(user ? 'yes' : 'no');
+                        if (!user) return;
+                        try {
+                            const groupID = await createGroup(user.id, parsedFilters, parsedLocation, invitedFriends.map(friend => friend.id));
+                            router.push({
+                                pathname: '/groupSwiping/GroupLobby',
+                                params: {
+                                    groupID: groupID,
+                                    useDummyData: useDummyData,
+                                }
+                            })
+                        } catch (error) {
+                            console.error('Error creating group:', error);
+                        }
                     }}
                 >
                     <Text className="font-baloo-regular text-white text-xl">

@@ -10,6 +10,7 @@ import {fetchUserByID} from "@/services/userService";
 import RemoteImage from "@/components/RemoteImage";
 import AcceptFriendRequestModal from "@/app/(modals)/AcceptFriendRequestModal";
 import { useFriendsStore } from "@/store/friendsStore";
+import AcceptGroupInviteModal from '@/app/(modals)/AcceptGroupInviteModal';
 
 const highlightWords = ["friend", "group swipe"];
 
@@ -23,6 +24,7 @@ type Message = {
     type: string;
     senderID: string;
     senderUsername: string;
+    groupID?: string; // For group invites
 };
 
 function getTimeAgo(isoString: string): string {
@@ -39,43 +41,48 @@ function getTimeAgo(isoString: string): string {
 }
 
 const retrieveRequests = async (currentUserId: string): Promise<Message[]> => {
-    console.log('[Debug] Fetching requests for user:', currentUserId);
-
     const { data: requests, error } = await supabase
         .from('inbox')
         .select('id, friendshipID, inviteID, type, sender, created_at')
         .eq('receiver', currentUserId);
-
-    console.log('[Debug] Raw requests data:', requests);
-    console.log('[Debug] Requests error:', error);
-
     if (error) {
         console.error('[Debug] Error fetching requests:', error);
         throw new Error(`Failed to fetch requests: ${error.message}`);
     }
-
     if (!requests || requests.length === 0) {
-        console.log('[Debug] No requests found');
         return [];
     }
 
     const messages = await Promise.all(
         requests.map(async (request) => {
-            console.log('[Debug] Processing request:', request);
             const senderData = await fetchUserByID(request.sender);
             if (!senderData) {
-                console.log('[Debug] No sender data found for:', request.sender);
                 return null;
             }
 
             let messageText = '';
             let messageID = '';
+            let groupID = '';
+
             if (request.type === 'friendship') {
                 messageText = 'Sent a friend request';
                 messageID = request.friendshipID;
             } else if (request.type === 'invite') {
                 messageText = 'Invited you to group swipe';
                 messageID = request.inviteID;
+
+                // Get group ID for group invites
+                if (request.inviteID) {
+                    const { data: inviteData } = await supabase
+                        .from('invites')
+                        .select('groupID')
+                        .eq('id', request.inviteID)
+                        .single();
+
+                    if (inviteData) {
+                        groupID = inviteData.groupID;
+                    }
+                }
             }
 
             return {
@@ -88,12 +95,12 @@ const retrieveRequests = async (currentUserId: string): Promise<Message[]> => {
                 time: getTimeAgo(request.created_at),
                 messageText,
                 type: request.type,
+                groupID,
             };
         })
     );
 
     const filteredMessages = messages.filter(Boolean) as Message[];
-    console.log('[Debug] Final processed messages:', filteredMessages);
     return filteredMessages;
 };
 
@@ -101,7 +108,8 @@ export default function InboxScreen() {
     const router = useRouter();
     const currentUser = useSession()?.user;
     const [messages, setMessages] = useState<Message[]>([]);
-    const [modalVisible, setModalVisible] = useState(false);
+    const [friendModalVisible, setFriendModalVisible] = useState(false);
+    const [groupInviteModalVisible, setGroupInviteModalVisible] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const { fetchFriends } = useFriendsStore();
 
@@ -111,13 +119,11 @@ export default function InboxScreen() {
     // Function to refresh messages
     const refreshMessages = async () => {
         if (currentUser) {
-            console.log('[Debug] Refreshing messages for user:', currentUser.id);
             try {
                 const updatedMessages = await retrieveRequests(currentUser.id);
-                console.log('[Debug] Setting messages:', updatedMessages);
                 setMessages(updatedMessages);
             } catch (error) {
-                console.error('[Debug] Failed to refresh messages:', error);
+                throw error;
             }
         }
     };
@@ -161,8 +167,6 @@ export default function InboxScreen() {
                 } else if (status === 'CHANNEL_ERROR') {
                     console.error('[Realtime] Inbox channel error');
                 } else if (status === 'TIMED_OUT') {
-                    //console.error('[Realtime] Inbox channel timed out');
-                    // Retry subscription after timeout
                     setTimeout(() => {
                         console.log('[Realtime] Retrying inbox subscription...');
                         unsubscribeFromInbox();
@@ -197,6 +201,7 @@ export default function InboxScreen() {
     }, [currentUser]);
 
     const handleRequestPress = (item: Message) => {
+        console.log('[DEBUG] Pressed item:', item);
         if (item.type === 'friendship') {
             const userForModal = {
                 id: item.senderID,
@@ -206,9 +211,19 @@ export default function InboxScreen() {
             };
 
             setSelectedUser(userForModal);
-            setModalVisible(true);
+            setFriendModalVisible(true);
         } else if (item.type === 'invite') {
-            console.log('Group invite pressed:', item);
+            const userForModal = {
+                id: item.senderID,
+                username: item.senderUsername,
+                name: item.senderName,
+                avatar_url: item.senderProfilePicture,
+                inviteID: item.requestID,
+                groupID: item.groupID,
+            };
+
+            setSelectedUser(userForModal);
+            setGroupInviteModalVisible(true);
         }
     };
 
@@ -268,8 +283,14 @@ export default function InboxScreen() {
             </View>
 
             <AcceptFriendRequestModal
-                visible={modalVisible}
-                onClose={() => setModalVisible(false)}
+                visible={friendModalVisible}
+                onClose={() => setFriendModalVisible(false)}
+                user={selectedUser}
+                onSuccess={handleModalSuccess}
+            />
+            <AcceptGroupInviteModal
+                visible={groupInviteModalVisible}
+                onClose={() => setGroupInviteModalVisible(false)}
                 user={selectedUser}
                 onSuccess={handleModalSuccess}
             />

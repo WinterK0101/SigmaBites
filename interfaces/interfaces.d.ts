@@ -63,4 +63,16 @@ export interface LocationData {
     isCurrentLocation: boolean;
 }
 
-export interface Inbox
+export interface GroupSession {
+    hostID: string;
+    filters: string;
+    location: string;
+    status: 'waiting' | 'active';
+}
+
+export interface GroupParticipant {
+    memberID: string;
+    swipingStatus: 'incomplete' | 'completed';
+    joinStatus: 'joined' | 'invited';
+    user: User | null;
+}
