@@ -3,34 +3,39 @@ import { View, Text, Image, StyleSheet, ScrollView, Linking, TouchableOpacity } 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {Eatery} from "@/interfaces/interfaces";
+import { supabase } from '@/SupabaseConfig';
+
+const [eatery, setEatery] = useState<Eatery | null>(null);
+const [loading, setLoading] = useState(true);
 
 export default function RestaurantDetails() {
     const router = useRouter();
+    const params = useLocalSearchParams();
+    
+    // Retrieve the eatery object
+    const eatery = params.eatery ? JSON.parse(params.eatery as string) : null;
+    const placeId = params.placeId as string;
 
-    const { eatery: eateryJson, placeId } = useLocalSearchParams<{
-        eatery?: string;
-        placeId?: string;
-    }>();
-
-    const [eatery, setEatery] = useState<Eatery | null>(null);
-    const [loading, setLoading] = useState(true);
+    console.log('Eatery JSON: ' + eatery)
+    console.log("PlaceID: " + placeId)
 
     useEffect(() => {
-        if (eateryJson) {
+        if (eatery) {
             try {
-                const parsedEatery = JSON.parse(eateryJson);
-                setEatery(parsedEatery);
+                //const parsedEatery = JSON.parse(eateryJson);
+                setEatery(eatery);
                 setLoading(false);
             } catch (err) {
                 console.error('Failed to parse eatery JSON:', err);
             }
         } else if (placeId) {
             // TODO: Fetch the eatery details from Supabase using placeId
+            retrieveEatery(placeId);
         } else {
             console.log('No eatery found');
             setLoading(false);
         }
-    }, [eateryJson, placeId]);
+    }, [eatery, placeId]);
 
 
 
@@ -85,6 +90,26 @@ export default function RestaurantDetails() {
             </ScrollView>
         </View>
     );
+}
+
+const retrieveEatery = async (placeId: any) =>{
+    try{
+        const {data: currEatery, error: fetchError} = await supabase
+            .from("Eatery")
+            .select("*")
+            .eq("placeId", placeId)
+            .single()
+        
+        if (fetchError){
+            console.log(fetchError.message)
+        }
+
+        if (currEatery){
+            setEatery(currEatery)
+        }
+    }catch(err){
+        console.log(err)
+    }
 }
 
 const styles = StyleSheet.create({
