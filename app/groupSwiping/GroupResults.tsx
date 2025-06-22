@@ -259,6 +259,23 @@ export default function GroupResults() {
                             View All Votes
                         </Text>
                     </TouchableOpacity>
+                    <TouchableOpacity
+                        className="flex-row items-center mt-4"
+                        style={{
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 3 },
+                            shadowOpacity: 0.3,
+                            shadowRadius: 6,
+                            elevation: 5,
+                        }}
+                        onPress={()=>router.replace('(tabs)/Discover')}
+                    >
+                        <Text
+                            className="text-white text-base font-baloo-regular"
+                        >
+                            Return to Discover
+                        </Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         </ImageBackground>

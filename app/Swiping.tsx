@@ -14,7 +14,7 @@ import { distanceFromUser, getOpeningHoursForToday } from "@/services/apiDetails
 import { useEffect, useRef, useState, useCallback } from "react";
 import { checkIfFriendLiked } from "@/services/checkIfFriendLiked";
 import { dummyEateries } from '@/data/dummyEateries';
-import {completeSwiping, getWaitingStatus} from "@/services/groupSwiping";
+import {completeSwiping, getWaitingStatus, updateSwipingSessionStatus} from "@/services/groupSwiping";
 import { supabase } from '@/SupabaseConfig';
 import {addVote} from "@/services/votingService";
 import {useSession} from "@/context/SessionContext";
@@ -213,6 +213,7 @@ export default function Swiping() {
                         pathname: '/groupSwiping/GroupResults',
                         params: {groupID: groupID as string},
                     });
+                    await updateSwipingSessionStatus(groupID as string, 'complete');
                 } else {
                     // Still waiting for others, go to waiting screen
                     router.replace({

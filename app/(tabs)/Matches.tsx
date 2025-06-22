@@ -90,7 +90,7 @@ export default function Matches() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#fafafa',
   },
   header: {
     paddingHorizontal: 16,
