@@ -128,6 +128,42 @@ export default function Swiping() {
                 }
             }
 
+            // --- Insert reviews into Review table ---
+            if (Array.isArray(likedEatery.reviews)) {
+                for (const review of likedEatery.reviews) {
+                    // Ensure author is JSON (object), not string
+                    let authorObj = review.author;
+                    if (typeof authorObj !== 'object' || authorObj === null) {
+                        // If only author_name is present as string, wrap it in an object
+                        authorObj = {
+                            displayName: typeof review.author === 'string' ? review.author : '',
+                            uri: '',
+                            photoUri: ''
+                        };
+                    }
+                    console.log('Review to insert:', {
+                        author: authorObj,
+                        rating: review.rating ?? null,
+                        text: review.text ?? null,
+                        relativePublishTimeDescription: review.relativePublishTimeDescription ?? null,
+                        placeId: likedEatery.placeId,
+                    }); 
+                    const { error: reviewInsertError } = await supabase
+                        .from('review')
+                        .insert([{
+                            author: authorObj,
+                            rating: review.rating ?? null,
+                            text: review.text ?? null,
+                            relativePublishTimeDescription: review.relativePublishTimeDescription ?? null,
+                            placeId: likedEatery.placeId,
+                        }]);
+                    if (reviewInsertError) {
+                        // Improved error logging
+                        console.error('Error inserting review:', reviewInsertError);
+                    }
+                }
+            }
+
             // --- Update liked_eateries in profiles table ---
             // Get current user id
             const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -187,7 +223,7 @@ export default function Swiping() {
         else if (swipingMode === 'group') {
             await addVote(groupID as string, currentUser.id, likedEatery.placeId);
         }
-    }, [eateries, router, swipingMode]);
+    }, [eateries, router, swipingMode, groupID, currentUser.id]);
 
     const handleSwipeBack = useCallback(() => {
         if (!swiperRef.current) return;

@@ -1,3 +1,5 @@
+import * as FileSystem from 'expo-file-system';
+import { Buffer } from 'buffer';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -6,6 +8,7 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -15,7 +18,8 @@ import { useFriendsStore } from '@/store/friendsStore';
 import EditProfileModal from '../(modals)/EditProfileModal';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import RemoteImage from "@/components/RemoteImage";
-import {MaterialCommunityIcons} from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import * as ImagePicker from 'expo-image-picker';
 
 export default function Profile() {
   const router = useRouter();
@@ -54,6 +58,9 @@ export default function Profile() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // For edit modal: store a temporary avatar url for preview
+  const [tempAvatarUrl, setTempAvatarUrl] = useState<string | undefined>(undefined);
 
   // Fetch profile on mount or session change
   useEffect(() => {
@@ -229,6 +236,62 @@ export default function Profile() {
     router.replace('/');
   };
 
+  // ----------- Profile Picture Edit Function -----------
+  // This only uploads and returns the new file path, does not update profile state
+  const handleTempProfilePicture = async (): Promise<string | undefined> => {
+    if (!session?.user) return undefined;
+
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission required', 'Sorry, we need camera roll permissions to change your profile picture.');
+      return undefined;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const image = result.assets[0];
+      const fileExt = image.uri.split('.').pop();
+      const fileName = `${session.user.id}_${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      // Read the file as base64 and convert to buffer
+      const fileData = await FileSystem.readAsStringAsync(image.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      const fileBuffer = Buffer.from(fileData, 'base64');
+
+      let { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, fileBuffer, {
+          upsert: true,
+          contentType: 'image/jpeg',
+        });
+
+      if (uploadError) {
+        Alert.alert('Upload failed!', uploadError.message);
+        return undefined;
+      }
+
+      // Do NOT update profile here, just return the new filePath for preview
+      setTempAvatarUrl(filePath);
+      return filePath;
+    }
+    return undefined;
+  };
+  // -----------------------------------------------------
+
+  // Always reset tempAvatarUrl when opening the modal
+  const handleOpenEditModal = () => {
+    setTempAvatarUrl(undefined);
+    setShowEditModal(true);
+  };
+
   const EmptyRecentlySavedState = () => (
       <View style={styles.emptyStateContainer}>
         <View style={styles.emptyIconContainer}>
@@ -305,13 +368,14 @@ export default function Profile() {
             style={styles.scrollView}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
-            bounces={false} // Disable bounce effect on iOS
-            overScrollMode="never" // Disable overscroll on Android
+            bounces={false}
+            overScrollMode="never"
         >
           {/* Profile Header */}
           <LinearGradient colors={['#D03939', '#FE724C']} style={styles.header}>
             <View className="relative mt-16">
-              <View
+              <TouchableOpacity onPress={handleOpenEditModal} activeOpacity={0.8}>
+                <View
                   style={{
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: 4 },
@@ -319,13 +383,24 @@ export default function Profile() {
                     shadowRadius: 5,
                     borderRadius: 60,
                   }}
-              >
-                <RemoteImage
-                    filePath={profile.avatar_url ? profile.avatar_url : 'default-profile.png'}
-                    bucket="avatars"
-                    style={{ width: 120, height: 120, borderRadius: 60, borderWidth: 4, borderColor: 'white' }}
-                />
-              </View>
+                >
+                  <RemoteImage
+                      filePath={profile.avatar_url ? profile.avatar_url : 'default-profile.png'}
+                      bucket="avatars"
+                      style={{ width: 120, height: 120, borderRadius: 60, borderWidth: 4, borderColor: 'white' }}
+                  />
+                  <View style={{
+                    position: 'absolute',
+                    bottom: 8,
+                    right: 8,
+                    backgroundColor: '#fff',
+                    borderRadius: 12,
+                    padding: 4,
+                  }}>
+                    <MaterialCommunityIcons name="camera" size={20} color="#FE724C" />
+                  </View>
+                </View>
+              </TouchableOpacity>
             </View>
 
             <Text style={styles.name}>{profile.displayName}</Text>
@@ -334,7 +409,7 @@ export default function Profile() {
             <TouchableOpacity
                 style={styles.editButton}
                 activeOpacity={0.8}
-                onPress={() => setShowEditModal(true)}
+                onPress={handleOpenEditModal}
             >
               <Text style={styles.editButtonText}>Edit Profile</Text>
             </TouchableOpacity>
@@ -460,8 +535,14 @@ export default function Profile() {
         {/* Edit Profile Modal */}
         <EditProfileModal
             visible={showEditModal}
-            onClose={() => setShowEditModal(false)}
-            profile={profile}
+            onClose={() => {
+              setShowEditModal(false);
+              setTempAvatarUrl(undefined); // revert temp avatar on cancel
+            }}
+            profile={{
+              ...profile,
+              avatar_url: tempAvatarUrl ?? profile.avatar_url,
+            }}
             onSave={async (updatedProfile) => {
               if (!session?.user) return;
               const { error } = await supabase
@@ -480,12 +561,14 @@ export default function Profile() {
                   username: updatedProfile.username,
                   avatar_url: updatedProfile.avatar_url,
                 }));
+                setTempAvatarUrl(undefined);
                 setShowEditModal(false);
               } else {
                 // Optionally show an error message
                 console.error('Error updating profile:', error.message);
               }
             }}
+            onChangeProfilePicture={handleTempProfilePicture}
         />
 
         {/* Logout Confirmation Modal */}
