@@ -5,37 +5,61 @@ import { Ionicons } from '@expo/vector-icons';
 import {Eatery} from "@/interfaces/interfaces";
 import { supabase } from '@/SupabaseConfig';
 
-const [eatery, setEatery] = useState<Eatery | null>(null);
-const [loading, setLoading] = useState(true);
+
 
 export default function RestaurantDetails() {
     const router = useRouter();
     const params = useLocalSearchParams();
+
+    const [eatery, setEatery] = useState<Eatery | null>(null);
+    const [loading, setLoading] = useState(true);
     
     // Retrieve the eatery object
-    const eatery = params.eatery ? JSON.parse(params.eatery as string) : null;
+    const eateryObj = params.eatery ? JSON.parse(params.eatery as string) : null;
     const placeId = params.placeId as string;
 
-    console.log('Eatery JSON: ' + eatery)
+    console.log('Eatery JSON: ' + eateryObj)
     console.log("PlaceID: " + placeId)
 
     useEffect(() => {
-        if (eatery) {
+        // TODO: Fetch the eatery details from Supabase using placeId
+            const fetchEatery = async () =>{
+                try{
+                    const {data: currEatery, error: fetchError} = await supabase
+                        .from("Eatery")
+                        .select("*")
+                        .eq("placeId", placeId)
+                        .single()
+                    
+                    if (fetchError){
+                        console.log(fetchError.message)
+                    }
+
+                    if (currEatery){
+                        setEatery(currEatery)
+                        console.log(eatery?.displayName)
+                    }
+                }catch(err){
+                    console.log(err)
+                }
+            }
+        if (placeId) {
+            fetchEatery()
+            
+        } else if (eateryObj) {
             try {
                 //const parsedEatery = JSON.parse(eateryJson);
-                setEatery(eatery);
+                setEatery(eateryObj);
                 setLoading(false);
             } catch (err) {
                 console.error('Failed to parse eatery JSON:', err);
             }
-        } else if (placeId) {
-            // TODO: Fetch the eatery details from Supabase using placeId
-            retrieveEatery(placeId);
         } else {
             console.log('No eatery found');
             setLoading(false);
         }
-    }, [eatery, placeId]);
+
+    }, []);
 
 
 
@@ -66,9 +90,17 @@ export default function RestaurantDetails() {
                     <Text style={styles.label}>Website:</Text>
                     <Text
                         style={[styles.value, { color: '#FF6B3E' }]}
-                        onPress={() => Linking.openURL('http://www.ajisen.com.sg/')}
+                        onPress={() => {
+                            if (eatery?.websiteUri) {
+                                // Add https:// if not present to ensure valid URL
+                                const url = eatery.websiteUri.startsWith('http') 
+                                    ? eatery.websiteUri 
+                                    : `https://${eatery.websiteUri}`;
+                                Linking.openURL(url);
+        }
+    }}
                     >
-                        http://www.ajisen.com.sg/
+                        {eatery?.websiteUri || 'No website available'}
                     </Text>
 
                     <Text style={styles.label}>Phone:</Text>
@@ -92,25 +124,7 @@ export default function RestaurantDetails() {
     );
 }
 
-const retrieveEatery = async (placeId: any) =>{
-    try{
-        const {data: currEatery, error: fetchError} = await supabase
-            .from("Eatery")
-            .select("*")
-            .eq("placeId", placeId)
-            .single()
-        
-        if (fetchError){
-            console.log(fetchError.message)
-        }
 
-        if (currEatery){
-            setEatery(currEatery)
-        }
-    }catch(err){
-        console.log(err)
-    }
-}
 
 const styles = StyleSheet.create({
     container: {

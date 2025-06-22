@@ -6,7 +6,7 @@ import { useSession } from '@/context/SessionContext';
 import { calculateDistance } from '../../services/apiDetailsForUI'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
-import { opacity } from 'react-native-reanimated/lib/typescript/Colors';
+//import { opacity } from 'react-native-reanimated/lib/typescript/Colors';
 import { router } from 'expo-router';
 
 const { width } = Dimensions.get('window');
