@@ -16,7 +16,6 @@ export default function StartPage() {
           </View>
 
           <View style={styles.buttonContainer}>
-            {/*<TouchableOpacity onPress={()=>router.push('/groupSwiping/GroupResults')}><Text>Go to Group Results</Text></TouchableOpacity>*/}
             <TouchableOpacity style={styles.button} onPress={() => router.push('(auth)/SignInPage')}>
               <Text style={styles.buttonText}>Sign in</Text>
             </TouchableOpacity>

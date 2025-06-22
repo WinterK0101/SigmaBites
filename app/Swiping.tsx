@@ -147,7 +147,7 @@ export default function Swiping() {
                         text: review.text ?? null,
                         relativePublishTimeDescription: review.relativePublishTimeDescription ?? null,
                         placeId: likedEatery.placeId,
-                    }); 
+                    });
                     const { error: reviewInsertError } = await supabase
                         .from('review')
                         .insert([{
@@ -201,14 +201,14 @@ export default function Swiping() {
         }
 
         if (swipingMode === 'solo') {
-            // TODO: Create checkIfFriendLiked function
-            const mutualLikes = checkIfFriendLiked(likedEatery);
-            if (mutualLikes) {
+            const friendsData = await checkIfFriendLiked(likedEatery.placeId, currentUser.id)
+            console.log(friendsData);
+            if (friendsData) {
                 router.push({
-                    pathname: '/(modals)/MatchedWithFriends',
+                    pathname: '/soloSwiping/MatchedWithFriends',
                     params: {
-                        restaurantImage: likedEatery.photo,
-                        matchedFriends: JSON.stringify(mutualLikes),
+                        eatery: JSON.stringify(likedEatery),
+                        friends: JSON.stringify(friendsData),
                     },
                 });
             } else {
