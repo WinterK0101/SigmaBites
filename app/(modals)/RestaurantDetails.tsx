@@ -2,9 +2,9 @@ import React, {useEffect, useState} from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, Linking, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import {Eatery} from "@/interfaces/interfaces";
+import {Eatery, Review} from "@/interfaces/interfaces";
 import { supabase } from '@/SupabaseConfig';
-
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 
 export default function RestaurantDetails() {
@@ -12,6 +12,7 @@ export default function RestaurantDetails() {
     const params = useLocalSearchParams();
 
     const [eatery, setEatery] = useState<Eatery | null>(null);
+    const [reviews, setReviews] = useState<Review[] | null>(null);
     const [loading, setLoading] = useState(true);
     
     // Retrieve the eatery object
@@ -23,28 +24,51 @@ export default function RestaurantDetails() {
 
     useEffect(() => {
         // TODO: Fetch the eatery details from Supabase using placeId
-            const fetchEatery = async () =>{
-                try{
-                    const {data: currEatery, error: fetchError} = await supabase
-                        .from("Eatery")
-                        .select("*")
-                        .eq("placeId", placeId)
-                        .single()
+        const fetchEatery = async () =>{
+            try{
+                const {data: currEatery, error: fetchError} = await supabase
+                    .from("Eatery")
+                    .select("*")
+                    .eq("placeId", placeId)
+                    .single()
                     
-                    if (fetchError){
-                        console.log(fetchError.message)
-                    }
-
-                    if (currEatery){
-                        setEatery(currEatery)
-                        console.log(eatery?.displayName)
-                    }
-                }catch(err){
-                    console.log(err)
+                if (fetchError){
+                    console.log(fetchError.message)
                 }
+
+                if (currEatery){
+                    setEatery(currEatery)
+                    console.log(eatery?.displayName)
+                }
+            }catch(err){
+                console.log(err)
             }
+        }
+
+        // Fetch from reviews table
+        const fetchReview = async () =>{
+            try{
+                const {data: currReview, error: fetchError} = await supabase
+                    .from("review")
+                    .select("*")
+                    .eq("placeId", placeId)
+                
+                if (fetchError){
+                    console.log(fetchError.message)
+                }
+
+                if (currReview){
+                    setReviews(currReview)
+                    console.log(currReview)
+                }
+            }catch(err){
+                console.log(err)
+            }
+        }
+
         if (placeId) {
-            fetchEatery()
+            fetchEatery();
+            fetchReview();
             
         } else if (eateryObj) {
             try {
@@ -108,10 +132,20 @@ export default function RestaurantDetails() {
                 </View>
 
                 <Text style={styles.sectionTitle}>Reviews</Text>
-                <View style={styles.reviewBox}>
+                {/* <View style={styles.reviewBox}>
+                    <View style={styles.container}>
+                        <FlatList
+                            data={eateries}
+                            renderItem={renderItem}
+                            keyExtractor={(item) => item.placeId || item.id}
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={styles.listContent}
+                        />
+                    </View>
                     <Text style={styles.reviewUser}>@User</Text>
                     <Text style={styles.reviewText}>Lorem ipsum dolor sit amet, consectetur adipiscing…</Text>
-                </View>
+                </View> */}
 
                 <Text style={styles.sectionTitle}>Friends Who Also Saved</Text>
                 <View style={styles.friendRow}>
