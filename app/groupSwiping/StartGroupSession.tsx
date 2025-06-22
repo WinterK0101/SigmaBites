@@ -190,7 +190,6 @@ export default function StartGroupSession() {
                         }
                         const parsedFilters = typeof filters === 'string' ? JSON.parse(filters) : {};
                         const parsedLocation = typeof locationData === 'string' ? JSON.parse(locationData) : {};
-                        console.log(user ? 'yes' : 'no');
                         if (!user) return;
                         try {
                             const groupID = await createGroup(user.id, parsedFilters, parsedLocation, invitedFriends.map(friend => friend.id));

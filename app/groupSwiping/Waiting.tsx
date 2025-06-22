@@ -37,8 +37,11 @@ export default function Waiting() {
                 if (update.everyoneReady) {
                     await updateSwipingSessionStatus(groupID as string, 'active');
                     setTimeout(() => {
-                        router.replace('/groupSwiping/GroupResults');
-                    }, 4000);
+                        router.replace({
+                            pathname: '/groupSwiping/GroupResults',
+                            params: {groupID: groupID as string},
+                        });
+                    }, 2000);
                 }
             } catch (error) {
                 console.error('Error updating participants:', error)
@@ -77,7 +80,7 @@ export default function Waiting() {
                     <ScrollView
                         className="flex-1 mt-3"
                         showsVerticalScrollIndicator={false}
-                        contentContainerStyle={{ flexGrow: 1, justifyContent: 'space-between', alignItems: 'center', paddingBottom: 4}}
+                        contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-start', alignItems: 'center', paddingBottom: 4}}
                     >
                         {participants.map((participant) => (
                             <View

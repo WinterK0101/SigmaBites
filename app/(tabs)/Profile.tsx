@@ -118,6 +118,7 @@ export default function Profile() {
             if (eateryError || !Array.isArray(eateries)) {
               setRecentlySaved([]);
             } else {
+
               // Order the eateries to match the order of lastThree
               const ordered = lastThree
                   .map(id => eateries.find(e => e.placeId === id))

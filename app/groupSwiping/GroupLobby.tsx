@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Collapsible } from "react-native-fast-collapsible";
-import {GroupParticipant, GroupSession, LocationData} from "@/interfaces/interfaces";
+import {Eatery, GroupParticipant, GroupSession, LocationData} from "@/interfaces/interfaces";
 import { useSession } from '@/context/SessionContext';
 import RemoteImage from '@/components/RemoteImage';
 import {
@@ -17,15 +17,28 @@ import {
 } from "@/services/groupSwiping";
 
 // Helper function to safely parse JSON from database
-const safeJsonParse = (str: string | undefined | null, fallback: any = null) => {
-    if (!str) return fallback;
+const safeJsonParse = (data: any, fallback: any = null) => {
+    // If data is null or undefined, return fallback
+    if (data == null) return fallback;
 
-    try {
-        return JSON.parse(str);
-    } catch (error) {
-        console.warn('Failed to parse JSON from database:', str, error);
-        return fallback;
+    // If it's already an object (Supabase auto-parses JSON columns), return it directly
+    if (typeof data === 'object') {
+        return data;
     }
+
+    // If it's a string, try to parse it
+    if (typeof data === 'string') {
+        try {
+            return JSON.parse(data);
+        } catch (error) {
+            console.warn('Failed to parse JSON string:', data, error);
+            return fallback;
+        }
+    }
+
+    // For any other type, return fallback
+    console.warn('Unexpected data type for JSON parsing:', typeof data, data);
+    return fallback;
 };
 
 export default function GroupLobby() {

@@ -14,26 +14,34 @@ export async function addVote(groupID: string, userID: string, eateryID: string)
 }
 
 export async function getAllVotes(groupID: string): Promise<{ eateryID: string; count: number }[] | null> {
-    const { data: sortedVotes, error } = await supabase
+    const { data: votes, error } = await supabase
         .from('votes')
-        .select('eateryID, count')
-        .eq('groupID', groupID)
-        .order('count', { ascending: false });
+        .select('eateryID')
+        .eq('groupID', groupID);
 
     if (error) {
         console.error('Error fetching votes:', error);
         return null;
     }
 
-    return sortedVotes;
+    // Count votes per eatery
+    const voteCounts = votes.reduce((acc, vote) => {
+        acc[vote.eateryID] = (acc[vote.eateryID] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+
+    // Convert to sorted array
+    return Object.entries(voteCounts)
+        .map(([eateryID, count]) => ({ eateryID, count }))
+        .sort((a, b) => b.count - a.count);
 }
 
 export function getTopEateries(sortedVotes: any) {
+    if (!sortedVotes || sortedVotes.length === 0) return [];
+
     const maxCount = sortedVotes[0].count;
 
-    const topEateryIDs = sortedVotes
+    return sortedVotes
         .filter(vote => vote.count === maxCount)
         .map(vote => vote.eateryID);
-
-    return topEateryIDs;
 }

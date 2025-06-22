@@ -209,7 +209,10 @@ export default function Swiping() {
 
                 if (waitingStatus.everyoneReady) {
                     // All users have completed swiping, go to results
-                    router.replace('/groupSwiping/GroupResults');
+                    router.replace({
+                        pathname: '/groupSwiping/GroupResults',
+                        params: {groupID: groupID as string},
+                    });
                 } else {
                     // Still waiting for others, go to waiting screen
                     router.replace({
