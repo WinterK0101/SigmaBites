@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState} from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,6 +11,7 @@ import RemoteImage from "@/components/RemoteImage";
 import AcceptFriendRequestModal from "@/app/(modals)/AcceptFriendRequestModal";
 import { useFriendsStore } from "@/store/friendsStore";
 import AcceptGroupInviteModal from '@/app/(modals)/AcceptGroupInviteModal';
+import { useFocusEffect } from '@react-navigation/native';
 
 const highlightWords = ["friend", "group swipe"];
 
@@ -24,7 +25,7 @@ type Message = {
     type: string;
     senderID: string;
     senderUsername: string;
-    groupID?: string; // For group invites
+    groupID?: string; // Optional, only if message is a group swiping invite
 };
 
 function getTimeAgo(isoString: string): string {
@@ -113,9 +114,6 @@ export default function InboxScreen() {
     const [selectedUser, setSelectedUser] = useState(null);
     const { fetchFriends } = useFriendsStore();
 
-    // Ref to store the subscription to prevent memory leaks
-    const inboxSubscription = useRef<ReturnType<typeof supabase.channel> | null>(null);
-
     // Function to refresh messages
     const refreshMessages = async () => {
         if (currentUser) {
@@ -123,85 +121,45 @@ export default function InboxScreen() {
                 const updatedMessages = await retrieveRequests(currentUser.id);
                 setMessages(updatedMessages);
             } catch (error) {
-                throw error;
+                console.error('[Inbox] Error refreshing messages:', error);
             }
         }
     };
 
-    // Set up realtime subscription
-    const subscribeToInboxChanges = (userId: string) => {
-        if (!userId || inboxSubscription.current) return;
+    // Set up real-time subscription when screen is focused
+    useFocusEffect(
+        React.useCallback(() => {
+            if (!currentUser) return;
 
-        console.log('[Realtime] Setting up inbox subscription for user:', userId);
-
-        inboxSubscription.current = supabase
-            .channel('inbox-changes')
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'inbox'
-                },
-                async (payload) => {
-                    console.log('[Realtime] Raw inbox change detected:', payload);
-
-                    // Check if this change affects the current user
-                    const newRecord = payload.new as any;
-                    const oldRecord = payload.old as any;
-
-                    const isUserAffected =
-                        (newRecord && newRecord.receiver === userId) ||
-                        (oldRecord && oldRecord.receiver === userId);
-
-                    if (isUserAffected) {
-                        console.log('[Realtime] User affected, refreshing inbox');
-                        await refreshMessages();
-                    }
-                }
-            )
-            .subscribe((status) => {
-                console.log('[Realtime] Inbox subscription status:', status);
-                if (status === 'SUBSCRIBED') {
-                    console.log('[Realtime] Successfully subscribed to inbox changes');
-                } else if (status === 'CHANNEL_ERROR') {
-                    console.error('[Realtime] Inbox channel error');
-                } else if (status === 'TIMED_OUT') {
-                    setTimeout(() => {
-                        console.log('[Realtime] Retrying inbox subscription...');
-                        unsubscribeFromInbox();
-                        subscribeToInboxChanges(userId);
-                    }, 5000);
-                }
-            });
-    };
-
-    // Clean up subscription
-    const unsubscribeFromInbox = () => {
-        if (inboxSubscription.current) {
-            supabase.removeChannel(inboxSubscription.current);
-            inboxSubscription.current = null;
-            console.log('[Realtime] Unsubscribed from inbox changes');
-        }
-    };
-
-    useEffect(() => {
-        if (currentUser) {
-            // Initial fetch
+            // Initial fetch when screen comes into focus
             refreshMessages();
 
-            // Set up realtime subscription
-            subscribeToInboxChanges(currentUser.id);
-        }
+            // Set up real-time subscription
+            const channel = supabase
+                .channel(`inbox-${currentUser.id}`)
+                .on(
+                    'postgres_changes',
+                    {
+                        event: '*',
+                        schema: 'public',
+                        table: 'inbox',
+                        filter: `receiver=eq.${currentUser.id}`
+                    },
+                    (payload) => {
+                        console.log('[Realtime] Inbox change for current user:', payload);
+                        refreshMessages();
+                    }
+                )
+                .subscribe();
 
-        // Cleanup subscription when component unmounts or user changes
-        return () => {
-            unsubscribeFromInbox();
-        };
-    }, [currentUser]);
+            // Cleanup function
+            return () => {
+                supabase.removeChannel(channel);
+            };
+        }, [currentUser])
+    );
 
     const handleRequestPress = (item: Message) => {
-        console.log('[DEBUG] Pressed item:', item);
         if (item.type === 'friendship') {
             const userForModal = {
                 id: item.senderID,
