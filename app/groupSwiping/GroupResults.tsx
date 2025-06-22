@@ -210,18 +210,18 @@ export default function GroupResults() {
                             </TouchableOpacity>
 
                             {/* Position dots */}
-                            <View className="flex-row justify-center">
-                                {topEateries.map((_, i) => (
-                                    <View
-                                        key={i}
-                                        className={`w-2.5 h-2.5 rounded-full mx-1 ${
-                                            i === index
-                                                ? 'bg-white'
-                                                : 'bg-white/40'
-                                        }`}
-                                    />
-                                ))}
-                            </View>
+                            {topEateries.length > 1 && (
+                                <View className="flex-row justify-center">
+                                    {topEateries.map((_, i) => (
+                                        <View
+                                            key={i}
+                                            className={`w-2.5 h-2.5 rounded-full mx-1 ${
+                                                i === index ? 'bg-white' : 'bg-white/40'
+                                            }`}
+                                        />
+                                    ))}
+                                </View>
+                            )}
                         </View>
 
                         {/* Right Arrow */}
