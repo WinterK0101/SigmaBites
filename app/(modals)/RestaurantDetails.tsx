@@ -1,99 +1,70 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, Linking, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import {Eatery, Review} from "@/interfaces/interfaces";
+import { Eatery, Review } from "@/interfaces/interfaces";
 import { supabase } from '@/SupabaseConfig';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function RestaurantDetails() {
     const router = useRouter();
     const params = useLocalSearchParams();
+    const insets = useSafeAreaInsets();
 
     const [eatery, setEatery] = useState<Eatery | null>(null);
     const [reviews, setReviews] = useState<Review[] | null>(null);
     const [loading, setLoading] = useState(true);
-    
-    // Retrieve the eatery object
+
     const eateryObj = params.eatery ? JSON.parse(params.eatery as string) : null;
     const placeId = params.placeId as string;
 
-    console.log('Eatery JSON: ' + eateryObj)
-    console.log("PlaceID: " + placeId)
-
     useEffect(() => {
-        // TODO: Fetch the eatery details from Supabase using placeId
-        const fetchEatery = async () =>{
-            try{
-                const {data: currEatery, error: fetchError} = await supabase
+        const fetchEatery = async () => {
+            try {
+                const { data: currEatery, error: fetchError } = await supabase
                     .from("Eatery")
                     .select("*")
                     .eq("placeId", placeId)
-                    .single()
-                    
-                if (fetchError){
-                    console.log(fetchError.message)
-                }
+                    .single();
 
-                if (currEatery){
-                    setEatery(currEatery)
-                    console.log(eatery?.displayName)
-                }
-            }catch(err){
-                console.log(err)
+                if (fetchError) console.log(fetchError.message);
+                if (currEatery) setEatery(currEatery);
+            } catch (err) {
+                console.log(err);
             }
-        }
+        };
 
-        // Fetch from reviews table
-        const fetchReview = async () =>{
-            try{
-                const {data: currReview, error: fetchError} = await supabase
+        const fetchReview = async () => {
+            try {
+                const { data: currReview, error: fetchError } = await supabase
                     .from("review")
                     .select("*")
-                    .eq("placeId", placeId)
-                
-                if (fetchError){
-                    console.log(fetchError.message)
-                }
+                    .eq("placeId", placeId);
 
-                if (currReview){
-                    setReviews(currReview)
-                    console.log(currReview)
-                }
-            }catch(err){
-                console.log(err)
+                if (fetchError) console.log(fetchError.message);
+                if (currReview) setReviews(currReview);
+            } catch (err) {
+                console.log(err);
             }
-        }
+        };
 
         if (placeId) {
             fetchEatery();
             fetchReview();
-            
         } else if (eateryObj) {
-            try {
-                //const parsedEatery = JSON.parse(eateryJson);
-                setEatery(eateryObj);
-                setLoading(false);
-            } catch (err) {
-                console.error('Failed to parse eatery JSON:', err);
-            }
+            setEatery(eateryObj);
+            setLoading(false);
         } else {
-            console.log('No eatery found');
             setLoading(false);
         }
-
     }, []);
 
-
-
     return (
-        <View style={styles.container}>
+        <View style={{ flex: 1 }}>
             <Image
                 source={{ uri: eatery?.photo || 'https://via.placeholder.com/300' }}
                 style={styles.image}
             />
-
 
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                 <Ionicons name="arrow-back" size={24} color="#fff" />
@@ -101,70 +72,63 @@ export default function RestaurantDetails() {
 
             <View style={styles.overlayBox}>
                 <Text style={styles.name}>{eatery?.displayName}</Text>
-                <Text style={styles.details}>{eatery?.editorialSummary ? eatery.editorialSummary : eatery?.generativeSummary}</Text>
+                <Text style={styles.details}>
+                    {eatery?.editorialSummary ? eatery.editorialSummary : eatery?.generativeSummary}
+                </Text>
                 <Text style={styles.rating}>{eatery?.rating}</Text>
             </View>
 
-            <ScrollView style={styles.infoSection} contentContainerStyle={{ paddingBottom: 100 }}>
-                <Text style={styles.sectionTitle}>Information</Text>
-                <View style={styles.infoBox}>
-                    <Text style={styles.label}>Address:</Text>
-                    <Text style={styles.value}>{eatery?.formattedAddress}</Text>
+            {/* Scrollable info section */}
+            <View style={{ flex: 1 }}>
+                <ScrollView style={styles.infoSection}>
+                    <Text style={styles.sectionTitle}>Information</Text>
+                    <View style={styles.infoBox}>
+                        <Text style={styles.label}>Address:</Text>
+                        <Text style={styles.value}>{eatery?.formattedAddress}</Text>
 
-                    <Text style={styles.label}>Website:</Text>
-                    <Text
-                        style={[styles.value, { color: '#FF6B3E' }]}
-                        onPress={() => {
-                            if (eatery?.websiteUri) {
-                                // Add https:// if not present to ensure valid URL
-                                const url = eatery.websiteUri.startsWith('http') 
-                                    ? eatery.websiteUri 
-                                    : `https://${eatery.websiteUri}`;
-                                Linking.openURL(url);
-        }
-    }}
-                    >
-                        {eatery?.websiteUri || 'No website available'}
-                    </Text>
+                        <Text style={styles.label}>Website:</Text>
+                        <Text
+                            style={[styles.value, { color: '#FF6B3E' }]}
+                            onPress={() => Linking.openURL('http://www.ajisen.com.sg/')}
+                        >
+                            http://www.ajisen.com.sg/
+                        </Text>
 
-                    <Text style={styles.label}>Phone:</Text>
-                    <Text style={styles.value}>{eatery?.internationalPhoneNumber}</Text>
-                </View>
-
-                <Text style={styles.sectionTitle}>Reviews</Text>
-                {/* <View style={styles.reviewBox}>
-                    <View style={styles.container}>
-                        <FlatList
-                            data={eateries}
-                            renderItem={renderItem}
-                            keyExtractor={(item) => item.placeId || item.id}
-                            horizontal
-                            showsHorizontalScrollIndicator={false}
-                            contentContainerStyle={styles.listContent}
-                        />
+                        <Text style={styles.label}>Phone:</Text>
+                        <Text style={styles.value}>{eatery?.internationalPhoneNumber}</Text>
                     </View>
-                    <Text style={styles.reviewUser}>@User</Text>
-                    <Text style={styles.reviewText}>Lorem ipsum dolor sit amet, consectetur adipiscing…</Text>
-                </View> */}
 
-                <Text style={styles.sectionTitle}>Friends Who Also Saved</Text>
-                <View style={styles.friendRow}>
-                    <Image source={{ uri: 'https://i.pravatar.cc/100?u=friend1' }} style={styles.avatar} />
-                    <Image source={{ uri: 'https://i.pravatar.cc/100?u=friend2' }} style={styles.avatar} />
-                    <Image source={{ uri: 'https://i.pravatar.cc/100?u=friend3' }} style={styles.avatar} />
-                </View>
-            </ScrollView>
+                    <Text style={styles.sectionTitle}>Reviews</Text>
+                    <View style={styles.reviewBox}>
+                        <Text style={styles.reviewUser}>@User</Text>
+                        <Text style={styles.reviewText}>
+                            Lorem ipsum dolor sit amet, consectetur adipiscing…
+                        </Text>
+                    </View>
+
+                    <Text style={styles.sectionTitle}>Friends Who Also Saved</Text>
+                    <View style={styles.friendRow}>
+                        <Image source={{ uri: 'https://i.pravatar.cc/100?u=friend1' }} style={styles.avatar} />
+                        <Image source={{ uri: 'https://i.pravatar.cc/100?u=friend2' }} style={styles.avatar} />
+                    </View>
+                </ScrollView>
+            </View>
+
+            {/* Fixed bottom buttons */}
+            <View style={[styles.bottomButtons, { paddingBottom: insets.bottom }]}>
+                <TouchableOpacity style={styles.heartButton}>
+                    <Ionicons name="heart" size={24} color="#fff" />
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.directionsButton}>
+                    <Text style={styles.directionsText}>Get Directions ➝</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 }
 
-
-
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#FF6B3E',
-    },
     image: {
         width: '100%',
         height: 260,
@@ -246,5 +210,40 @@ const styles = StyleSheet.create({
         height: 44,
         borderRadius: 22,
         marginRight: 10,
+    },
+    bottomButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingTop: 16,
+        paddingBottom: 20,
+        backgroundColor: '#fff',
+        borderTopWidth: 1,
+        borderTopColor: '#eee',
+    },
+    heartButton: {
+        width: 56,
+        height: 56,
+        backgroundColor: '#FF6B3E',
+        borderRadius: 28,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 4,
+    },
+    directionsButton: {
+        flex: 1,
+        backgroundColor: '#FF6B3E',
+        marginLeft: 20,
+        borderRadius: 30,
+        paddingVertical: 14,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 4,
+    },
+    directionsText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 16,
     },
 });
