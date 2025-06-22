@@ -45,7 +45,8 @@ const retrieveRequests = async (currentUserId: string): Promise<Message[]> => {
     const { data: requests, error } = await supabase
         .from('inbox')
         .select('id, friendshipID, inviteID, type, sender, created_at')
-        .eq('receiver', currentUserId);
+        .eq('receiver', currentUserId)
+        .order('created_at', { ascending: false });
     if (error) {
         console.error('[Debug] Error fetching requests:', error);
         throw new Error(`Failed to fetch requests: ${error.message}`);

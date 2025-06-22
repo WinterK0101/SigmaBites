@@ -213,9 +213,9 @@ export default function Swiping() {
                 });
             } else {
                 router.push({
-                    pathname: '/(modals)/LikedConfirmation',
+                    pathname: '/soloSwiping/MatchedWithFriends/LikedConfirmation',
                     params: {
-                        restaurantImage: likedEatery.photo,
+                        eatery: JSON.stringify(likedEatery),
                     }
                 })
             }
