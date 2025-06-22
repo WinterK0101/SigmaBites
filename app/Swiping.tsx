@@ -260,7 +260,7 @@ export default function Swiping() {
     }, [lastSwipeWasRight, router, swipingMode, groupID, currentUser.id]);
 
     // Function for creating the cards
-    const renderCard = useCallback((eatery) => {
+    const renderCard = useCallback((eatery : any) => {
         if (!eatery) return null;
 
         return (
