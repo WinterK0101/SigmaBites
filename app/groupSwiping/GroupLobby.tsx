@@ -50,7 +50,6 @@ export default function GroupLobby() {
         useDummyData?: string;
     }>();
 
-    // Only extract what we actually need from route params
     const { groupID, useDummyData } = params;
 
     const insets = useSafeAreaInsets();
