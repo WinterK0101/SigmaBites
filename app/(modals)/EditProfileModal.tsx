@@ -10,6 +10,7 @@ import {
     TextInput,
 } from 'react-native';
 import RemoteImage from '@/components/RemoteImage';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface EditProfileModalProps {
     visible: boolean;
@@ -90,7 +91,7 @@ export default function EditProfileModal({
                                     style={styles.editIconButton}
                                     onPress={() => Alert.alert('Edit picture pressed')}
                                 >
-                                    <Text style={styles.editIconText}>✎</Text>
+                                    <MaterialCommunityIcons name="pencil-outline" size={20} color="white"/>
                                 </TouchableOpacity>
                             </>
                         ) : (
@@ -185,8 +186,10 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 8,
         right: 80,
-        backgroundColor: 'white',
-        borderRadius: 16,
+        backgroundColor: '#fe724c',
+        borderColor: 'white',
+        borderWidth: 2,
+        borderRadius: 100,
         padding: 6,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
@@ -195,8 +198,8 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     editIconText: {
-        fontSize: 14,
-        color: '#FE724C',
+        fontSize: 18,
+        color: 'white',
         fontWeight: 'bold',
     },
     title: {
