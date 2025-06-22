@@ -80,11 +80,19 @@ export default function EditProfileModal({
                     {/* Profile Picture */}
                     <View style={styles.profilePictureContainer}>
                         {profilePicUrl ? (
-                            <RemoteImage
-                                filePath={profilePicUrl}
-                                bucket="avatars"
-                                style={styles.profilePicture}
-                            />
+                            <>
+                                <RemoteImage
+                                    filePath={profilePicUrl}
+                                    bucket="avatars"
+                                    style={styles.profilePicture}
+                                />
+                                <TouchableOpacity
+                                    style={styles.editIconButton}
+                                    onPress={() => Alert.alert('Edit picture pressed')}
+                                >
+                                    <Text style={styles.editIconText}>✎</Text>
+                                </TouchableOpacity>
+                            </>
                         ) : (
                             <ActivityIndicator />
                         )}
@@ -160,6 +168,7 @@ const styles = StyleSheet.create({
     profilePictureContainer: {
         alignItems: 'center',
         marginBottom: 16,
+        position: 'relative',
     },
     profilePicture: {
         width: 120,
@@ -171,6 +180,24 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 5,
+    },
+    editIconButton: {
+        position: 'absolute',
+        top: 8,
+        right: 80,
+        backgroundColor: 'white',
+        borderRadius: 16,
+        padding: 6,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+        elevation: 5,
+    },
+    editIconText: {
+        fontSize: 14,
+        color: '#FE724C',
+        fontWeight: 'bold',
     },
     title: {
         fontSize: 20,
