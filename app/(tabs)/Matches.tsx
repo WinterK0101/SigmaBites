@@ -1,16 +1,39 @@
 import { View, Text, FlatList, StyleSheet, ImageBackground, Dimensions } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback  } from 'react';
 import { supabase } from '@/SupabaseConfig';
 import { useSession } from '@/context/SessionContext';
+import { calculateDistance } from '../../services/apiDetailsForUI'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 const itemSize = (width - 48) / 2;
+
+// To get location
+const getLocation = async () => {
+  try {
+    const jsonValue = await AsyncStorage.getItem('userLocation');
+    //return jsonValue
+    return jsonValue != null ? JSON.parse(jsonValue) : null;
+  } catch (e) {
+    console.error('Failed to fetch location');
+  }
+};
 
 export default function Matches() {
   const [products, setProducts] = useState(Array<any>);
   const session = useSession();
   const eateries: Array<any> = [];
+
+  useFocusEffect(
+    useCallback(() => {
+      // This runs when the screen is focused
+      console.log('Screen focused');
+      retrieveProfile();
+    }, [])
+  )
+
   const retrieveProfile = async () =>{
     try {
       const { data: fetchedData, error: fetchError } = await supabase
@@ -24,25 +47,33 @@ export default function Matches() {
       }
       for (let index = 0; index < fetchedData.liked_eateries.length; index++) {
         const element = fetchedData.liked_eateries[index];
-        console.log(index + fetchedData.liked_eateries[index])
-        console.log(element)
         const {data: currEatery} = await supabase
           .from("Eatery")
           .select("*")
           .eq("placeId", element)
           .single()
 
-        console.log(currEatery.displayName)
-        console.log(currEatery.photo)
+        
+        const currentLocation = await getLocation();
+        console.log(typeof currentLocation.latitude)
+        console.log(typeof currentLocation.longitude)
+        console.log(typeof currEatery.location.latitude)
+        console.log(typeof currEatery.location.longitude)
+        
+        const dist = calculateDistance(currentLocation.latitude, 
+          currentLocation.longitude, currEatery.location.latitude, 
+          currEatery.location.longitude);
+        console.log(dist);
+
         eateries.push(
           {
             id:element,
             name:currEatery.displayName,
-            restaurant: "2km",
+            distance: `${dist.toFixed(2)} km`,
             image:currEatery.photo
           }
         )
-        console.log(eateries)
+        //console.log(eateries)
         setProducts(eateries);
       }
     } catch (err) {
@@ -76,7 +107,7 @@ export default function Matches() {
                     <View style={styles.overlay} />
                     <View style={styles.textContainer}>
                       <Text style={styles.name}>{item.name}</Text>
-                      <Text style={styles.restaurant}>{item.restaurant}</Text>
+                      <Text style={styles.restaurant}>{item.distance}</Text>
                     </View>
                   </ImageBackground>
                 </View>

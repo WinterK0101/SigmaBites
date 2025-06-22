@@ -9,7 +9,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import LocationSearch from "@/components/LocationSearch";
 import { LocationDisplay } from "@/components/LocationDisplay";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { LocationData } from '@/interfaces/interfaces';
 import Slider from "@react-native-community/slider";
 import ScrollView = Animated.ScrollView;
@@ -20,6 +20,7 @@ import { useRouter } from 'expo-router';
 import {getNearbyEateries} from "@/services/eaterySearch";
 import {filterEateries} from "@/services/filterService";
 import { icons } from '@/constants/icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Discover() {
     const router = useRouter();
@@ -41,8 +42,19 @@ export default function Discover() {
         openNowToggle: searchOpen
     };
 
+    // To save location
+    const saveLocation = async (location: any) => {
+    try {
+        await AsyncStorage.setItem('userLocation', JSON.stringify(location));
+    } catch (e) {
+        console.error('Failed to save location');
+    }
+    };
+
     const handleLocationChange = (location: LocationData | null) => {
         setUserLocation(location);
+        console.log("SEE HERE!!!!" + JSON.stringify(location?.coordinates))
+        saveLocation(location?.coordinates);
     };
 
     const togglePrice = (price: number) => {
