@@ -2,7 +2,12 @@ import {View, Text, ImageBackground, ScrollView, Image, ActivityIndicator} from 
 import React, { useEffect, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { images } from "@/constants/images"
-import {getParticipants, subscribeToWaitingUpdates, updateSwipingSessionStatus} from '@/services/groupSwiping'
+import {
+    getParticipants,
+    getSessionStatus,
+    subscribeToWaitingUpdates,
+    updateSwipingSessionStatus
+} from '@/services/groupSwiping'
 import { GroupParticipant } from '@/interfaces/interfaces'
 import RemoteImage from "@/components/RemoteImage";
 
@@ -13,6 +18,8 @@ export default function Waiting() {
 
     useEffect(() => {
         if (!groupID) return
+
+        let hasNavigated = false; // Prevent multiple navigations
 
         // Get all participants initially
         const fetchParticipants = async () => {
@@ -28,23 +35,35 @@ export default function Waiting() {
 
         // Subscribe to real-time updates
         const channel = subscribeToWaitingUpdates(groupID as string, async (update) => {
-            // Refresh participants data when there's an update
+            // Prevent multiple navigation attempts
+            if (hasNavigated) return;
+
             try {
+                // Refresh participants data when there's an update
                 const users = await getParticipants(groupID as string)
                 setParticipants(users)
 
                 // If everyone is ready, navigate to results
-                if (update.everyoneReady) {
-                    await updateSwipingSessionStatus(groupID as string, 'active');
-                    setTimeout(() => {
-                        router.replace({
-                            pathname: '/groupSwiping/GroupResults',
-                            params: {groupID: groupID as string},
-                        });
-                    }, 2000);
+                if (update.everyoneReady && !hasNavigated) {
+                    hasNavigated = true;
+
+                    // Only one user should update the session status
+                    // Check if status is already 'completed' to avoid race conditions
+                    const currentStatus = await getSessionStatus(groupID as string);
+
+                    if (currentStatus !== 'completed') {
+                        await updateSwipingSessionStatus(groupID as string, 'completed');
+                    }
+
+                    // Navigate immediately without delay
+                    router.replace({
+                        pathname: '/groupSwiping/GroupResults',
+                        params: {groupID: groupID as string},
+                    });
                 }
             } catch (error) {
                 console.error('Error updating participants:', error)
+                hasNavigated = false; // Reset flag on error
             }
         })
 

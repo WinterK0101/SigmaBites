@@ -38,10 +38,28 @@ export default function Swiping() {
         }
     } : null;
 
-    // Initialize eateries data
-    const initializeEateries = useCallback(() => {
-        let sourceEateries = dummyEateries;
+    // Initialize eateries data with group settings support
+    const initializeEateries = useCallback(async () => {
+        // For group mode, check the group setting first
+        if (swipingMode === 'group' && groupID) {
+            try {
+                const { data: groupSession } = await supabase
+                    .from('group_sessions')
+                    .select('useDummyData')
+                    .eq('group_id', groupID)
+                    .single();
 
+                if (groupSession?.useDummyData) {
+                    return dummyEateries; // Everyone uses dummy data
+                }
+                // If not using dummy data, fall through to parse eateriesParam
+            } catch (error) {
+                console.error('Failed to fetch group settings:', error);
+            }
+        }
+
+        // Original logic for parsing actual eateries (solo mode or group mode with real data)
+        let sourceEateries = dummyEateries;
         if (useDummyData !== 'true' && eateriesParam) {
             try {
                 sourceEateries = JSON.parse(eateriesParam as string);
@@ -51,10 +69,15 @@ export default function Swiping() {
             }
         }
         return sourceEateries;
-    }, [eateriesParam, useDummyData]);
+    }, [eateriesParam, useDummyData, swipingMode, groupID]);
 
     useEffect(() => {
-        setEateries(initializeEateries());
+        const loadEateries = async () => {
+            const initializedEateries = await initializeEateries();
+            setEateries(initializedEateries);
+        };
+
+        loadEateries();
     }, [initializeEateries]);
 
 
@@ -208,12 +231,14 @@ export default function Swiping() {
                 const waitingStatus = await getWaitingStatus(groupID as string);
 
                 if (waitingStatus.everyoneReady) {
-                    // All users have completed swiping, go to results
+                    // Update session status before navigation
+                    await updateSwipingSessionStatus(groupID as string, 'completed');
+
+                    // Navigate to results immediately
                     router.replace({
                         pathname: '/groupSwiping/GroupResults',
                         params: {groupID: groupID as string},
                     });
-                    await updateSwipingSessionStatus(groupID as string, 'complete');
                 } else {
                     // Still waiting for others, go to waiting screen
                     router.replace({
@@ -224,6 +249,13 @@ export default function Swiping() {
             }
         } catch (error) {
             console.error('Error handling swipe completion:', error);
+            // Fallback navigation
+            if (swipingMode === 'group') {
+                router.replace({
+                    pathname: '/groupSwiping/Waiting',
+                    params: { groupID: groupID as string }
+                });
+            }
         }
     }, [lastSwipeWasRight, router, swipingMode, groupID, currentUser.id]);
 

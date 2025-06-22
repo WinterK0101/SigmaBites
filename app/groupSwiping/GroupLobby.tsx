@@ -15,6 +15,9 @@ import {
     leaveGroup,
     updateSwipingSessionStatus
 } from "@/services/groupSwiping";
+import {getNearbyEateries} from "@/services/eaterySearch";
+import {filterEateries} from "@/services/filterService";
+import { supabase } from '@/SupabaseConfig'; // Add this import
 
 // Helper function to safely parse JSON from database
 const safeJsonParse = (data: any, fallback: any = null) => {
@@ -47,7 +50,6 @@ export default function GroupLobby() {
         useDummyData?: string;
     }>();
 
-    // Only extract what we actually need from route params
     const { groupID, useDummyData } = params;
 
     const insets = useSafeAreaInsets();
@@ -96,7 +98,44 @@ export default function GroupLobby() {
 
     // Navigate to swiping screen (shared function for host and participants)
     const navigateToSwiping = useCallback(async () => {
-        if (!parsedLocationData) return;
+        if (!parsedLocationData || !groupID) return;
+
+        let eateries = [];
+        let shouldUseDummyData = false;
+
+        try {
+            // For group mode, check the group setting first
+            const { data: groupSession } = await supabase
+                .from('group_sessions')
+                .select('useDummyData')
+                .eq('id', groupID)
+                .single();
+
+            shouldUseDummyData = groupSession?.useDummyData || false;
+
+            if (shouldUseDummyData) {
+                // Use dummy data - no API call needed
+                eateries = [];
+            } else {
+                // Get real data from API
+                eateries = await getNearbyEateries(
+                    parsedLocationData.coordinates.latitude,
+                    parsedLocationData.coordinates.longitude,
+                    parsedFilters
+                );
+            }
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            if (!shouldUseDummyData) {
+                Alert.alert("Error", "Failed to fetch eateries");
+                return;
+            }
+        }
+
+        let filteredEateries: Eatery[] = [];
+        if (eateries.length > 0) {
+            filteredEateries = filterEateries(eateries, parsedFilters);
+        }
 
         router.push({
             pathname: '/Swiping',
@@ -104,11 +143,12 @@ export default function GroupLobby() {
                 swipingMode: 'group',
                 latitude: parsedLocationData.coordinates.latitude.toString(),
                 longitude: parsedLocationData.coordinates.longitude.toString(),
-                useDummyData: isUsingDummyData.toString(),
+                eateries: JSON.stringify(filteredEateries),
+                useDummyData: shouldUseDummyData.toString(), // Use the group setting
                 groupID: groupID as string,
             }
         });
-    }, [parsedLocationData, isUsingDummyData, groupID, router]);
+    }, [parsedLocationData, groupID, router, parsedFilters]);
 
     // Handle realtime updates with better debugging
     const handleGroupUpdate = useCallback(async (payload: any) => {
@@ -208,9 +248,14 @@ export default function GroupLobby() {
         setIsStarting(true);
 
         try {
-            // Update the group status to 'active'
-            // This will trigger the realtime update for other participants
-            await updateSwipingSessionStatus(groupID as string, 'active');
+            // Store the host's dummy data preference in the group session
+            await supabase
+                .from('group_sessions')
+                .update({
+                    useDummyData: isUsingDummyData,
+                    status: 'active'
+                })
+                .eq('id', groupID);
 
             // Navigate host to swiping screen
             await navigateToSwiping();
@@ -278,6 +323,11 @@ export default function GroupLobby() {
                         <Collapsible isVisible={isFiltersVisible}>
                             <View className="mt-4">
                                 <View className="h-[2px] bg-grey mb-2" />
+                                {isUsingDummyData && (
+                                    <Text className="text-accent text-xs mt-2 font-lexend-bold">
+                                        Using Dummy Data for Testing
+                                    </Text>
+                                )}
                                 <Text className="text-black text-xs mt-2 font-lexend-regular">
                                     <Text className="font-lexend-bold">Location: </Text>
                                     <Text>{parsedLocationData.address}</Text>
@@ -318,15 +368,6 @@ export default function GroupLobby() {
                         <Text className="text-[#6C6C6C] font-lexend-regular text-base">
                             {joinedParticipants.length} joined, {pendingParticipants.length} pending
                         </Text>
-                        {/*<TouchableOpacity*/}
-                        {/*    className="bg-white border-2 border-grey rounded-[30px] px-4 py-2"*/}
-                        {/*    onPress={() => {*/}
-                        {/*        // Navigate back to invite more friends*/}
-                        {/*        router.back();*/}
-                        {/*    }}*/}
-                        {/*>*/}
-                        {/*    <Text className="text-accent text-xs font-baloo-regular">Invite More Friends</Text>*/}
-                        {/*</TouchableOpacity>*/}
                     </View>
 
                     {/* Participants List */}
@@ -404,6 +445,7 @@ export default function GroupLobby() {
                         <Text className="text-center text-[#6C6C6C] text-xs mt-2 font-lexend-regular">
                             Need at least 2 members to start
                         </Text>
+
                     )}
                 </View>
             )}

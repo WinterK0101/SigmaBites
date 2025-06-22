@@ -192,7 +192,8 @@ export default function StartGroupSession() {
                         const parsedLocation = typeof locationData === 'string' ? JSON.parse(locationData) : {};
                         if (!user) return;
                         try {
-                            const groupID = await createGroup(user.id, parsedFilters, parsedLocation, invitedFriends.map(friend => friend.id));
+                            const isUsingDummyData = useDummyData === 'true';
+                            const groupID = await createGroup(user.id, parsedFilters, parsedLocation, invitedFriends.map(friend => friend.id), isUsingDummyData);
                             router.push({
                                 pathname: '/groupSwiping/GroupLobby',
                                 params: {
