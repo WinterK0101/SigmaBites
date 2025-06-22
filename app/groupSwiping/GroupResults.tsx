@@ -13,6 +13,7 @@ export default function GroupResults() {
     const [topEateries, setTopEateries] = useState<Eatery[]>([]);
     const [index, setIndex] = useState(0);
     const router = useRouter();
+    const [sortedVotes, setSortedVotes] = useState<{ eateryID: string; count: number }[]>([]);
 
     const goLeft = () => {
         if (index > 0) {
@@ -33,8 +34,9 @@ export default function GroupResults() {
             if (!groupID) return;
 
             setLoading(true);
-            const sortedVotes = await getAllVotes(groupID);
-            const topIDs = getTopEateries(sortedVotes);
+            const sorted = await getAllVotes(groupID);
+            setSortedVotes(sorted || []);
+            const topIDs = getTopEateries(sorted);
             if (!topIDs || !topIDs.length) setTopEateries([]);
             else {
                 const topEateries = await Promise.all(
@@ -92,7 +94,7 @@ export default function GroupResults() {
                         shadowRadius: 4,
                         elevation: 3,
                     }}
-                    onPress={()=>router.replace('(tabs)/Discover')}
+                    onPress={()=>router.replace('/(tabs)/Discover')}
                 >
                     <Text className="text-white text-base font-baloo-regular">
                         Go back to Discover
@@ -252,6 +254,10 @@ export default function GroupResults() {
                             shadowRadius: 6,
                             elevation: 5,
                         }}
+                        onPress={()=> router.push({
+                            pathname: '/groupSwiping/VoteBreakdown',
+                            params: { sortedVotes: JSON.stringify(sortedVotes) },
+                        })}
                     >
                         <Text
                             className="text-accent text-base font-baloo-regular"
@@ -268,7 +274,7 @@ export default function GroupResults() {
                             shadowRadius: 6,
                             elevation: 5,
                         }}
-                        onPress={()=>router.replace('(tabs)/Discover')}
+                        onPress={()=>router.replace('/(tabs)/Discover')}
                     >
                         <Text
                             className="text-white text-base font-baloo-regular"

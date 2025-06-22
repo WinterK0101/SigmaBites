@@ -7,7 +7,8 @@ export async function createGroup(
     hostID: string,
     filters: EateryFilters,
     location: LocationData,
-    friendIDs: string[]
+    friendIDs: string[],
+    useDummyData: boolean,
 ) {
     // Create group
     const { data: group, error } = await supabase
@@ -17,6 +18,7 @@ export async function createGroup(
             filters: JSON.stringify(filters),
             location: JSON.stringify(location),
             status: 'waiting',
+            useDummyData: useDummyData,
         })
         .select()
         .single();
@@ -157,6 +159,31 @@ export async function updateSwipingSessionStatus(groupId: string, status: string
 
     if (error) throw error;
 }
+
+export async function getSessionStatus(groupID: string): Promise<string | null> {
+    try {
+        const { data, error } = await supabase
+            .from('group_sessions')
+            .select('status')
+            .eq('id', groupID)
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') {
+                // No rows found
+                console.log(`No session found for groupID: ${groupID}`);
+                return null;
+            }
+            throw error;
+        }
+
+        return data?.status || null;
+    } catch (error) {
+        console.error('Error fetching session status:', error);
+        return null;
+    }
+}
+
 
 // Mark swiping as completed
 export async function completeSwiping(groupId: string, userId: string) {
