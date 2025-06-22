@@ -1,4 +1,4 @@
-import { View, Text, FlatList, StyleSheet, ImageBackground, Dimensions } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ImageBackground, Dimensions, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
 import React, { useEffect, useState, useCallback  } from 'react';
 import { supabase } from '@/SupabaseConfig';
@@ -6,6 +6,8 @@ import { useSession } from '@/context/SessionContext';
 import { calculateDistance } from '../../services/apiDetailsForUI'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
+import { opacity } from 'react-native-reanimated/lib/typescript/Colors';
+import { router } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 const itemSize = (width - 48) / 2;
@@ -20,70 +22,82 @@ const getLocation = async () => {
     console.error('Failed to fetch location');
   }
 };
+const seeDetails = (item : any) =>{
+  console.log(item)
+  router.push({
+    pathname:'/(modals)/RestaurantDetails',
+    params:{
+      placeId: item.id,
+      eatery: JSON.stringify(item)
+    }
+  });
+}
+
+/* const test = useCallback(() => {
+        const currentEatery = eateries[currentIndex];
+        if (!currentEatery) return;
+        router.push({
+            pathname: "/RestaurantDetails",
+            params: {
+                placeId: currentEatery.placeId,
+                eatery: JSON.stringify(currentEatery),
+            },
+        });
+    }, [eateries, currentIndex, router]); */
 
 export default function Matches() {
-  const [products, setProducts] = useState(Array<any>);
+  const [products, setProducts] = useState<Array<any>>([]);
   const session = useSession();
-  const eateries: Array<any> = [];
 
   useFocusEffect(
     useCallback(() => {
-      // This runs when the screen is focused
-      console.log('Screen focused');
-      retrieveProfile();
-    }, [])
-  )
-
-  const retrieveProfile = async () =>{
-    try {
-      const { data: fetchedData, error: fetchError } = await supabase
-        .from('profiles')
-        .select('liked_eateries')
-        .eq('id', session?.user.id)
-        .single();
-
-      if (fetchError) {
-        throw fetchError;
-      }
-      for (let index = 0; index < fetchedData.liked_eateries.length; index++) {
-        const element = fetchedData.liked_eateries[index];
-        const {data: currEatery} = await supabase
-          .from("Eatery")
-          .select("*")
-          .eq("placeId", element)
-          .single()
-
+      const fetchData = async () => {
+        if (products.length > 0) return;
         
-        const currentLocation = await getLocation();
-        console.log(typeof currentLocation.latitude)
-        console.log(typeof currentLocation.longitude)
-        console.log(typeof currEatery.location.latitude)
-        console.log(typeof currEatery.location.longitude)
-        
-        const dist = calculateDistance(currentLocation.latitude, 
-          currentLocation.longitude, currEatery.location.latitude, 
-          currEatery.location.longitude);
-        console.log(dist);
+        try {
+          const { data: fetchedData, error: fetchError } = await supabase
+            .from('profiles')
+            .select('liked_eateries')
+            .eq('id', session?.user.id)
+            .single();
 
-        eateries.push(
-          {
-            id:element,
-            name:currEatery.displayName,
-            distance: `${dist.toFixed(2)} km`,
-            image:currEatery.photo
-          }
-        )
-        //console.log(eateries)
-        setProducts(eateries);
-      }
-    } catch (err) {
-      console.log(err.message)
-    }
-  }
-  
-  useEffect(() => {
-    retrieveProfile();
-  }, []);
+          if (fetchError) throw fetchError;
+
+          const eateries = await Promise.all(
+            fetchedData.liked_eateries.map(async (element: string) => {
+              const { data: currEatery } = await supabase
+                .from("Eatery")
+                .select("*")
+                .eq("placeId", element)
+                .single();
+
+              const currentLocation = await getLocation();
+              const dist = calculateDistance(
+                currentLocation.latitude, 
+                currentLocation.longitude, 
+                currEatery.location.latitude, 
+                currEatery.location.longitude
+              );
+
+              return {
+                id: element,
+                name: currEatery.displayName,
+                distance: `${dist.toFixed(2)} km`,
+                image: currEatery.photo
+              };
+            })
+          );
+
+          setProducts(eateries);
+        } catch (err) {
+          console.error(err);
+        }
+      };
+
+      fetchData();
+    }, [products.length, session?.user.id]) // Proper dependencies
+  );
+
 
   return (
       <SafeAreaView style={styles.container}>
@@ -103,12 +117,20 @@ export default function Matches() {
                       source={{ uri: item.image }}
                       style={styles.imageBackground}
                       imageStyle={styles.imageStyle}
-                  >
-                    <View style={styles.overlay} />
-                    <View style={styles.textContainer}>
-                      <Text style={styles.name}>{item.name}</Text>
-                      <Text style={styles.restaurant}>{item.distance}</Text>
-                    </View>
+                    >
+                      {/* Invisible but clickable overlay */}
+                      <TouchableOpacity 
+                        style={styles.invisibleTouchable}
+                        activeOpacity={1} // No visual feedback on press
+                        onPress={() => seeDetails(item)}
+                      />
+                      
+                      {/* Your visible content stays separate */}
+                      <View style={styles.overlay} />
+                      <View style={styles.textContainer}>
+                        <Text style={styles.name}>{item.name}</Text>
+                        <Text style={styles.restaurant}>{item.distance}</Text>
+                      </View>    
                   </ImageBackground>
                 </View>
             )}
@@ -174,5 +196,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#ddd',
     textAlign: 'center',
+  },
+  invisibleTouchable: {
+    ...StyleSheet.absoluteFillObject, // Covers entire parent
+    backgroundColor: 'transparent',
+    zIndex: 1, // Ensures it's above the image but below content
   },
 });
