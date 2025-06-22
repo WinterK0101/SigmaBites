@@ -12,7 +12,7 @@ import {
 import { useSession } from "@/context/SessionContext";
 import RemoteImage from "@/components/RemoteImage";
 import { useFriendsStore } from "@/store/friendsStore";
-import { useInboxStore } from "@/store/inboxStore"; // Add this import
+import { useInboxStore } from "@/store/inboxStore";
 
 export default function FriendsScreen() {
   const router = useRouter();
