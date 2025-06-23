@@ -478,7 +478,7 @@ export default function Profile() {
               <TouchableOpacity
                 style={styles.editButton}
                 activeOpacity={0.8}
-                onPress={() => setShowEditModal(true)}
+                onPress={handleOpenEditModal}
               >
                 <Text style={styles.editButtonText}>Edit Profile</Text>
               </TouchableOpacity>
@@ -606,8 +606,14 @@ export default function Profile() {
           {/* Edit Profile Modal */}
           <EditProfileModal
             visible={showEditModal}
-            onClose={() => setShowEditModal(false)}
-            profile={profile}
+            onClose={() => {
+              setShowEditModal(false);
+              setTempAvatarUrl(undefined); // revert temp avatar on cancel
+            }}
+            profile={{
+              ...profile,
+              avatar_url: tempAvatarUrl ?? profile.avatar_url,
+            }}
             onSave={async (updatedProfile) => {
               if (!session?.user) return;
               const { error } = await supabase
@@ -626,12 +632,14 @@ export default function Profile() {
                   username: updatedProfile.username,
                   avatar_url: updatedProfile.avatar_url,
                 }));
+                setTempAvatarUrl(undefined);
                 setShowEditModal(false);
               } else {
                 // Optionally show an error message
                 console.error('Error updating profile:', error.message);
               }
             }}
+            onChangeProfilePicture={handleTempProfilePicture}
           />
 
           {/* Logout Confirmation Modal */}
