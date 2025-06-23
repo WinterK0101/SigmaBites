@@ -5,11 +5,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { Eatery, Review } from "@/interfaces/interfaces";
 import { supabase } from '@/SupabaseConfig';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { addToFavorites } from '@/services/favouriteService';
+import { useSession } from '@/context/SessionContext';
 
 export default function RestaurantDetails() {
     const router = useRouter();
     const params = useLocalSearchParams();
     const insets = useSafeAreaInsets();
+    const session = useSession();
 
     const [eatery, setEatery] = useState<Eatery | null>(null);
     const [reviews, setReviews] = useState<Review[] | null>(null);
@@ -65,6 +68,41 @@ export default function RestaurantDetails() {
             <Text style={styles.reviewText}>{item.text}</Text>
         </View>
     );
+
+    // Handle onpress for Get Direction
+    const getDirectionOnPress = () => {
+        if (eatery){
+            const url = `https://www.google.com/maps/search/?api=1&query=${eatery.location.latitude},${eatery.location.longitude}`;
+            Linking.openURL(url);
+        }
+    }
+
+    // Handle onpress for heart button
+    const heartBtnOnPress = () => {
+        console.log("you have clicked the favourite button")
+        const retrieveFavourites = async () => {
+            const {data:currFav, error:fetchError} = await supabase
+            .from("profiles")
+            .select("favourite_eateries")
+            .eq("id", session?.user.id)
+            .single()
+
+            if (fetchError) console.log(fetchError.message)
+            
+            if (eatery && session && currFav)
+            {
+                addToFavorites(session.user.id, eatery.placeId, currFav.favourite_eateries)
+                console.log("added to favourites")
+            }
+            else{
+                console.log(eatery?.placeId)
+                console.log(session?.user.id)
+                console.log(currFav?.favourite_eateries)
+            }
+        }
+
+        retrieveFavourites()
+    }
 
     return (
         <View style={{ flex: 1 }}>
@@ -132,11 +170,11 @@ export default function RestaurantDetails() {
 
             {/* Bottom buttons */}
             <View style={[styles.bottomButtons, { paddingBottom: insets.bottom + 24}]}>
-                <TouchableOpacity style={styles.heartButton}>
+                <TouchableOpacity style={styles.heartButton} onPress={heartBtnOnPress}>
                     <Ionicons name="heart" size={24} color="#fff" />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.directionsButton}>
+                <TouchableOpacity style={styles.directionsButton} onPress={getDirectionOnPress}>
                     <Text style={styles.directionsText}>Get Directions ➝</Text>
                 </TouchableOpacity>
             </View>
