@@ -15,7 +15,7 @@ const SignInScreen = () => {
     if (error) {
       Alert.alert(error.message)
     } else {
-      router.replace('/(tabs)/Discover')
+      router.replace('/(auth)/StartupScreen')
     }
   }
 
