@@ -130,8 +130,8 @@ export default function RestaurantDetails() {
                 </ScrollView>
             </View>
 
-            {/* Fixed bottom buttons */}
-            <View style={[styles.bottomButtons, { paddingBottom: insets.bottom }]}>
+            {/* Bottom buttons */}
+            <View style={[styles.bottomButtons, { paddingBottom: insets.bottom + 24}]}>
                 <TouchableOpacity style={styles.heartButton}>
                     <Ionicons name="heart" size={24} color="#fff" />
                 </TouchableOpacity>
