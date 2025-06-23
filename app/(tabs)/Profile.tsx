@@ -21,6 +21,131 @@ import RemoteImage from "@/components/RemoteImage";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from 'expo-image-picker';
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fafafa',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
+  },
+  header: {
+    width: 1000,
+    height: 440,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 50,
+    borderRadius: '100%',
+    alignSelf: 'center',
+    overflow: 'hidden',
+    top: -60,
+  },
+  name: {
+    fontSize: 32,
+    color: '#fff',
+    fontFamily: 'Baloo-regular',
+  },
+  username: {
+    color: '#fff',
+    marginTop: -12,
+    fontSize: 14,
+    fontFamily: 'Lexend-regular',
+  },
+  editButton: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    paddingHorizontal: 28,
+    paddingVertical: 6,
+    marginVertical: 12,
+  },
+  editButtonText: {
+    color: '#FE724C',
+    fontFamily: 'Baloo-regular',
+    fontSize: 16,
+  },
+  settingsIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    top: 10,
+    right: 0,
+    zIndex: 999,
+  },
+  settingsImage: {
+    width: 18,
+    height: 18,
+    tintColor: 'white',
+  },
+  dropdownMenu: {
+    position: 'absolute',
+    top: 42,
+    right: 0,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    paddingVertical: 8,
+    width: 110,
+    zIndex: 1000,
+  },
+  dropdownItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    fontFamily: 'Lexend-Regular',
+    fontSize: 13,
+    color: '#FE724C',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#f0f0f0',
+    marginVertical: 6,
+    marginHorizontal: 12,
+  },
+  // Empty state styles
+  emptyStateContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  emptyIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#FFF5F2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  emptyStateTitle: {
+    fontSize: 14,
+    fontFamily: 'Lexend-medium',
+    color: '#333',
+    marginBottom: 2,
+    textAlign: 'center',
+  },
+  emptyStateSubtitle: {
+    fontSize: 11,
+    fontFamily: 'Lexend-regular',
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 6,
+    lineHeight: 14,
+    maxWidth: 250,
+  },
+}
+);
+
 export default function Profile() {
   const router = useRouter();
   const { session } = useSession();
@@ -591,129 +716,4 @@ export default function Profile() {
     </View>
   );
 
-
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: '#fafafa',
-    },
-    scrollView: {
-      flex: 1,
-    },
-    scrollContent: {
-      flexGrow: 1,
-      paddingBottom: 20,
-    },
-    header: {
-      width: 1000,
-      height: 440,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingTop: 50,
-      borderRadius: '100%',
-      alignSelf: 'center',
-      overflow: 'hidden',
-      top: -60,
-    },
-    name: {
-      fontSize: 32,
-      color: '#fff',
-      fontFamily: 'Baloo-regular',
-    },
-    username: {
-      color: '#fff',
-      marginTop: -12,
-      fontSize: 14,
-      fontFamily: 'Lexend-regular',
-    },
-    editButton: {
-      backgroundColor: '#fff',
-      borderRadius: 20,
-      paddingHorizontal: 28,
-      paddingVertical: 6,
-      marginVertical: 12,
-    },
-    editButtonText: {
-      color: '#FE724C',
-      fontFamily: 'Baloo-regular',
-      fontSize: 16,
-    },
-    settingsIcon: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: 'rgba(255,255,255,0.2)',
-      alignItems: 'center',
-      justifyContent: 'center',
-      position: 'absolute',
-      top: 10,
-      right: 0,
-      zIndex: 999,
-    },
-    settingsImage: {
-      width: 18,
-      height: 18,
-      tintColor: 'white',
-    },
-    dropdownMenu: {
-      position: 'absolute',
-      top: 42,
-      right: 0,
-      backgroundColor: 'white',
-      borderRadius: 12,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.2,
-      shadowRadius: 4,
-      paddingVertical: 8,
-      width: 110,
-      zIndex: 1000,
-    },
-    dropdownItem: {
-      paddingVertical: 10,
-      paddingHorizontal: 16,
-      fontFamily: 'Lexend-Regular',
-      fontSize: 13,
-      color: '#FE724C',
-    },
-    divider: {
-      height: 1,
-      backgroundColor: '#f0f0f0',
-      marginVertical: 6,
-      marginHorizontal: 12,
-    },
-    // Empty state styles
-    emptyStateContainer: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-    },
-    emptyIconContainer: {
-      width: 50,
-      height: 50,
-      borderRadius: 25,
-      backgroundColor: '#FFF5F2',
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 8,
-    },
-    emptyStateTitle: {
-      fontSize: 14,
-      fontFamily: 'Lexend-medium',
-      color: '#333',
-      marginBottom: 2,
-      textAlign: 'center',
-    },
-    emptyStateSubtitle: {
-      fontSize: 11,
-      fontFamily: 'Lexend-regular',
-      color: '#666',
-      textAlign: 'center',
-      marginBottom: 6,
-      lineHeight: 14,
-      maxWidth: 250,
-    },
-  }
-  );
 } 
