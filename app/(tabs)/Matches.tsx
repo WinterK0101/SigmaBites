@@ -24,7 +24,7 @@ const getLocation = async () => {
     }
 };
 
-const seeDetails = (item : any) => {
+const seeDetails = (item) => {
     console.log(item)
     router.push({
         pathname: '/(modals)/RestaurantDetails',
@@ -223,7 +223,7 @@ export default function Matches() {
         }, [products.length, session?.user.id])
     );
 
-    const handleRemoveItem = (item : any) => {
+    const handleRemoveItem = (item) => {
         setItemToRemove(item);
         setShowConfirmModal(true);
     };
@@ -237,9 +237,8 @@ export default function Matches() {
         //TODO: Implement removal!!!
         setShowConfirmModal(false);
         setItemToRemove(null);
-
         async () => {
-          const userId = session?.user.id;
+            const userId = session?.user.id;
             // 1. Fetch current liked_eateries
             const { data: profileData, error: profileError } = await supabase
                 .from('profiles')
@@ -270,7 +269,7 @@ export default function Matches() {
         }
     };
 
-    const handleFavoritePress = (item : any) => {
+    const handleFavoritePress = (item) => {
         setItemToFavorite(item);
         setShowFavouriteConfirm(true);
     };
@@ -287,10 +286,12 @@ export default function Matches() {
 
             setFavourites(updatedFavorites);
 
+            // Optional: Show success message
             console.log(wasAdded ? 'Added to favorites' : 'Removed from favorites');
 
         } catch (error) {
             console.error('Error toggling favorite:', error);
+            // You might want to show an error toast here
         } finally {
             setShowFavouriteConfirm(false);
             setItemToFavorite(null);
