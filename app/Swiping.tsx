@@ -253,6 +253,9 @@ export default function Swiping() {
             if (swipingMode === 'solo') {
                 if (!lastSwipeWasRight) {
                     router.replace('/(modals)/NoMatches');
+                } else {
+                    router.replace('/(modals)/NoMatches');
+                    await handleSwipeRight(eateries.length - 1);
                 }
             } else if (swipingMode === 'group') {
                 if (!groupID) {
