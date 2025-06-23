@@ -202,8 +202,7 @@ export default function Swiping() {
 
         if (swipingMode === 'solo') {
             const friendsData = await checkIfFriendLiked(likedEatery.placeId, currentUser.id)
-            console.log(friendsData);
-            if (friendsData) {
+            if (friendsData.length > 0) {
                 router.push({
                     pathname: '/soloSwiping/MatchedWithFriends',
                     params: {
@@ -213,7 +212,7 @@ export default function Swiping() {
                 });
             } else {
                 router.push({
-                    pathname: '/soloSwiping/MatchedWithFriends/LikedConfirmation',
+                    pathname: '/soloSwiping/LikedConfirmation',
                     params: {
                         eatery: JSON.stringify(likedEatery),
                     }

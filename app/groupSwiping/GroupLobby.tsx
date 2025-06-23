@@ -13,7 +13,6 @@ import {
     getParticipants,
     listenToGroup,
     leaveGroup,
-    updateSwipingSessionStatus
 } from "@/services/groupSwiping";
 import { getNearbyEateries } from "@/services/eaterySearch";
 import { filterEateries } from "@/services/filterService";
@@ -153,7 +152,6 @@ export default function GroupLobby() {
     }, [parsedLocationData, groupID, router, parsedFilters]);
 
     // Handle realtime updates with better debugging
-    // Handle realtime updates with better debugging
     const handleGroupUpdate = useCallback(async (payload: any) => {
         console.log('=== GROUP UPDATE RECEIVED ===');
         console.log('Event Type:', payload.eventType);
@@ -243,7 +241,7 @@ export default function GroupLobby() {
             // Give a small delay to ensure the update propagates to other users
             await new Promise(resolve => setTimeout(resolve, 500));
 
-            // Now actually leave the group (delete the participant record)
+            // Delete the participant record
             await leaveGroup(groupID as string, user.id);
 
             setShowLeaveModal(false);

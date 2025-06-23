@@ -180,7 +180,7 @@ export default function MatchedWithFriends() {
             {/* Bottom Button */}
             <View className="absolute bottom-20 left-0 right-0 items-center px-5">
                 <TouchableOpacity
-                    className="bg-white px-8 py-4 rounded-full shadow-lg flex-row items-center"
+                    className="bg-white px-16 py-4 rounded-full shadow-lg flex-row items-center"
                     style={{
                         shadowColor: '#000',
                         shadowOffset: { width: 0, height: 3 },
