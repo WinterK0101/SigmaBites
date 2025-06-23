@@ -14,8 +14,6 @@ import { acceptFriendRequest, rejectFriendRequest } from "@/services/friendServi
 
 export default function AcceptFriendRequestModal({ visible, onClose, user, onSuccess }) {
     const [loading, setLoading] = useState(false);
-    const [accepted, setAccepted] = useState(false);
-    const session = useSession();
     const { session } = useSession();
     const currentUser = session?.user;
 
