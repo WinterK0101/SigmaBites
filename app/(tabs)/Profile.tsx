@@ -89,7 +89,7 @@ export default function Profile() {
           };
 
           setProfile(newProfile);
-          setEateryCount(Array.isArray(data.favourite_eateries) ? data.favourite_eateries.length : 0);
+          setEateryCount(Array.isArray(data.liked_eateries) ? data.liked_eateries.length : 0);
 
           // Fetch favourite eateries details
           const favIds = Array.isArray(data.favourite_eateries) ? data.favourite_eateries : [];
@@ -438,7 +438,7 @@ export default function Profile() {
                 minHeight: 110,
               }}
           >
-            <Text className="font-lexend-bold text-primary text-base mb-3">Recently Saved</Text>
+            <Text className="font-lexend-bold text-primary text-base mb-3">Recently Swiped</Text>
 
             {recentlySaved.length === 0 ? (
                 <EmptyRecentlySavedState />
@@ -449,6 +449,13 @@ export default function Profile() {
                           key={eatery.displayName}
                           activeOpacity={0.8}
                           className="mr-3 items-center"
+                          onPress = {()=>{router.push({
+                            pathname: "/(modals)/RestaurantDetails",
+                            params: {
+                              placeId: eatery.placeId,
+                              eatery: JSON.stringify(eatery),
+                            },
+                          });}}
                       >
                         <Image
                             source={{ uri: eatery.photo }}
@@ -490,6 +497,13 @@ export default function Profile() {
                             key={eatery.placeId}
                             activeOpacity={0.8}
                             className="mr-3 items-center"
+                            onPress = {()=>{router.push({
+                              pathname: "/(modals)/RestaurantDetails",
+                              params: {
+                                placeId: eatery.placeId,
+                                eatery: JSON.stringify(eatery),
+                              },
+                            });}}
                         >
                           <View style={{ position: 'relative' }}>
                             <Image

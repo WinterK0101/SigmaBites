@@ -219,7 +219,7 @@ export default function Swiping() {
         const currentEatery = eateries[currentIndex];
         if (!currentEatery) return;
         router.push({
-            pathname: "/RestaurantDetails",
+            pathname: "/(modals)/RestaurantDetails",
             params: {
                 placeId: currentEatery.placeId,
                 eatery: JSON.stringify(currentEatery),

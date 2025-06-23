@@ -186,7 +186,16 @@ export default function GroupResults() {
                                 {topEateries[index].displayName}
                             </Text>
 
-                            <TouchableOpacity className="mb-6">
+                            <TouchableOpacity
+                                className="mb-6"
+                                onPress = {()=>{router.push({
+                                    pathname: "/(modals)/RestaurantDetails",
+                                    params: {
+                                        placeId: topEateries[index].placeId,
+                                        eatery: JSON.stringify(topEateries[index]),
+                                    },
+                                });}}
+                            >
                                 <Text
                                     className="text-white text-base font-lexend-regular"
                                 >

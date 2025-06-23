@@ -19,31 +19,31 @@ export default function VoteBreakdown() {
         async function fetchVoteInformation() {
             try {
                 setLoading(true);
-                // const sortedVotes = JSON.parse(sortedVotesParam);
+                const sortedVotes = JSON.parse(sortedVotesParam);
 
-                // FOR TESTING!!!!
-                const sortedVotes = [
-                    {
-                        eateryID: 'ChIJ_8kIMrA92jER1_ShHUa409c',
-                        count: 8
-                    },
-                    {
-                        eateryID: 'ChIJ04DTdbQZ2jERFt4kBQi-E60',
-                        count: 5
-                    },
-                    {
-                        eateryID: 'ChIJ1Y5ET7A92jERgEtUCvAQepI',
-                        count: 4
-                    },
-                    {
-                        eateryID: 'ChIJ3YoS3ukP2jERkcHsff2PWBo',
-                        count: 2
-                    },
-                    {
-                        eateryID: 'ChIJ5T8-VXUZ2jERMpGzIj6L2ts',
-                        count: 0
-                    },
-                ]
+                // // FOR TESTING!!!!
+                // const sortedVotes = [
+                //     {
+                //         eateryID: 'ChIJcY9MxKfY2jERipP87g9f0Ws',
+                //         count: 8
+                //     },
+                //     {
+                //         eateryID: 'ChIJ04DTdbQZ2jERFt4kBQi-E60',
+                //         count: 5
+                //     },
+                //     {
+                //         eateryID: 'ChIJ1Y5ET7A92jERgEtUCvAQepI',
+                //         count: 4
+                //     },
+                //     {
+                //         eateryID: 'ChIJ3YoS3ukP2jERkcHsff2PWBo',
+                //         count: 2
+                //     },
+                //     {
+                //         eateryID: 'ChIJ5T8-VXUZ2jERMpGzIj6L2ts',
+                //         count: 0
+                //     },
+                // ]
 
                 setVotes(sortedVotes);
 

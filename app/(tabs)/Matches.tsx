@@ -4,7 +4,6 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/SupabaseConfig';
 import { useSession } from '@/context/SessionContext';
 import { calculateDistance } from '@/services/apiDetailsForUI'
-//import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -163,18 +162,6 @@ export default function Matches() {
     const [itemToFavorite, setItemToFavorite] = useState(null);
     const { session, currLocation } = useSession();
 
-    // To get location
-    /* const getLocation = async () => {
-        await getCurrentLocation(); 
-        try {
-            
-            const jsonValue = await AsyncStorage.getItem('userLocation');
-            return jsonValue != null ? JSON.parse(jsonValue) : null;
-        } catch (e) {
-            console.error('Failed to fetch location');
-        }
-    }; */
-
     useFocusEffect(
         useCallback(() => {
             const fetchData = async () => {
@@ -294,7 +281,7 @@ export default function Matches() {
     return (
         <SafeAreaView className="flex-1 bg-gray-50">
             <View className="px-4 pt-8 flex-row justify-between">
-                <Text className="font-baloo-regular text-accent text-4xl py-4">Match History</Text>
+                <Text className="font-baloo-regular text-accent text-4xl py-4">Like History</Text>
                 <TouchableOpacity
                     className="bg-accent rounded-full mr-3 w-10 h-10 mt-2 justify-center items-center"
                     onPress={() => setIsEditMode(!isEditMode)}

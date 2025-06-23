@@ -1,22 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, Linking, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, Image, ScrollView, Linking, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { Eatery, Review } from "@/interfaces/interfaces";
+import {Ionicons, MaterialCommunityIcons} from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Eatery, Review, User } from "@/interfaces/interfaces";
 import { supabase } from '@/SupabaseConfig';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { addToFavorites } from '@/services/favouriteService';
+import { toggleFavorite } from '@/services/favouriteService';
 import { useSession } from '@/context/SessionContext';
+import {calculateDistance, getOpeningHoursForToday} from "@/services/apiDetailsForUI";
+import {checkIfFriendLiked} from "@/services/checkIfFriendLiked";
+import RemoteImage from "@/components/RemoteImage";
 
 export default function RestaurantDetails() {
     const router = useRouter();
     const params = useLocalSearchParams();
     const insets = useSafeAreaInsets();
-    const {session} = useSession();
+    const {session, currLocation} = useSession();
 
     const [eatery, setEatery] = useState<Eatery | null>(null);
     const [reviews, setReviews] = useState<Review[] | null>(null);
     const [loading, setLoading] = useState(true);
+    const [friends, setFriends] = useState<User[]>([]);
+    const [showAllReviews, setShowAllReviews] = useState(false);
+    const [currentFavorites, setCurrentFavorites] = useState([]);
+    const [isFavorited, setIsFavorited] = useState(false);
 
     const eateryObj = params.eatery ? JSON.parse(params.eatery as string) : null;
     const placeId = params.placeId as string;
@@ -31,12 +39,22 @@ export default function RestaurantDetails() {
                     .single();
 
                 if (fetchError) console.log(fetchError.message);
-                if (currEatery) setEatery(currEatery);
+                if (currEatery) {
+                    setEatery(currEatery);
+
+                    if (session?.user.id) {
+                        const mutualFriends = await checkIfFriendLiked(currEatery.placeId, session.user.id);
+                        console.log("Mutual friends:", mutualFriends);
+                        setFriends(mutualFriends);
+                    }
+                } else {
+                    console.log("No eatery found for placeId:", placeId);
+                }
+
             } catch (err) {
                 console.log(err);
             }
         };
-
         const fetchReview = async () => {
             try {
                 const { data: currReview, error: fetchError } = await supabase
@@ -51,254 +69,340 @@ export default function RestaurantDetails() {
             }
         };
 
+        const fetchFavorites = async () => {
+            if (session?.user.id) {
+                try {
+                    const { data: currFav, error: fetchError } = await supabase
+                        .from("profiles")
+                        .select("favourite_eateries")
+                        .eq("id", session.user.id)
+                        .single();
+
+                    if (fetchError) console.log(fetchError.message);
+                    if (currFav) {
+                        setCurrentFavorites(currFav.favourite_eateries || []);
+                        setIsFavorited(currFav.favourite_eateries?.includes(placeId) || false);
+                    }
+                } catch (err) {
+                    console.log(err);
+                }
+            }
+        };
+
         if (placeId) {
             fetchEatery();
             fetchReview();
+            fetchFavorites();
         } else if (eateryObj) {
             setEatery(eateryObj);
             setLoading(false);
+            if (session?.user.id) {
+                fetchFavorites();
+            }
         } else {
             setLoading(false);
         }
     }, []);
 
-    const renderItem = ({ item }: { item: Review }) => (
-        <View style={styles.reviewBox}>
-            <Text style={styles.reviewUser}>{item.author.displayName}</Text>
-            <Text style={styles.reviewText}>{item.text}</Text>
+// Render stars component
+    const renderStars = (rating: number) => {
+        const stars = [];
+        const fullStars = Math.floor(rating);
+        const hasHalfStar = rating % 1 !== 0;
+
+        for (let i = 0; i < fullStars; i++) {
+            stars.push(
+                <Ionicons key={`full-${i}`} name="star" size={14} color="#FFD700" />
+            );
+        }
+
+        if (hasHalfStar) {
+            stars.push(
+                <Ionicons key="half" name="star-half" size={14} color="#FFD700" />
+            );
+        }
+
+        const emptyStars = 5 - Math.ceil(rating);
+        for (let i = 0; i < emptyStars; i++) {
+            stars.push(
+                <Ionicons key={`empty-${i}`} name="star-outline" size={14} color="#FFD700" />
+            );
+        }
+
+        return stars;
+    };
+
+    const renderReviewItem = ({ item }: { item: Review }) => (
+        <View className="bg-offwhite rounded-xl p-4 mr-3 w-72 border border-[#d9d9d9]">
+            <View className="flex-row items-center mb-3">
+                <View className="w-10 h-10 rounded-full bg-accent items-center justify-center mr-3">
+                    {item.author.photoUri ? (
+                        <Image
+                            source={{ uri: item.author.photoUri }}
+                            className="w-10 h-10 rounded-full"
+                        />
+                    ) : (
+                        <Text className="text-white font-lexend-bold text-sm">
+                            {item.author.displayName.charAt(0).toUpperCase()}
+                        </Text>
+                    )}
+                </View>
+
+                <View className="flex-1">
+                    <Text className="text-base font-lexend-bold text-primary" numberOfLines={1}>
+                        {item.author.displayName}
+                    </Text>
+                    <View className="flex-row items-center mt-1">
+                        <View className="flex-row items-center mr-2">
+                            {renderStars(item.rating)}
+                        </View>
+                    </View>
+                </View>
+            </View>
+
+            {/* Review Text */}
+            <Text className="text-sm font-lexend-regular text-gray-700 leading-5" numberOfLines={4}>
+                {item.text}
+            </Text>
         </View>
     );
 
-    // Handle onpress for Get Direction
+    // Getting Directions
     const getDirectionOnPress = () => {
         if (eatery){
-            const url = `https://www.google.com/maps/search/?api=1&query=${eatery.location.latitude},${eatery.location.longitude}`;
+            Linking.openURL(eatery.googleMapsUri);
+        }
+    }
+
+    const heartBtnOnPress = async () => {
+       try {
+            const result = await toggleFavorite(session.user.id, eatery.placeId, currentFavorites);
+            setCurrentFavorites(result.updatedFavorites);
+            setIsFavorited(!isFavorited);
+
+            Alert.alert(
+                "Success",
+                result.wasAdded ? "Added to favorites!" : "Removed from favorites!"
+            );
+        } catch (error) {
+            Alert.alert("Error", "Failed to update favorites");
+        }
+    }
+
+    const handlePhonePress = () => {
+        if (eatery?.internationalPhoneNumber) {
+            Linking.openURL(`tel:${eatery.internationalPhoneNumber}`);
+        } else {
+            Alert.alert(
+                "Phone Not Available",
+                "This eatery doesn't have a phone number available.",
+                [{ text: "OK", style: "default" }]
+            );
+        }
+    };
+
+    const handleWebsitePress = () => {
+        if (eatery?.websiteUri) {
+            const url = eatery.websiteUri.startsWith('http')
+                ? eatery.websiteUri
+                : `https://${eatery.websiteUri}`;
             Linking.openURL(url);
+        } else {
+            Alert.alert(
+                "Website Not Available",
+                "This eatery doesn't have a website available.",
+                [{ text: "OK", style: "default" }]
+            );
         }
+    };
+
+    const displayedReviews = showAllReviews ? reviews : reviews?.slice(0, 5);
+
+    const getDistance = (currLocation, eateryLocation) => {
+       if (!currLocation || !eateryLocation) {
+           return;
+       }
+        const dist = calculateDistance(
+            currLocation.latitude,
+            currLocation.longitude,
+            eateryLocation.latitude,
+            eateryLocation.longitude
+        );
+        return `${dist.toFixed(2)} km`;
     }
 
-    // Handle onpress for heart button
-    const heartBtnOnPress = () => {
-        console.log("you have clicked the favourite button")
-        const retrieveFavourites = async () => {
-            const {data:currFav, error:fetchError} = await supabase
-            .from("profiles")
-            .select("favourite_eateries")
-            .eq("id", session?.user.id)
-            .single()
-
-            if (fetchError) console.log(fetchError.message)
-            
-            if (eatery && session && currFav)
-            {
-                addToFavorites(session.user.id, eatery.placeId, currFav.favourite_eateries)
-                console.log("added to favourites")
-            }
-            else{
-                console.log(eatery?.placeId)
-                console.log(session?.user.id)
-                console.log(currFav?.favourite_eateries)
-            }
-        }
-
-        retrieveFavourites()
-    }
 
     return (
-        <View style={{ flex: 1 }}>
-            <Image
-                source={{ uri: eatery?.photo || 'https://via.placeholder.com/300' }}
-                style={styles.image}
-            />
+        <View className="flex-1 bg-white">
+            {/* Header*/}
+            <View className="h-80 relative">
+                <Image
+                    source={{ uri: eatery?.photo || 'https://via.placeholder.com/300' }}
+                    className="w-full h-full"
+                />
+                <LinearGradient
+                    colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.3)', 'rgba(102,51,25,0.8)']}
+                    locations={[0, 0.8, 1]}
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        height: '100%',
+                        width: '100%',
+                        zIndex: 1,
+                    }}
+                />
 
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                <Ionicons name="arrow-back" size={24} color="#fff" />
-            </TouchableOpacity>
-
-            <View style={styles.overlayBox}>
-                <Text style={styles.name}>{eatery?.displayName}</Text>
-                <Text style={styles.details}>
-                    {eatery?.editorialSummary ? eatery.editorialSummary : eatery?.generativeSummary}
-                </Text>
-                <Text style={styles.rating}>{eatery?.rating}</Text>
-            </View>
-
-            {/* Scrollable info section */}
-            <View style={{ flex: 1 }}>
-                <ScrollView style={styles.infoSection}>
-                    <Text style={styles.sectionTitle}>Information</Text>
-                    <View style={styles.infoBox}>
-                        <Text style={styles.label}>Address:</Text>
-                        <Text style={styles.value}>{eatery?.formattedAddress}</Text>
-
-                        <Text style={styles.label}>Website:</Text>
-                        <Text
-                            style={[styles.value, { color: '#FF6B3E' }]}
-                            onPress={() => {
-                                if (eatery?.websiteUri) {
-                                    // Add https:// if not present to ensure valid URL
-                                    const url = eatery.websiteUri.startsWith('http') 
-                                        ? eatery.websiteUri 
-                                        : `https://${eatery.websiteUri}`;
-                                    Linking.openURL(url);
-                                }
-                            }}
-                        >
-                            {eatery?.websiteUri || 'No website available'}
+                {/* Restaurant Info Overlay*/}
+                <View className="absolute bottom-4 left-5 right-5 z-2" style={{ zIndex: 2 }}>
+                    <Text className="text-3xl font-baloo-regular text-white">
+                        {eatery?.displayName}
+                    </Text>
+                    <Text className="text-base font-lexend-regular text-white/90 mb-3" numberOfLines={2}>
+                        {getDistance(currLocation, eatery?.location)}  •  {eatery?.primaryTypeDisplayName}  •  {getOpeningHoursForToday(eatery)}
+                    </Text>
+                    <View className="flex-row items-centzer">
+                        <Text className="text-base font-lexend-regular text-white ml-2">
+                            ★ {eatery?.rating}  •  {'$'.repeat(eatery?.priceLevel)}
                         </Text>
-
-                        <Text style={styles.label}>Phone:</Text>
-                        <Text style={styles.value}>{eatery?.internationalPhoneNumber}</Text>
                     </View>
+                </View>
 
-                    <Text style={styles.sectionTitle}>Reviews</Text>
-                    <FlatList
-                        data={reviews}
-                        renderItem={renderItem}
-                        keyExtractor={(item) => String(item.id)}
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                    />
-
-                    <Text style={styles.sectionTitle}>Friends Who Also Saved</Text>
-                    <View style={styles.friendRow}>
-                        <Image source={{ uri: 'https://i.pravatar.cc/100?u=friend1' }} style={styles.avatar} />
-                        <Image source={{ uri: 'https://i.pravatar.cc/100?u=friend2' }} style={styles.avatar} />
-                    </View>
-                </ScrollView>
+                {/* Back Button */}
+                <TouchableOpacity
+                    className="absolute top-12 left-5 bg-black/50 p-3 rounded-full"
+                    onPress = {()=>{router.back()}}
+                    style={{zIndex: 20}}
+                >
+                    <Ionicons name="arrow-back" size={24} color="#fff" />
+                </TouchableOpacity>
             </View>
 
-            {/* Bottom buttons */}
-            <View style={[styles.bottomButtons, { paddingBottom: insets.bottom + 24}]}>
-                <TouchableOpacity style={styles.heartButton} onPress={heartBtnOnPress}>
-                    <Ionicons name="heart" size={24} color="#fff" />
+            {/* INFORMATION!! */}
+            <ScrollView className="flex-1 bg-white" showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 20}}>
+
+                {/* Summary (optional)*/}
+                {(eatery?.editorialSummary || eatery?.generativeSummary) && (
+                    <View className="px-5 py-4 bg-offwhite border-b border-grey">
+                        <Text className="text-sm font-lexend-regular text-primary">
+                            {eatery?.editorialSummary ? eatery.editorialSummary : eatery?.generativeSummary}
+                        </Text>
+                    </View>
+                )}
+
+                {/* Information Section */}
+                <View className="px-5 py-6">
+                    <Text className="text-xl font-lexend-bold text-accent mb-2">Information</Text>
+                    <View className="bg-offwhite rounded-xl px-6 py-5 mb-4 border border-[#d9d9d9]">
+                        <View className="flex-row items-start mb-4">
+                            <Ionicons name="location-outline" size={32} color="#FF6B3E" />
+                            <Text className="text-base font-lexend-regular text-gray-700 ml-3 flex-1 leading-6">
+                                {eatery?.formattedAddress}
+                            </Text>
+                        </View>
+
+                        <View className="flex-row gap-6">
+                            <TouchableOpacity
+                                className="flex-1 bg-accent flex-row items-center justify-center py-3 px-4 rounded-full shadow-sm"
+                                activeOpacity={0.8}
+                                onPress={handlePhonePress}
+                            >
+                                <Ionicons name="call-outline" size={20} color="#fff" />
+                                <Text className="text-white text-base font-baloo-regular ml-2">Call</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                className="flex-1 bg-accent flex-row items-center justify-center py-3 px-4 rounded-full shadow-sm"
+                                onPress={handleWebsitePress}
+                                activeOpacity={0.8}
+                            >
+                                <Ionicons name="globe-outline" size={20} color="#fff" />
+                                <Text className="text-white text-base font-baloo-regular ml-2">Website</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+
+                {/* Reviews Section */}
+                {reviews && reviews.length > 0 && (
+                    <View className="px-5 -mt-4 mb-2">
+                        <View className="flex-row justify-between items-center mb-2">
+                            <Text className="text-xl font-lexend-bold text-accent mb-2">Reviews</Text>
+                            {reviews.length > 3 && (
+                                <TouchableOpacity onPress={() => setShowAllReviews(!showAllReviews)}>
+                                    <Text className="text-accent text-base font-lexend-regular">
+                                        {showAllReviews ? '< View Less' : 'View More >'}
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+
+                        <FlatList
+                            data={displayedReviews}
+                            renderItem={renderReviewItem}
+                            keyExtractor={(item) => String(item.id)}
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={{ paddingRight: 20 }}
+                        />
+                    </View>
+                )}
+
+                {/* Friends Section */}
+                <View className="px-5 py-4">
+                    <Text className="text-xl font-lexend-bold text-accent mb-2">Friends Who Also Saved</Text>
+                    <View className="bg-offwhite rounded-xl px-6 py-5 mb-4 border border-[#d9d9d9]">
+                        {friends.length > 0 ? (
+                            <ScrollView className="flex-row flex-wrap gap-3" horizontal showsHorizontalScrollIndicator={false}>
+                                {friends.map((friend) => (
+                                    <View key={friend.id} className="items-center mr-4 flex-col justify-center">
+                                        <RemoteImage
+                                            filePath={friend.avatar_url}
+                                            bucket="avatars"
+                                            style={{ width: 48, height: 48, borderRadius: 24 }}
+                                        />
+                                        <Text className="text-sm font-lexend-regular text-center mt-1 text-primary">
+                                            @{friend.username}
+                                        </Text>
+                                    </View>
+                                ))}
+                            </ScrollView>
+                        ) : (
+                            <Text className="text-base font-lexend-regular text-gray-500">No friends have saved this yet.</Text>
+                        )}
+                    </View>
+                </View>
+            </ScrollView>
+
+            {/* Add to Favourites & Get Directions Buttons */}
+            <View
+                style={{
+                    paddingBottom: insets.bottom + 8,
+                    paddingTop: 16,
+                    paddingHorizontal: 24,
+                    backgroundColor: 'white',
+                    borderTopWidth: 1,
+                    borderTopColor: '#d9d9d9',
+                    flexDirection: 'row',
+                }}
+            >
+                <TouchableOpacity
+                    className="w-14 h-14 bg-accent rounded-full justify-center items-center shadow-inner"
+                    onPress={heartBtnOnPress}
+                >
+                    <MaterialCommunityIcons name={isFavorited ? "heart" : "heart-outline"} size={24} color="#fff" />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.directionsButton} onPress={getDirectionOnPress}>
-                    <Text style={styles.directionsText}>Get Directions ➝</Text>
+                <TouchableOpacity
+                    className="flex-1 bg-accent ml-4 rounded-full py-4 flex-row justify-center items-center"
+                    onPress={getDirectionOnPress}
+                >
+                    <Text className="text-white font-lexend-bold text-base">Get Directions</Text>
+                    <Ionicons name="navigate" size={20} color="#fff" className="ml-2" />
                 </TouchableOpacity>
             </View>
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    image: {
-        width: '100%',
-        height: 260,
-        borderBottomLeftRadius: 20,
-        borderBottomRightRadius: 20,
-    },
-    backButton: {
-        position: 'absolute',
-        top: 50,
-        left: 20,
-        backgroundColor: '#00000055',
-        padding: 8,
-        borderRadius: 20,
-    },
-    overlayBox: {
-        backgroundColor: '#fff',
-        padding: 16,
-        borderRadius: 12,
-        margin: 16,
-        marginTop: -40,
-        elevation: 3,
-    },
-    name: {
-        fontSize: 22,
-        fontWeight: 'bold',
-    },
-    details: {
-        fontSize: 14,
-        color: '#777',
-        marginTop: 4,
-    },
-    rating: {
-        fontSize: 16,
-        fontWeight: '600',
-        marginTop: 6,
-    },
-    infoSection: {
-        flex: 1,
-        backgroundColor: '#fff',
-        paddingHorizontal: 16,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#FF6B3E',
-        marginTop: 20,
-        marginBottom: 10,
-    },
-    infoBox: {
-        backgroundColor: '#f5f5f5',
-        padding: 12,
-        borderRadius: 10,
-    },
-    label: {
-        fontWeight: 'bold',
-        marginTop: 6,
-    },
-    value: {
-        marginBottom: 4,
-    },
-    reviewBox: {
-        backgroundColor: '#f5f5f5',
-        padding: 12,
-        borderRadius: 10,
-        marginBottom: 10,
-        marginRight: 10,
-    },
-    reviewUser: {
-        fontWeight: '600',
-    },
-    reviewText: {
-        marginTop: 4,
-    },
-    friendRow: {
-        flexDirection: 'row',
-        marginTop: 10,
-    },
-    avatar: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        marginRight: 10,
-    },
-    bottomButtons: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingTop: 16,
-        paddingBottom: 20,
-        backgroundColor: '#fff',
-        borderTopWidth: 1,
-        borderTopColor: '#eee',
-    },
-    heartButton: {
-        width: 56,
-        height: 56,
-        backgroundColor: '#FF6B3E',
-        borderRadius: 28,
-        justifyContent: 'center',
-        alignItems: 'center',
-        elevation: 4,
-    },
-    directionsButton: {
-        flex: 1,
-        backgroundColor: '#FF6B3E',
-        marginLeft: 20,
-        borderRadius: 30,
-        paddingVertical: 14,
-        justifyContent: 'center',
-        alignItems: 'center',
-        elevation: 4,
-    },
-    directionsText: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
-});

@@ -3,10 +3,10 @@ import {fetchUserFriends} from '@/services/friendService';
 
 export async function checkIfFriendLiked(eateryID: string, currentUser: string): Promise<User[]> {
     const mutualLikes: User[] = [];
-    const friends: User[] = await fetchUserFriends(currentUser); // await needed
+    const friends: User[] = await fetchUserFriends(currentUser);
 
     friends.forEach((friend: User) => {
-        if (friend.liked_eateries.includes(eateryID)) {
+        if (friend.liked_eateries?.includes(eateryID)) {
             mutualLikes.push(friend);
         }
     });

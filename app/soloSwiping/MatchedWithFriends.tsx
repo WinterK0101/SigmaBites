@@ -219,7 +219,7 @@ export default function MatchedWithFriends() {
 
             {/* Invite Modal */}
             <Modal
-                animationType="slide"
+                animationType="fade"
                 transparent={true}
                 visible={modalVisible}
                 onRequestClose={() => setModalVisible(false)}

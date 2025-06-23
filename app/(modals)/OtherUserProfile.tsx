@@ -429,7 +429,7 @@ export default function OtherUserProfile() {
                         minHeight: 110,
                     }}
                 >
-                    <Text className="font-lexend-bold text-primary text-base mb-3">Recently Saved</Text>
+                    <Text className="font-lexend-bold text-primary text-base mb-3">Recently Swiped</Text>
 
                     {recentlySaved.length === 0 ? (
                         <EmptyRecentlySavedState />
@@ -440,6 +440,13 @@ export default function OtherUserProfile() {
                                     key={eatery.placeId}
                                     activeOpacity={0.8}
                                     className="mr-3 items-center"
+                                    onPress = {()=>{router.push({
+                                        pathname: "/(modals)/RestaurantDetails",
+                                        params: {
+                                            placeId: eatery.placeId,
+                                            eatery: JSON.stringify(eatery),
+                                        },
+                                    });}}
                                 >
                                     <Image
                                         source={{ uri: eatery.photo }}
@@ -481,6 +488,13 @@ export default function OtherUserProfile() {
                                         key={eatery.placeId}
                                         activeOpacity={0.8}
                                         className="mr-3 items-center"
+                                        onPress = {()=>{router.push({
+                                            pathname: "/(modals)/RestaurantDetails",
+                                            params: {
+                                                placeId: eatery.placeId,
+                                                eatery: JSON.stringify(eatery),
+                                            },
+                                        });}}
                                     >
                                         <View style={{ position: 'relative' }}>
                                             <Image
