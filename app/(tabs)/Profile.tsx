@@ -1,6 +1,6 @@
 import * as FileSystem from 'expo-file-system';
 import { Buffer } from 'buffer';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -22,128 +22,128 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from 'expo-image-picker';
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fafafa',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: 20,
-  },
-  header: {
-    width: 1000,
-    height: 440,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 50,
-    borderRadius: '100%',
-    alignSelf: 'center',
-    overflow: 'hidden',
-    top: -60,
-  },
-  name: {
-    fontSize: 32,
-    color: '#fff',
-    fontFamily: 'Baloo-regular',
-  },
-  username: {
-    color: '#fff',
-    marginTop: -12,
-    fontSize: 14,
-    fontFamily: 'Lexend-regular',
-  },
-  editButton: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    paddingHorizontal: 28,
-    paddingVertical: 6,
-    marginVertical: 12,
-  },
-  editButtonText: {
-    color: '#FE724C',
-    fontFamily: 'Baloo-regular',
-    fontSize: 16,
-  },
-  settingsIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'absolute',
-    top: 10,
-    right: 0,
-    zIndex: 999,
-  },
-  settingsImage: {
-    width: 18,
-    height: 18,
-    tintColor: 'white',
-  },
-  dropdownMenu: {
-    position: 'absolute',
-    top: 42,
-    right: 0,
-    backgroundColor: 'white',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    paddingVertical: 8,
-    width: 110,
-    zIndex: 1000,
-  },
-  dropdownItem: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    fontFamily: 'Lexend-Regular',
-    fontSize: 13,
-    color: '#FE724C',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#f0f0f0',
-    marginVertical: 6,
-    marginHorizontal: 12,
-  },
-  // Empty state styles
-  emptyStateContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-  },
-  emptyIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#FFF5F2',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  emptyStateTitle: {
-    fontSize: 14,
-    fontFamily: 'Lexend-medium',
-    color: '#333',
-    marginBottom: 2,
-    textAlign: 'center',
-  },
-  emptyStateSubtitle: {
-    fontSize: 11,
-    fontFamily: 'Lexend-regular',
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 6,
-    lineHeight: 14,
-    maxWidth: 250,
-  },
-}
+      container: {
+        flex: 1,
+        backgroundColor: '#fafafa',
+      },
+      scrollView: {
+        flex: 1,
+      },
+      scrollContent: {
+        flexGrow: 1,
+        paddingBottom: 20,
+      },
+      header: {
+        width: 1000,
+        height: 440,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingTop: 50,
+        borderRadius: '100%',
+        alignSelf: 'center',
+        overflow: 'hidden',
+        top: -60,
+      },
+      name: {
+        fontSize: 32,
+        color: '#fff',
+        fontFamily: 'Baloo-regular',
+      },
+      username: {
+        color: '#fff',
+        marginTop: -12,
+        fontSize: 14,
+        fontFamily: 'Lexend-regular',
+      },
+      editButton: {
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        paddingHorizontal: 28,
+        paddingVertical: 6,
+        marginVertical: 12,
+      },
+      editButtonText: {
+        color: '#FE724C',
+        fontFamily: 'Baloo-regular',
+        fontSize: 16,
+      },
+      settingsIcon: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'absolute',
+        top: 10,
+        right: 0,
+        zIndex: 999,
+      },
+      settingsImage: {
+        width: 18,
+        height: 18,
+        tintColor: 'white',
+      },
+      dropdownMenu: {
+        position: 'absolute',
+        top: 42,
+        right: 0,
+        backgroundColor: 'white',
+        borderRadius: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        paddingVertical: 8,
+        width: 110,
+        zIndex: 1000,
+      },
+      dropdownItem: {
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        fontFamily: 'Lexend-Regular',
+        fontSize: 13,
+        color: '#FE724C',
+      },
+      divider: {
+        height: 1,
+        backgroundColor: '#f0f0f0',
+        marginVertical: 6,
+        marginHorizontal: 12,
+      },
+      // Empty state styles
+      emptyStateContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+      },
+      emptyIconContainer: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: '#FFF5F2',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 8,
+      },
+      emptyStateTitle: {
+        fontSize: 14,
+        fontFamily: 'Lexend-medium',
+        color: '#333',
+        marginBottom: 2,
+        textAlign: 'center',
+      },
+      emptyStateSubtitle: {
+        fontSize: 11,
+        fontFamily: 'Lexend-regular',
+        color: '#666',
+        textAlign: 'center',
+        marginBottom: 6,
+        lineHeight: 14,
+        maxWidth: 250,
+      },
+    }
 );
 
 export default function Profile() {
@@ -187,6 +187,53 @@ export default function Profile() {
   // For edit modal: store a temporary avatar url for preview
   const [tempAvatarUrl, setTempAvatarUrl] = useState<string | undefined>(undefined);
 
+  // Subscription reference for cleanup - using useCallback to prevent re-creation
+  const [profileSubscription, setProfileSubscription] = useState<any>(null);
+
+  const fetchFavouriteEateries = useCallback(async (favIds: string[]) => {
+    if (favIds.length === 0) {
+      setFavouriteEateries([]);
+      return;
+    }
+
+    const { data: favs, error: favsError } = await supabase
+        .from('Eatery')
+        .select('placeId, displayName, photo')
+        .in('placeId', favIds);
+
+    if (favsError || !Array.isArray(favs)) {
+      setFavouriteEateries([]);
+    } else {
+      const orderedFavs = favIds
+          .map(id => favs.find(e => e.placeId === id))
+          .filter((e): e is { placeId: string; displayName: string; photo: string } => Boolean(e));
+      setFavouriteEateries(orderedFavs);
+    }
+  }, []);
+
+  const fetchRecentlySaved = useCallback(async (liked: string[]) => {
+    const lastThree = liked.slice(-3).reverse();
+
+    if (lastThree.length === 0) {
+      setRecentlySaved([]);
+      return;
+    }
+
+    const { data: eateries, error: eateryError } = await supabase
+        .from('Eatery')
+        .select('placeId, displayName, photo')
+        .in('placeId', lastThree);
+
+    if (eateryError || !Array.isArray(eateries)) {
+      setRecentlySaved([]);
+    } else {
+      const ordered = lastThree
+          .map(id => eateries.find(e => e.placeId === id))
+          .filter((e): e is { placeId: string; displayName: string; photo: string } => Boolean(e));
+      setRecentlySaved(ordered);
+    }
+  }, []);
+
   // Fetch profile on mount or session change
   useEffect(() => {
     async function fetchProfile() {
@@ -218,48 +265,11 @@ export default function Profile() {
 
           // Fetch favourite eateries details
           const favIds = Array.isArray(data.favourite_eateries) ? data.favourite_eateries : [];
-          if (favIds.length > 0) {
-            const { data: favs, error: favsError } = await supabase
-                .from('Eatery')
-                .select('placeId, displayName, photo')
-                .in('placeId', favIds);
-
-            if (favsError || !Array.isArray(favs)) {
-              setFavouriteEateries([]);
-            } else {
-              // Order to match the order in favIds
-              const orderedFavs = favIds
-                  .map(id => favs.find(e => e.placeId === id))
-                  .filter((e): e is { placeId: string; displayName: string; photo: string } => Boolean(e));
-              setFavouriteEateries(orderedFavs);
-            }
-          } else {
-            setFavouriteEateries([]);
-          }
+          await fetchFavouriteEateries(favIds);
 
           // Fetch details for last 3 liked eateries
           const liked = Array.isArray(data.liked_eateries) ? data.liked_eateries : [];
-          const lastThree = liked.slice(-3).reverse(); // Get last 3, most recent first
-
-          if (lastThree.length > 0) {
-            const { data: eateries, error: eateryError } = await supabase
-                .from('Eatery')
-                .select('placeId, displayName, photo')
-                .in('placeId', lastThree);
-
-            if (eateryError || !Array.isArray(eateries)) {
-              setRecentlySaved([]);
-            } else {
-
-              // Order the eateries to match the order of lastThree
-              const ordered = lastThree
-                  .map(id => eateries.find(e => e.placeId === id))
-                  .filter((e): e is { placeId: string; displayName: string; photo: string } => Boolean(e));
-              setRecentlySaved(ordered);
-            }
-          } else {
-            setRecentlySaved([]);
-          }
+          await fetchRecentlySaved(liked);
         }
       } catch (error) {
         console.error('Error in fetchProfile:', error);
@@ -267,9 +277,74 @@ export default function Profile() {
     }
 
     fetchProfile();
-  }, [session]);
+  }, [session?.user?.id, fetchFavouriteEateries, fetchRecentlySaved]);
 
-  // Setup friend count and real-time subscription
+  // Setup real-time subscription for profile changess
+  useEffect(() => {
+    if (!session?.user) return;
+
+    const userId = session.user.id;
+
+    // Clean up existing subscription first
+    if (profileSubscription) {
+      supabase.removeChannel(profileSubscription);
+      setProfileSubscription(null);
+    }
+
+    // Create new subscription with unique channel name
+    const channelName = `profile_updates_${userId}_${Date.now()}`;
+    const subscription = supabase
+        .channel(channelName)
+        .on(
+            'postgres_changes',
+            {
+              event: 'UPDATE',
+              schema: 'public',
+              table: 'profiles',
+              filter: `id=eq.${userId}`,
+            },
+            async (payload) => {
+              if (payload.new) {
+                const data = payload.new;
+                const newProfile = {
+                  displayName: data.name,
+                  username: data.username,
+                  avatar_url: data.avatar_url,
+                  favourite_eateries: data.favourite_eateries || [],
+                  liked_eateries: data.liked_eateries || [],
+                };
+
+                setProfile(newProfile);
+                setEateryCount(Array.isArray(data.liked_eateries) ? data.liked_eateries.length : 0);
+
+                // Update favourite eateries
+                const favIds = Array.isArray(data.favourite_eateries) ? data.favourite_eateries : [];
+                await fetchFavouriteEateries(favIds);
+
+                // Update recently saved
+                const liked = Array.isArray(data.liked_eateries) ? data.liked_eateries : [];
+                await fetchRecentlySaved(liked);
+              }
+            }
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('Profile subscription active');
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error('Profile subscription error');
+          }
+        });
+
+    setProfileSubscription(subscription);
+
+    return () => {
+      if (subscription) {
+        supabase.removeChannel(subscription);
+      }
+    };
+  }, [session?.user?.id]);
+
+  // Setup friend count and real-time subscription - Fixed to prevent multiple subscriptions
   useEffect(() => {
     if (!session?.user) return;
 
@@ -285,12 +360,26 @@ export default function Profile() {
     return () => {
       unsubscribe();
     };
-  }, [session?.user?.id, fetchFriendCount, subscribeToFriendChanges, unsubscribe]);
+  }, [session?.user?.id]); // Removed function dependencies to prevent re-runs
+
+  // Cleanup subscriptions on unmount
+  useEffect(() => {
+    return () => {
+      if (profileSubscription) {
+        supabase.removeChannel(profileSubscription);
+      }
+      unsubscribe();
+    };
+  }, []); // Empty dependency array - only run on mount/unmount
 
   const handleLogout = async () => {
     setShowLogoutModal(false);
 
     // Unsubscribe from real-time updates before logout
+    if (profileSubscription) {
+      supabase.removeChannel(profileSubscription);
+      setProfileSubscription(null);
+    }
     unsubscribe();
 
     const { error } = await supabase.auth.signOut();
@@ -308,6 +397,10 @@ export default function Profile() {
     const userId = session.user.id;
 
     // Unsubscribe from real-time updates before deletion
+    if (profileSubscription) {
+      supabase.removeChannel(profileSubscription);
+      setProfileSubscription(null);
+    }
     unsubscribe();
 
     // Delete friendships where user is user_id_1 or user_id_2
@@ -392,11 +485,11 @@ export default function Profile() {
       const fileBuffer = Buffer.from(fileData, 'base64');
 
       let { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, fileBuffer, {
-          upsert: true,
-          contentType: 'image/jpeg',
-        });
+          .from('avatars')
+          .upload(filePath, fileBuffer, {
+            upsert: true,
+            contentType: 'image/jpeg',
+          });
 
       if (uploadError) {
         Alert.alert('Upload failed!', uploadError.message);
@@ -501,13 +594,13 @@ export default function Profile() {
             <View className="relative mt-16">
               <TouchableOpacity onPress={handleOpenEditModal} activeOpacity={0.8}>
                 <View
-                  style={{
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 5,
-                    borderRadius: 60,
-                  }}
+                    style={{
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 5,
+                      borderRadius: 60,
+                    }}
                 >
                   <RemoteImage
                       filePath={profile.avatar_url ? profile.avatar_url : 'default-profile.png'}
@@ -551,118 +644,118 @@ export default function Profile() {
             </View>
           </LinearGradient>
 
-        {/* Recently Saved */}
-        <View
-          className="flex-col bg-white w-[350px] self-center rounded-2xl py-4 px-4"
-          style={{
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.2,
-            shadowRadius: 4,
-            marginTop: -40,
-            minHeight: 110,
-          }}
-        >
-          <Text className="font-lexend-bold text-primary text-base mb-3">Recently Saved</Text>
-          {recentlySaved.length === 0 ? (
-            <EmptyRecentlySavedState />
-          ) : (
-            <View className="flex-row justify-center flex-wrap items-center gap-x-10 gap-y-4">
-              {recentlySaved.map((eatery) => (
-                <TouchableOpacity
-                  key={eatery.displayName}
-                  activeOpacity={0.8}
-                  className="items-center"
-                  onPress={() => router.push({
-                    pathname: '/(modals)/RestaurantDetails',
-                    params: {
-                      placeId: eatery?.placeId,
-                      eatery: JSON.stringify(eatery)
-                    }
-                  })}
-                >
-                  <Image
-                    source={{ uri: eatery.photo }}
-                    className="w-[70px] h-[70px] rounded-full"
-                    resizeMode="cover"
-                  />
-                  <Text
-                    className="text-xs w-[80px] font-lexend-regular text-primary text-center mt-2"
-                    numberOfLines={1}
-                  >
-                    {eatery.displayName}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
-
-        {/* Favourites */}
-        <View
-          className="flex-col bg-white w-[350px] self-center rounded-2xl py-4 px-4 mt-4"
-          style={{
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.2,
-            shadowRadius: 4,
-            minHeight: 135,
-          }}
-        >
-          <Text className="font-lexend-bold text-primary text-base mb-3">Favourites</Text>
-          {favouriteEateries.length === 0 ? (
-            <EmptyFavouritesState />
-          ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View className="flex-row items-center">
-                {favouriteEateries.map((eatery) => (
-                  <TouchableOpacity
-                    key={eatery.placeId}
-                    activeOpacity={0.8}
-                    className="mr-3 items-center"
-                    onPress={() => router.push({
-                      pathname: '/(modals)/RestaurantDetails',
-                      params: {
-                        placeId: eatery?.placeId,
-                        eatery: JSON.stringify(eatery)
-                      }
-                    })}
-                  >
-                    <View style={{ position: 'relative' }}>
-                      <Image
-                        source={{ uri: eatery.photo }}
-                        className="w-[110px] h-[120px] rounded-2xl"
-                        resizeMode="cover"
-                      />
-                      <LinearGradient
-                        colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.3)', 'rgba(102,51,25,0.8)']}
-                        locations={[0, 0.6, 1]}
-                        style={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          width: 110,
-                          height: 120,
-                          borderRadius: 16,
-                          justifyContent: 'flex-end',
-                          paddingBottom: 8,
-                        }}
+          {/* Recently Saved */}
+          <View
+              className="flex-col bg-white w-[350px] self-center rounded-2xl py-4 px-4"
+              style={{
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                marginTop: -40,
+                minHeight: 110,
+              }}
+          >
+            <Text className="font-lexend-bold text-primary text-base mb-3">Recently Saved</Text>
+            {recentlySaved.length === 0 ? (
+                <EmptyRecentlySavedState />
+            ) : (
+                <View className="flex-row justify-center flex-wrap items-center gap-x-10 gap-y-4">
+                  {recentlySaved.map((eatery) => (
+                      <TouchableOpacity
+                          key={eatery.displayName}
+                          activeOpacity={0.8}
+                          className="items-center"
+                          onPress={() => router.push({
+                            pathname: '/(modals)/RestaurantDetails',
+                            params: {
+                              placeId: eatery?.placeId,
+                              eatery: JSON.stringify(eatery)
+                            }
+                          })}
                       >
+                        <Image
+                            source={{ uri: eatery.photo }}
+                            className="w-[70px] h-[70px] rounded-full"
+                            resizeMode="cover"
+                        />
                         <Text
-                          className="text-white text-xs font-lexend-medium ml-2"
-                          numberOfLines={2}
+                            className="text-xs w-[80px] font-lexend-regular text-primary text-center mt-2"
+                            numberOfLines={1}
                         >
                           {eatery.displayName}
                         </Text>
-                      </LinearGradient>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
-          )}
-        </View>
-      </ScrollView>
+                      </TouchableOpacity>
+                  ))}
+                </View>
+            )}
+          </View>
+
+          {/* Favourites */}
+          <View
+              className="flex-col bg-white w-[350px] self-center rounded-2xl py-4 px-4 mt-4"
+              style={{
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                minHeight: 135,
+              }}
+          >
+            <Text className="font-lexend-bold text-primary text-base mb-3">Favourites</Text>
+            {favouriteEateries.length === 0 ? (
+                <EmptyFavouritesState />
+            ) : (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View className="flex-row items-center">
+                    {favouriteEateries.map((eatery) => (
+                        <TouchableOpacity
+                            key={eatery.placeId}
+                            activeOpacity={0.8}
+                            className="mr-3 items-center"
+                            onPress={() => router.push({
+                              pathname: '/(modals)/RestaurantDetails',
+                              params: {
+                                placeId: eatery?.placeId,
+                                eatery: JSON.stringify(eatery)
+                              }
+                            })}
+                        >
+                          <View style={{ position: 'relative' }}>
+                            <Image
+                                source={{ uri: eatery.photo }}
+                                className="w-[110px] h-[120px] rounded-2xl"
+                                resizeMode="cover"
+                            />
+                            <LinearGradient
+                                colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.3)', 'rgba(102,51,25,0.8)']}
+                                locations={[0, 0.6, 1]}
+                                style={{
+                                  position: 'absolute',
+                                  top: 0,
+                                  left: 0,
+                                  width: 110,
+                                  height: 120,
+                                  borderRadius: 16,
+                                  justifyContent: 'flex-end',
+                                  paddingBottom: 8,
+                                }}
+                            >
+                              <Text
+                                  className="text-white text-xs font-lexend-medium ml-2"
+                                  numberOfLines={2}
+                              >
+                                {eatery.displayName}
+                              </Text>
+                            </LinearGradient>
+                          </View>
+                        </TouchableOpacity>
+                    ))}
+                  </View>
+                </ScrollView>
+            )}
+          </View>
+        </ScrollView>
 
         {/* Edit Profile Modal */}
         <EditProfileModal
@@ -686,21 +779,21 @@ export default function Profile() {
                   })
                   .eq('id', session.user.id);
 
-          if (!error) {
-            setProfile((prev) => ({
-              ...prev,
-              displayName: updatedProfile.displayName,
-              username: updatedProfile.username,
-              avatar_url: updatedProfile.avatar_url,
-            }));
-            setTempAvatarUrl(undefined);
-            setShowEditModal(false);
-          } else {
-            console.error('Error updating profile:', error.message);
-          }
-        }}
-        onChangeProfilePicture={handleTempProfilePicture}
-      />
+              if (!error) {
+                setProfile((prev) => ({
+                  ...prev,
+                  displayName: updatedProfile.displayName,
+                  username: updatedProfile.username,
+                  avatar_url: updatedProfile.avatar_url,
+                }));
+                setTempAvatarUrl(undefined);
+                setShowEditModal(false);
+              } else {
+                console.error('Error updating profile:', error.message);
+              }
+            }}
+            onChangeProfilePicture={handleTempProfilePicture}
+        />
 
         {/* Logout Confirmation Modal */}
         <ConfirmationModal
@@ -724,5 +817,4 @@ export default function Profile() {
 
       </View>
   );
-
 }
