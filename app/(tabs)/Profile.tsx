@@ -326,7 +326,6 @@ export default function Profile() {
 
   return (
     <View style={styles.container}>
-
       {/* Settings Dropdown */}
       <View style={{ position: 'absolute', top: 60, right: 20, zIndex: 999 }}>
         <TouchableOpacity
@@ -340,335 +339,206 @@ export default function Profile() {
             style={styles.settingsImage}
           />
         </TouchableOpacity>
-        {/* Settings Dropdown */}
-        <View style={{ position: 'absolute', top: 60, right: 20, zIndex: 999 }}>
-          <TouchableOpacity
-            onPress={() => setShowDropdown(!showDropdown)}
-            style={styles.settingsIcon}
-          >
-            <Image
-              source={{
-                uri: 'https://www.iconpacks.net/icons/2/free-settings-icon-3110-thumb.png',
+
+        {showDropdown && (
+          <View style={styles.dropdownMenu}>
+            <TouchableOpacity
+              onPress={() => {
+                setShowDropdown(false);
+                setShowLogoutModal(true);
               }}
-              style={styles.settingsImage}
-            />
-          </TouchableOpacity>
+            >
+              <Text style={styles.dropdownItem}>Log out</Text>
+            </TouchableOpacity>
+            <View style={styles.divider} />
+            <TouchableOpacity
+              onPress={() => {
+                setShowDropdown(false);
+                setShowDeleteModal(true);
+              }}
+            >
+              <Text style={styles.dropdownItem}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
 
-          {showDropdown && (
-            <View style={styles.dropdownMenu}>
-              <TouchableOpacity
-                onPress={() => {
-                  setShowDropdown(false);
-                  setShowLogoutModal(true);
+      {/* Main ScrollView */}
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        bounces={false}
+        overScrollMode="never"
+      >
+        {/* Profile Header */}
+        <LinearGradient colors={['#D03939', '#FE724C']} style={styles.header}>
+          <View className="relative mt-16">
+            <TouchableOpacity onPress={handleOpenEditModal} activeOpacity={0.8}>
+              <View
+                style={{
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 5,
+                  borderRadius: 60,
                 }}
               >
-                <Text style={styles.dropdownItem}>Log out</Text>
-              </TouchableOpacity>
-              <View style={styles.divider} />
-              <TouchableOpacity
-                onPress={() => {
-                  setShowDropdown(false);
-                  setShowDeleteModal(true);
-                }}
-              >
-                <Text style={styles.dropdownItem}>Delete</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-
-        <ScrollView
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-          bounces={false}
-          overScrollMode="never"
-        >
-          {/* Profile Header */}
-          <LinearGradient colors={['#D03939', '#FE724C']} style={styles.header}>
-            <View className="relative mt-16">
-              <TouchableOpacity onPress={handleOpenEditModal} activeOpacity={0.8}>
+                <RemoteImage
+                  filePath={profile.avatar_url ?? 'default-profile.png'}
+                  bucket="avatars"
+                  style={{
+                    width: 120,
+                    height: 120,
+                    borderRadius: 60,
+                    borderWidth: 4,
+                    borderColor: 'white',
+                  }}
+                />
                 <View
                   style={{
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 5,
-                    borderRadius: 60,
-                  }}
-                >
-                  <RemoteImage
-                    filePath={profile.avatar_url ? profile.avatar_url : 'default-profile.png'}
-                    bucket="avatars"
-                    style={{ width: 120, height: 120, borderRadius: 60, borderWidth: 4, borderColor: 'white' }}
-                  />
-                  <View style={{
                     position: 'absolute',
                     bottom: 8,
                     right: 8,
                     backgroundColor: '#fff',
                     borderRadius: 12,
                     padding: 4,
-                  }}>
-                    <MaterialCommunityIcons name="camera" size={20} color="#FE724C" />
-                  </View>
+                  }}
+                >
+                  <MaterialCommunityIcons name="camera" size={20} color="#FE724C" />
                 </View>
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.name}>{profile.displayName}</Text>
-            <Text style={styles.username}>@{profile.username}</Text>
-
-            {showDropdown && (
-              <View style={styles.dropdownMenu}>
-                <TouchableOpacity
-                  onPress={() => {
-                    setShowDropdown(false);
-                    setShowLogoutModal(true);
-                  }}
-                  style={styles.editButton}
-                  activeOpacity={0.8}
-                  onPress={handleOpenEditModal}
-                >
-                  <Text style={styles.dropdownItem}>Log out</Text>
-                </TouchableOpacity>
-                <View style={styles.divider} />
-                <TouchableOpacity
-                  onPress={() => {
-                    setShowDropdown(false);
-                    setShowDeleteModal(true);
-                  }}
-                >
-                  <Text style={styles.dropdownItem}>Delete</Text>
-                </TouchableOpacity>
               </View>
-            )}
+            </TouchableOpacity>
           </View>
 
-          <ScrollView
-            style={styles.scrollView}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
-            bounces={false} // Disable bounce effect on iOS
-            overScrollMode="never" // Disable overscroll on Android
+          <Text style={styles.name}>{profile.displayName}</Text>
+          <Text style={styles.username}>@{profile.username}</Text>
+
+          <TouchableOpacity
+            style={styles.editButton}
+            activeOpacity={0.8}
+            onPress={handleOpenEditModal}
           >
-            {/* Profile Header */}
-            <LinearGradient colors={['#D03939', '#FE724C']} style={styles.header}>
-              <View className="relative mt-16">
-                <View
-                  style={{
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 5,
-                    borderRadius: 60,
-                  }}
+            <Text style={styles.editButtonText}>Edit Profile</Text>
+          </TouchableOpacity>
+
+          <View className="flex-row justify-center items-center">
+            <View className="flex-col items-center mr-10">
+              <Text className="font-lexend-bold text-xl text-white">{eateryCount}</Text>
+              <Text className="font-lexend-regular text-sm text-white">Eateries</Text>
+            </View>
+            <View className="flex-col items-center">
+              <Text className="font-lexend-bold text-xl text-white">{friendCount}</Text>
+              <Text className="font-lexend-regular text-sm text-white">Friends</Text>
+            </View>
+          </View>
+        </LinearGradient>
+
+        {/* Recently Saved */}
+        <View
+          className="flex-col bg-white w-[350px] self-center rounded-2xl py-4 px-4"
+          style={{
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.2,
+            shadowRadius: 4,
+            marginTop: -40,
+            minHeight: 110,
+          }}
+        >
+          <Text className="font-lexend-bold text-primary text-base mb-3">Recently Saved</Text>
+          {recentlySaved.length === 0 ? (
+            <EmptyRecentlySavedState />
+          ) : (
+            <View className="flex-row justify-center flex-wrap items-center gap-x-10 gap-y-4">
+              {recentlySaved.map((eatery) => (
+                <TouchableOpacity
+                  key={eatery.displayName}
+                  activeOpacity={0.8}
+                  className="items-center"
                 >
-                  <RemoteImage
-                    filePath={profile.avatar_url ? profile.avatar_url : 'default-profile.png'}
-                    bucket="avatars"
-                    style={{ width: 120, height: 120, borderRadius: 60, borderWidth: 4, borderColor: 'white' }}
+                  <Image
+                    source={{ uri: eatery.photo }}
+                    className="w-[70px] h-[70px] rounded-full"
+                    resizeMode="cover"
                   />
-                </View>
-              </View>
+                  <Text
+                    className="text-xs w-[80px] font-lexend-regular text-primary text-center mt-2"
+                    numberOfLines={1}
+                  >
+                    {eatery.displayName}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
 
-              <Text style={styles.name}>{profile.displayName}</Text>
-              <Text style={styles.username}>@{profile.username}</Text>
-
-              <TouchableOpacity
-                style={styles.editButton}
-                activeOpacity={0.8}
-                onPress={handleOpenEditModal}
-              >
-                <Text style={styles.editButtonText}>Edit Profile</Text>
-              </TouchableOpacity>
-
-              <View className="flex-row justify-center items-center">
-                <View className="flex-col items-center mr-10">
-                  <Text className="font-lexend-bold text-xl text-white">{eateryCount}</Text>
-                  <Text className="font-lexend-regular text-sm text-white">Eateries</Text>
-                </View>
-                <View className="flex-col items-center">
-                  <Text className="font-lexend-bold text-xl text-white">{friendCount}</Text>
-                  <Text className="font-lexend-regular text-sm text-white">Friends</Text>
-                </View>
-              </View>
-            </LinearGradient>
-
-            {/* Recently Saved */}
-            <View
-              className="flex-col bg-white w-[350px] self-center rounded-2xl py-4 px-4"
-              style={{
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.2,
-                shadowRadius: 4,
-                marginTop: -40,
-                minHeight: 110,
-              }}
-            >
-              <Text className="font-lexend-bold text-primary text-base mb-3">Recently Saved</Text>
-
-              {recentlySaved.length === 0 ? (
-                <EmptyRecentlySavedState />
-              ) : (
-                <View className="flex-row justify-center flex-wrap items-center gap-x-10 gap-y-4">
-                  {recentlySaved.map((eatery) => (
-                    <TouchableOpacity
-                      key={eatery.displayName}
-                      activeOpacity={0.8}
-                      className="items-center"
-                    >
+        {/* Favourites */}
+        <View
+          className="flex-col bg-white w-[350px] self-center rounded-2xl py-4 px-4 mt-4"
+          style={{
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.2,
+            shadowRadius: 4,
+            minHeight: 135,
+          }}
+        >
+          <Text className="font-lexend-bold text-primary text-base mb-3">Favourites</Text>
+          {favouriteEateries.length === 0 ? (
+            <EmptyFavouritesState />
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View className="flex-row items-center">
+                {favouriteEateries.map((eatery) => (
+                  <TouchableOpacity
+                    key={eatery.placeId}
+                    activeOpacity={0.8}
+                    className="mr-3 items-center"
+                  >
+                    <View style={{ position: 'relative' }}>
                       <Image
                         source={{ uri: eatery.photo }}
-                        className="w-[70px] h-[70px] rounded-full"
+                        className="w-[110px] h-[120px] rounded-2xl"
                         resizeMode="cover"
                       />
-                      <Text
-                        className="text-xs w-[80px] font-lexend-regular text-primary text-center mt-2"
-                        numberOfLines={1}
+                      <LinearGradient
+                        colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.3)', 'rgba(102,51,25,0.8)']}
+                        locations={[0, 0.6, 1]}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: 110,
+                          height: 120,
+                          borderRadius: 16,
+                          justifyContent: 'flex-end',
+                          paddingBottom: 8,
+                        }}
                       >
-                        {eatery.displayName}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                        <Text
+                          className="text-white text-xs font-lexend-medium ml-2"
+                          numberOfLines={2}
+                        >
+                          {eatery.displayName}
+                        </Text>
+                      </LinearGradient>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+          )}
+        </View>
+      </ScrollView>
 
-              )}
-
-            </View>
-
-            {/* Favourites */}
-            <View
-              className="flex-col bg-white w-[350px] self-center rounded-2xl py-4 px-4 mt-4"
-              style={{
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.2,
-                shadowRadius: 4,
-                minHeight: 135,
-              }}
-            >
-              <Text className="font-lexend-bold text-primary text-base mb-3">Favourites</Text>
-
-              {favouriteEateries.length === 0 ? (
-                <EmptyFavouritesState />
-              ) : (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <View className="flex-row items-center">
-                    {favouriteEateries.map((eatery) => (
-                      <TouchableOpacity
-                        key={eatery.placeId}
-                        activeOpacity={0.8}
-                        className="mr-3 items-center"
-                      >
-                        <View style={{ position: 'relative' }}>
-                          <Image
-                            source={{ uri: eatery.photo }}
-                            className="w-[110px] h-[120px] rounded-2xl"
-                            resizeMode="cover"
-                          />
-
-                          <LinearGradient
-                            colors={[
-                              'rgba(0,0,0,0)',
-                              'rgba(0,0,0,0.3)',
-                              'rgba(102,51,25,0.8)'
-                            ]}
-                            locations={[0, 0.6, 1]}
-                            style={{
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              width: 110,
-                              height: 120,
-                              borderRadius: 16,
-                              justifyContent: 'flex-end',
-                              paddingBottom: 8,
-                            }}
-                          >
-                            <Text
-                              className="text-white text-xs font-lexend-medium ml-2"
-                              numberOfLines={2}
-                            >
-                              {eatery.displayName}
-                            </Text>
-                          </LinearGradient>
-                        </View>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </ScrollView>
-              )}
-            </View>
-          </ScrollView>
-
-          {/* Edit Profile Modal */}
-          <EditProfileModal
-            visible={showEditModal}
-            onClose={() => {
-              setShowEditModal(false);
-              setTempAvatarUrl(undefined); // revert temp avatar on cancel
-            }}
-            profile={{
-              ...profile,
-              avatar_url: tempAvatarUrl ?? profile.avatar_url,
-            }}
-            onSave={async (updatedProfile) => {
-              if (!session?.user) return;
-              const { error } = await supabase
-                .from('profiles')
-                .update({
-                  name: updatedProfile.displayName,
-                  username: updatedProfile.username,
-                  avatar_url: updatedProfile.avatar_url,
-                })
-                .eq('id', session.user.id);
-
-              if (!error) {
-                setProfile((prev) => ({
-                  ...prev,
-                  displayName: updatedProfile.displayName,
-                  username: updatedProfile.username,
-                  avatar_url: updatedProfile.avatar_url,
-                }));
-                setTempAvatarUrl(undefined);
-                setShowEditModal(false);
-              } else {
-                // Optionally show an error message
-                console.error('Error updating profile:', error.message);
-              }
-            }}
-            onChangeProfilePicture={handleTempProfilePicture}
-          />
-
-          {/* Logout Confirmation Modal */}
-          <ConfirmationModal
-            visible={showLogoutModal}
-            title="Log Out"
-            message="Are you sure you want to log out?"
-            confirmText="Log Out"
-            onConfirm={handleLogout}
-            onCancel={() => setShowLogoutModal(false)}
-          />
-
-          {/* Delete Confirmation Modal */}
-          <ConfirmationModal
-            visible={showDeleteModal}
-            title="Delete Account"
-            message="This action cannot be undone. All your data will be permanently deleted."
-            confirmText="Delete"
-            onConfirm={handleDelete}
-            onCancel={() => setShowDeleteModal(false)}
-          />
-
-      </View>
-      {/* Edit Profile Modal */}
+      {/* Modals */}
       <EditProfileModal
         visible={showEditModal}
         onClose={() => {
           setShowEditModal(false);
-          setTempAvatarUrl(undefined); // revert temp avatar on cancel
+          setTempAvatarUrl(undefined);
         }}
         profile={{
           ...profile,
@@ -695,14 +565,12 @@ export default function Profile() {
             setTempAvatarUrl(undefined);
             setShowEditModal(false);
           } else {
-            // Optionally show an error message
             console.error('Error updating profile:', error.message);
           }
         }}
         onChangeProfilePicture={handleTempProfilePicture}
       />
 
-      {/* Logout Confirmation Modal */}
       <ConfirmationModal
         visible={showLogoutModal}
         title="Log Out"
@@ -712,7 +580,6 @@ export default function Profile() {
         onCancel={() => setShowLogoutModal(false)}
       />
 
-      {/* Delete Confirmation Modal */}
       <ConfirmationModal
         visible={showDeleteModal}
         title="Delete Account"
@@ -721,131 +588,132 @@ export default function Profile() {
         onConfirm={handleDelete}
         onCancel={() => setShowDeleteModal(false)}
       />
-
     </View>
   );
-}
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fafafa',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: 20,
-  },
-  header: {
-    width: 1000,
-    height: 440,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 50,
-    borderRadius: '100%',
-    alignSelf: 'center',
-    overflow: 'hidden',
-    top: -60,
-  },
-  name: {
-    fontSize: 32,
-    color: '#fff',
-    fontFamily: 'Baloo-regular',
-  },
-  username: {
-    color: '#fff',
-    marginTop: -12,
-    fontSize: 14,
-    fontFamily: 'Lexend-regular',
-  },
-  editButton: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    paddingHorizontal: 28,
-    paddingVertical: 6,
-    marginVertical: 12,
-  },
-  editButtonText: {
-    color: '#FE724C',
-    fontFamily: 'Baloo-regular',
-    fontSize: 16,
-  },
-  settingsIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'absolute',
-    top: 10,
-    right: 0,
-    zIndex: 999,
-  },
-  settingsImage: {
-    width: 18,
-    height: 18,
-    tintColor: 'white',
-  },
-  dropdownMenu: {
-    position: 'absolute',
-    top: 42,
-    right: 0,
-    backgroundColor: 'white',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    paddingVertical: 8,
-    width: 110,
-    zIndex: 1000,
-  },
-  dropdownItem: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    fontFamily: 'Lexend-Regular',
-    fontSize: 13,
-    color: '#FE724C',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#f0f0f0',
-    marginVertical: 6,
-    marginHorizontal: 12,
-  },
-  // Empty state styles
-  emptyStateContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-  },
-  emptyIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#FFF5F2',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  emptyStateTitle: {
-    fontSize: 14,
-    fontFamily: 'Lexend-medium',
-    color: '#333',
-    marginBottom: 2,
-    textAlign: 'center',
-  },
-  emptyStateSubtitle: {
-    fontSize: 11,
-    fontFamily: 'Lexend-regular',
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 6,
-    lineHeight: 14,
-    maxWidth: 250,
-  },
-});
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#fafafa',
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingBottom: 20,
+    },
+    header: {
+      width: 1000,
+      height: 440,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingTop: 50,
+      borderRadius: '100%',
+      alignSelf: 'center',
+      overflow: 'hidden',
+      top: -60,
+    },
+    name: {
+      fontSize: 32,
+      color: '#fff',
+      fontFamily: 'Baloo-regular',
+    },
+    username: {
+      color: '#fff',
+      marginTop: -12,
+      fontSize: 14,
+      fontFamily: 'Lexend-regular',
+    },
+    editButton: {
+      backgroundColor: '#fff',
+      borderRadius: 20,
+      paddingHorizontal: 28,
+      paddingVertical: 6,
+      marginVertical: 12,
+    },
+    editButtonText: {
+      color: '#FE724C',
+      fontFamily: 'Baloo-regular',
+      fontSize: 16,
+    },
+    settingsIcon: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: 'rgba(255,255,255,0.2)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'absolute',
+      top: 10,
+      right: 0,
+      zIndex: 999,
+    },
+    settingsImage: {
+      width: 18,
+      height: 18,
+      tintColor: 'white',
+    },
+    dropdownMenu: {
+      position: 'absolute',
+      top: 42,
+      right: 0,
+      backgroundColor: 'white',
+      borderRadius: 12,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      paddingVertical: 8,
+      width: 110,
+      zIndex: 1000,
+    },
+    dropdownItem: {
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      fontFamily: 'Lexend-Regular',
+      fontSize: 13,
+      color: '#FE724C',
+    },
+    divider: {
+      height: 1,
+      backgroundColor: '#f0f0f0',
+      marginVertical: 6,
+      marginHorizontal: 12,
+    },
+    // Empty state styles
+    emptyStateContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+    },
+    emptyIconContainer: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      backgroundColor: '#FFF5F2',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 8,
+    },
+    emptyStateTitle: {
+      fontSize: 14,
+      fontFamily: 'Lexend-medium',
+      color: '#333',
+      marginBottom: 2,
+      textAlign: 'center',
+    },
+    emptyStateSubtitle: {
+      fontSize: 11,
+      fontFamily: 'Lexend-regular',
+      color: '#666',
+      textAlign: 'center',
+      marginBottom: 6,
+      lineHeight: 14,
+      maxWidth: 250,
+    },
+  }
+  );
+} 
