@@ -24,7 +24,7 @@ const getLocation = async () => {
     }
 };
 
-const seeDetails = (item) => {
+const seeDetails = (item : any) => {
     console.log(item)
     router.push({
         pathname: '/(modals)/RestaurantDetails',
@@ -223,7 +223,7 @@ export default function Matches() {
         }, [products.length, session?.user.id])
     );
 
-    const handleRemoveItem = (item) => {
+    const handleRemoveItem = (item : any) => {
         setItemToRemove(item);
         setShowConfirmModal(true);
     };
@@ -237,9 +237,40 @@ export default function Matches() {
         //TODO: Implement removal!!!
         setShowConfirmModal(false);
         setItemToRemove(null);
+
+        async () => {
+          const userId = session?.user.id;
+            // 1. Fetch current liked_eateries
+            const { data: profileData, error: profileError } = await supabase
+                .from('profiles')
+                .select('favourite_eateries')
+                .eq('id', userId)
+                .single();
+
+            if (profileError) {
+                console.error('Error fetching profile:', profileError.message);
+            } else {
+                let favouriteEateriesArr = Array.isArray(profileData?.favourite_eateries)
+                    ? profileData.favourite_eateries
+                    : [];
+                // 2. Add placeId if not already present
+                if (favouriteEateriesArr.includes(itemToRemove.placeId)) {
+                    const index = favouriteEateriesArr.indexOf(itemToRemove.placeId)
+                    favouriteEateriesArr.splice(index, 1)
+                    // 3. Update the profile
+                    const { error: updateError } = await supabase
+                        .from('profiles')
+                        .update({ favourite_eateries: favouriteEateriesArr })
+                        .eq('id', userId);
+                    if (updateError) {
+                        console.error('Error updating favourite_eateries:', updateError.message);
+                    }
+                }
+            }
+        }
     };
 
-    const handleFavoritePress = (item) => {
+    const handleFavoritePress = (item : any) => {
         setItemToFavorite(item);
         setShowFavouriteConfirm(true);
     };
@@ -256,6 +287,36 @@ export default function Matches() {
 
             setFavourites(updatedFavorites);
 
+            async () => {
+              // Get current user id
+              const userId = session?.user.id;
+                  // 1. Fetch current liked_eateries
+                  const { data: profileData, error: profileError } = await supabase
+                      .from('profiles')
+                      .select('favourite_eateries')
+                      .eq('id', userId)
+                      .single();
+
+                  if (profileError) {
+                      console.error('Error fetching profile:', profileError.message);
+                  } else {
+                      let favouriteEateriesArr = Array.isArray(profileData?.favourite_eateries)
+                          ? profileData.favourite_eateries
+                          : [];
+                      // 2. Add placeId if not already present
+                      if (!favouriteEateriesArr.includes(itemToFavorite.placeId)) {
+                          favouriteEateriesArr = [...favouriteEateriesArr, itemToFavorite.placeId];
+                          // 3. Update the profile
+                          const { error: updateError } = await supabase
+                              .from('profiles')
+                              .update({ favourite_eateries: favouriteEateriesArr })
+                              .eq('id', userId);
+                          if (updateError) {
+                              console.error('Error updating favourite_eateries:', updateError.message);
+                          }
+                      }
+                  }
+            }
             // Optional: Show success message
             console.log(wasAdded ? 'Added to favorites' : 'Removed from favorites');
 
