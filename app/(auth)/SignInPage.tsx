@@ -29,12 +29,9 @@ const SignInScreen = () => {
         <Text style={styles.title}>Sign In</Text>
 
         <View style={styles.centerAlign}>
-          {/* Google sign-in removed */}
         </View>
 
         <View style={styles.centerAlign}>
-          {/* ---or--- divider removed */}
-
           <Text style={styles.inputLabel}>Email</Text>
           <TextInput
               style={styles.textInput}

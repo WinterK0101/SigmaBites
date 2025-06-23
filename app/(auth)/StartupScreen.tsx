@@ -1,39 +1,80 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Image, ImageBackground } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Image, ImageBackground, Animated, TouchableWithoutFeedback } from 'react-native';
 import { useRouter } from 'expo-router';
 import { images } from '@/constants/images';
-import {useSession} from "@/context/SessionContext";
+import { useSession } from "@/context/SessionContext";
+import { fetchUserByID } from "@/services/userService";
+import RemoteImage from "@/components/RemoteImage";
+import { User } from "@/interfaces/interfaces";
 
 export default function StartupScreen() {
   const router = useRouter();
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const { session } = useSession();
+  const user = session?.user;
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  const handleTap = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 500,
+      useNativeDriver: true,
+    }).start(() => {
+      router.replace('/(tabs)/Discover');
+    });
+  };
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      router.replace('/(tabs)/Discover'); 
-    }, 1000);
+    const fetchUser = async () => {
+      if (user?.id) {
+        try {
+          const userData = await fetchUserByID(user.id);
+          setCurrentUser(userData);
+        } catch (error) {
+          console.error('Error fetching user:', error);
+        }
+      }
+    };
 
-    return () => clearTimeout(timer); 
-  }, []);
+    fetchUser();
+
+    const timer = setTimeout(() => {
+      handleTap();
+    }, 10000);
+
+    return () => clearTimeout(timer);
+  }, [user?.id]);
 
   return (
-    <ImageBackground
-      source={images.primarybg}
-      style={styles.background}
-      resizeMode="cover"
-    >
-      <View style={styles.overlay}>
-        <Text style={styles.greeting}>Hello, John!</Text>
-        <Image
-          source={{ uri: 'https://i.pinimg.com/564x/39/33/f6/3933f64de1724bb67264818810e3f2cb.jpg' }}
-          style={styles.avatar}
-        />
-        <Text style={styles.prompt}>What would you like to eat?</Text>
-      </View>
-    </ImageBackground>
+      <TouchableWithoutFeedback onPress={handleTap}>
+        <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+          <ImageBackground
+              source={images.primarybg}
+              style={styles.background}
+              resizeMode="cover"
+          >
+            <View style={styles.overlay}>
+              <Text style={styles.greeting}>
+                Hello, {currentUser?.name}!
+              </Text>
+              <RemoteImage
+                  filePath={currentUser?.avatar_url}
+                  bucket="avatars"
+                  style={styles.avatar}
+              />
+              <Text style={styles.prompt}>What would you like to eat?</Text>
+              <Text style={styles.tapHint}>Tap anywhere to continue to the app!</Text>
+            </View>
+          </ImageBackground>
+        </Animated.View>
+      </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   background: {
     flex: 1,
     width: '100%',
@@ -67,9 +108,18 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 20,
     fontFamily: 'Lexend-Regular',
-    marginBottom: 100,
+    marginBottom: 20,
     textShadowColor: 'rgba(0, 0, 0, 1)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 4,
+  },
+  tapHint: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 14,
+    fontFamily: 'Lexend-Regular',
+    marginBottom: 100,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
 });

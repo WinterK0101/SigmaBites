@@ -1,5 +1,5 @@
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import {Stack, Tabs} from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
@@ -11,10 +11,6 @@ import { SessionProvider } from '@/context/SessionContext';
 export {
     ErrorBoundary,
 } from 'expo-router';
-
-export const unstable_settings = {
-    initialRouteName: '(tabs)',
-};
 
 SplashScreen.preventAutoHideAsync();
 
@@ -61,15 +57,16 @@ export default function RootLayout() {
 
     return (
         <SessionProvider >
-                <Stack screenOptions={{ headerShown: false }}>
-                    <Stack.Screen name="index" />
-                    <Stack.Screen name="(tabs)" />
-                    <Stack.Screen name="(auth)" />
-                    <Stack.Screen name="soloSwiping" />
-                    <Stack.Screen name="groupSwiping" />
+                <Stack screenOptions={{ headerShown: false }}>\
                     <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
+                    <Stack.Screen
+                        name="(tabs)"
+                        options={{
+                            gestureEnabled: false,
+                            animation: 'none'
+                        }}
+                    />
                 </Stack>
-
         </SessionProvider>
     );
 }
