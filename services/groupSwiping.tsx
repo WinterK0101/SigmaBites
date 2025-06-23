@@ -102,6 +102,15 @@ export async function acceptInvite(inviteID: string, userID: string) {
         .eq('groupID', invite.groupID)
         .eq('memberID', userID);
 
+    // Delete the invite
+    const { error: deleteInviteError } = await supabase
+        .from('invites')
+        .delete()
+        .eq('id', inviteID)
+        .eq('receiver', userID);
+
+    if (deleteInviteError) throw deleteInviteError;
+
     if (error) throw error;
 
     return invite.groupID;
@@ -147,6 +156,15 @@ export async function leaveGroup(groupId: string, userId: string) {
         .eq('memberID', userId);
 
     if (error) throw error;
+
+    // Delete the invite
+    const { error: deleteInviteError } = await supabase
+        .from('invites')
+        .delete()
+        .eq('groupID', groupId)
+        .eq('receiver', userId);
+
+    if (deleteInviteError) throw deleteInviteError;
 }
 
 // Update Session Status
