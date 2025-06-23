@@ -54,7 +54,7 @@ export default function GroupLobby() {
 
     const insets = useSafeAreaInsets();
     const router = useRouter();
-    const session = useSession();
+    const {session} = useSession();
     const user = session?.user;
 
     // State

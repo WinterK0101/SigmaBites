@@ -18,7 +18,7 @@ export default function SendFriendRequestModal({
                                                    onSuccess
                                                }) {
     const [loading, setLoading] = useState(false);
-    const session = useSession();
+    const {session} = useSession();
     const currentUser = session?.user;
 
     const handleSend = async () => {

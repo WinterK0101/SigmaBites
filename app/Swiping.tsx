@@ -25,6 +25,7 @@ import {
     handleEndSessionService
 } from "@/services/swipingService";
 import {removeFromLikedEateries} from "@/services/eateryService";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const SWIPE_THRESHOLD = screenWidth * 0.25;
@@ -37,6 +38,7 @@ export default function Swiping() {
     const router = useRouter();
     const {session} = useSession();
     const currentUser = session?.user;
+    const insets = useSafeAreaInsets();
 
     // Animation values for custom swiper
     const pan = useRef(new Animated.ValueXY()).current;
@@ -481,7 +483,7 @@ export default function Swiping() {
                         alignSelf: 'center',
                     }
                 ]}
-                className="flex-col items-start rounded-[20px] border-4 border-accent bg-white shadow-lg"
+                className="flex-col items-start rounded-[20px] border-4 border-accent bg-offwhite shadow-lg"
             >
                 <LinearGradient
                     colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.3)', 'rgba(102,51,25,0.8)']}
@@ -552,33 +554,40 @@ export default function Swiping() {
                 })}
             </View>
 
-            <View className="absolute bottom-10 w-full flex-row justify-evenly px-5">
+            <View
+                className="absolute w-full flex-row items-end justify-between px-8"
+                style = {{
+                    bottom: insets.bottom + 32,
+                }}
+            >
                 <TouchableOpacity
-                    className="w-[66px] h-[66px] rounded-full bg-white justify-center items-center shadow-md"
+                    className="w-16 h-16 rounded-full bg-white justify-center items-center shadow-inner border-2 border-grey"
                     onPress={handleSwipeBack}
                     disabled={isAnimating}
                 >
                     <Ionicons name="arrow-back" size={30} color="#000" />
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                    className="w-[66px] h-[66px] rounded-full bg-accent justify-center items-center shadow-md"
-                    onPress={swipeLeft}
-                    disabled={isAnimating}
-                >
-                    <MaterialCommunityIcons name="thumb-down-outline" size={36} color="white" />
-                </TouchableOpacity>
+                <View className="flex-row justify-between w-52">
+                    <TouchableOpacity
+                        className="w-24 h-24 rounded-full bg-accent justify-center items-center shadow-inner"
+                        onPress={swipeLeft}
+                        disabled={isAnimating}
+                    >
+                        <MaterialCommunityIcons name="thumb-down-outline" size={36} color="white" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        className="w-24 h-24 rounded-full bg-accent justify-center items-center shadow-inner"
+                        onPress={swipeRight}
+                        disabled={isAnimating}
+                    >
+                        <MaterialCommunityIcons name="thumb-up-outline" size={36} color="white" />
+                    </TouchableOpacity>
+                </View>
 
                 <TouchableOpacity
-                    className="w-[66px] h-[66px] rounded-full bg-accent justify-center items-center shadow-md"
-                    onPress={swipeRight}
-                    disabled={isAnimating}
-                >
-                    <MaterialCommunityIcons name="thumb-up-outline" size={36} color="white" />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    className="w-[66px] h-[66px] rounded-full bg-white justify-center items-center shadow-md border-2 border-white"
+                    className="w-16 h-16 rounded-full bg-white justify-center items-center shadow-inner border-2 border-grey"
                     onPress={handleMenuPress}
                     disabled={isAnimating}
                 >

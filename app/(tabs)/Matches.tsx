@@ -1,10 +1,10 @@
 import { View, Text, FlatList, StyleSheet, ImageBackground, Dimensions, TouchableOpacity, Animated } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/SupabaseConfig';
 import { useSession } from '@/context/SessionContext';
 import { calculateDistance } from '@/services/apiDetailsForUI'
-import AsyncStorage from '@react-native-async-storage/async-storage';
+//import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -13,19 +13,10 @@ import ConfirmationModal from "@/components/ConfirmationModal";
 import { toggleFavorite } from '@/services/favouriteService';
 import {removeFromLikedEateries} from "@/services/eateryService";
 
+
 const { width, height } = Dimensions.get('window');
 
-// To get location
-const getLocation = async () => {
-    try {
-        const jsonValue = await AsyncStorage.getItem('userLocation');
-        return jsonValue != null ? JSON.parse(jsonValue) : null;
-    } catch (e) {
-        console.error('Failed to fetch location');
-    }
-};
-
-const seeDetails = (item) => {
+const seeDetails = (item : any) => {
     console.log(item)
     router.push({
         pathname: '/(modals)/RestaurantDetails',
@@ -170,11 +161,25 @@ export default function Matches() {
     const [itemToRemove, setItemToRemove] = useState(null);
     const [showFavouriteConfirm, setShowFavouriteConfirm] = useState(false);
     const [itemToFavorite, setItemToFavorite] = useState(null);
-    const session = useSession();
+    const { session, currLocation } = useSession();
+
+    // To get location
+    /* const getLocation = async () => {
+        await getCurrentLocation(); 
+        try {
+            
+            const jsonValue = await AsyncStorage.getItem('userLocation');
+            return jsonValue != null ? JSON.parse(jsonValue) : null;
+        } catch (e) {
+            console.error('Failed to fetch location');
+        }
+    }; */
 
     useFocusEffect(
         useCallback(() => {
             const fetchData = async () => {
+                console.log("matches page " + session?.user.id)   
+                console.log("location is: " + currLocation?.latitude + " " + currLocation?.longitude)
                 try {
                     const { data: fetchedData, error: fetchError } = await supabase
                         .from('profiles')
@@ -188,27 +193,28 @@ export default function Matches() {
                     setFavourites(favoriteEateries);
 
                     const eateries = await Promise.all(
-                        fetchedData.liked_eateries.map(async (element) => {
+                        fetchedData.liked_eateries.map(async (element : any) => {
+                            //console.log("Element is : " + element)
                             const { data: currEatery } = await supabase
                                 .from("Eatery")
                                 .select("*")
                                 .eq("placeId", element)
                                 .single();
 
-                            const currentLocation = await getLocation();
-                            const dist = calculateDistance(
-                                currentLocation.latitude,
-                                currentLocation.longitude,
+                            if (currLocation){
+                                const dist = calculateDistance(
+                                currLocation.latitude,
+                                currLocation.longitude,
                                 currEatery.location.latitude,
                                 currEatery.location.longitude
                             );
-
-                            return {
+                                return {
                                 id: element,
                                 name: currEatery.displayName,
                                 distance: `${dist.toFixed(2)} km`,
                                 image: currEatery.photo
                             };
+                            }
                         })
                     );
 

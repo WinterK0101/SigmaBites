@@ -15,7 +15,8 @@ export default function StartGroupSession() {
     const { locationData, filters, useDummyData } = useLocalSearchParams();
     const insets = useSafeAreaInsets();
     const router = useRouter();
-    const user = useSession()?.user;
+    const {session} = useSession();
+    const user = session?.user;
     const { friends, isLoading, fetchFriends } = useFriendsStore();
 
     // Type invitedFriends as array of User

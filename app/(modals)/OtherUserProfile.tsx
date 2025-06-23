@@ -59,7 +59,8 @@ const getFriendButtonTextStyle = (status: FriendStatus, styles) => {
 
 export default function OtherUserProfile() {
     const router = useRouter();
-    const currentUser = useSession()?.user;
+    const { session } = useSession()
+    const currentUser = session?.user;
     if (!currentUser) return;
     const { username } = useLocalSearchParams();
 
