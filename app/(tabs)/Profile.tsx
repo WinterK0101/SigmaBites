@@ -573,6 +573,13 @@ export default function Profile() {
                   key={eatery.displayName}
                   activeOpacity={0.8}
                   className="items-center"
+                  onPress={() => router.push({
+                    pathname: '/(modals)/RestaurantDetails',
+                    params: {
+                      placeId: eatery?.placeId,
+                      eatery: JSON.stringify(eatery)
+                    }
+                  })}
                 >
                   <Image
                     source={{ uri: eatery.photo }}
@@ -613,6 +620,13 @@ export default function Profile() {
                     key={eatery.placeId}
                     activeOpacity={0.8}
                     className="mr-3 items-center"
+                    onPress={() => router.push({
+                      pathname: '/(modals)/RestaurantDetails',
+                      params: {
+                        placeId: eatery?.placeId,
+                        eatery: JSON.stringify(eatery)
+                      }
+                    })}
                   >
                     <View style={{ position: 'relative' }}>
                       <Image
