@@ -65,7 +65,7 @@ Through a swipe interface, users can browse restaurants, match preferences with 
 
 - **Frontend**: React Native
 - **Development Platform**: Expo Go
-- **Backend Services**: Firebase (Authentication, Firestore, Cloud Functions), Supabase 
+- **Backend Services**: Firebase, Supabase 
 - **APIs**: Google Places API
 - **Version Control**: Git & GitHub
 
