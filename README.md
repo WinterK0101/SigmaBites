@@ -110,4 +110,7 @@ sigma-bites/
 
 
 ## Contributors 
-Brought to you by Loong Kiat, Mun Kuan, Iniya, Michelle and Emeline. ![Sigma Bites](https://github.com/user-attachments/assets/9c56528c-e12d-4664-a0ed-35107d9d2386)
+Brought to you by Loong Kiat, Mun Kuan, Iniya, Michelle and Emeline. 
+
+## System Architecture Diagram
+![Sigma Bites](https://github.com/user-attachments/assets/9c56528c-e12d-4664-a0ed-35107d9d2386)
