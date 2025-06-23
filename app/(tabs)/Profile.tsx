@@ -23,7 +23,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 export default function Profile() {
   const router = useRouter();
-  const session = useSession();
+  const {session} = useSession();
 
   // Use the friends store for friend count and real-time updates
   const {

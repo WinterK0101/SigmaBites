@@ -108,7 +108,8 @@ const retrieveRequests = async (currentUserId: string): Promise<Message[]> => {
 
 export default function InboxScreen() {
     const router = useRouter();
-    const currentUser = useSession()?.user;
+    const {session} = useSession();
+    const currentUser = session?.user;
     const [messages, setMessages] = useState<Message[]>([]);
     const [friendModalVisible, setFriendModalVisible] = useState(false);
     const [groupInviteModalVisible, setGroupInviteModalVisible] = useState(false);

@@ -17,12 +17,13 @@ import {fetchUserByID} from "@/services/userService";
 
 export default function LikedConfirmation() {
     const router = useRouter();
+    const {session} = useSession();
     const { eatery: eateryParam } = useLocalSearchParams();
     const [eatery, setEatery] = useState<Eatery>();
     const [currentUser, setCurrentUser] = useState<User | null>();
     const [loading, setLoading] = useState(false);
 
-    const user = useSession()?.user
+    const user = session?.user
     if (!user) {
         return;
     }

@@ -12,7 +12,7 @@ export default function RestaurantDetails() {
     const router = useRouter();
     const params = useLocalSearchParams();
     const insets = useSafeAreaInsets();
-    const session = useSession();
+    const {session} = useSession();
 
     const [eatery, setEatery] = useState<Eatery | null>(null);
     const [reviews, setReviews] = useState<Review[] | null>(null);

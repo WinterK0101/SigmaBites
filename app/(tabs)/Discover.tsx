@@ -9,21 +9,23 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import LocationSearch from "@/components/LocationSearch";
 import { LocationDisplay } from "@/components/LocationDisplay";
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { LocationData } from '@/interfaces/interfaces';
 import Slider from "@react-native-community/slider";
 import ScrollView = Animated.ScrollView;
 import { LinearGradient } from "expo-linear-gradient";
 import {Eatery, EateryFilters} from "@/interfaces/interfaces";
 import { Ratings } from "@hammim-in/react-native-ratings";
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import {getNearbyEateries} from "@/services/eaterySearch";
 import {filterEateries} from "@/services/filterService";
 import { icons } from '@/constants/icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSession } from '@/context/SessionContext';
 
 export default function Discover() {
     const router = useRouter();
+    const { currLocation, session } = useSession();
     const [userLocation, setUserLocation] = useState<LocationData | null>(null);
     const [searchRadius, setSearchRadius] = useState(2000);
     const [selectedPrices, setSelectedPrices] = useState(new Set([1]));
@@ -41,20 +43,19 @@ export default function Discover() {
         radius: searchRadius,
         openNowToggle: searchOpen
     };
-
     // To save location
-    const saveLocation = async (location: any) => {
-    try {
-        await AsyncStorage.setItem('userLocation', JSON.stringify(location));
-    } catch (e) {
-        console.error('Failed to save location');
-    }
-    };
+/*     const saveLocation = async (location: any) => {
+        try {
+            await AsyncStorage.setItem('userLocation', JSON.stringify(location));
+        } catch (e) {
+            console.error('Failed to save location');
+        }
+    }; */
 
     const handleLocationChange = (location: LocationData | null) => {
         setUserLocation(location);
         console.log("SEE HERE!!!!" + JSON.stringify(location?.coordinates))
-        saveLocation(location?.coordinates);
+        //saveLocation(location?.coordinates);
     };
 
     const togglePrice = (price: number) => {

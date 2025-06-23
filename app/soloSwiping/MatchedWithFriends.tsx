@@ -20,7 +20,8 @@ import {User} from '@/interfaces/interfaces'
 import {fetchUserByID} from "@/services/userService";
 
 export default function MatchedWithFriends() {
-    const user = useSession()?.user;
+    const {session} = useSession();
+    const user = session?.user;
     const { eatery: eateryParam, friends: friendsParam} = useLocalSearchParams();
     const router = useRouter();
     const [eatery, setEatery] = useState(null);

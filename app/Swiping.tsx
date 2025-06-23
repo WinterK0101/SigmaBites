@@ -35,7 +35,8 @@ export default function Swiping() {
     const [lastSwipeWasRight, setLastSwipeWasRight] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
     const router = useRouter();
-    const currentUser = useSession()?.user;
+    const {session} = useSession();
+    const currentUser = session?.user;
 
     // Animation values for custom swiper
     const pan = useRef(new Animated.ValueXY()).current;

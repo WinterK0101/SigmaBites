@@ -16,7 +16,8 @@ import { useInboxStore } from "@/store/inboxStore";
 
 export default function FriendsScreen() {
   const router = useRouter();
-  const user = useSession()?.user;
+  const {session} = useSession();
+  const user = session?.user;
   const {
     friends,
     isLoading,
