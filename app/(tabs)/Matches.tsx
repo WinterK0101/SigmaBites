@@ -10,7 +10,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import ConfirmationModal from "@/components/ConfirmationModal";
-import { addToFavorites, removeFromFavorites, toggleFavorite } from '@/services/favouriteService';
+import { toggleFavorite } from '@/services/favouriteService';
+import {removeFromLikedEateries} from "@/services/eateryService";
 
 const { width, height } = Dimensions.get('window');
 
@@ -174,8 +175,6 @@ export default function Matches() {
     useFocusEffect(
         useCallback(() => {
             const fetchData = async () => {
-                if (products.length > 0) return;
-
                 try {
                     const { data: fetchedData, error: fetchError } = await supabase
                         .from('profiles')
@@ -234,38 +233,23 @@ export default function Matches() {
     };
 
     const confirmRemove = async () => {
-        //TODO: Implement removal!!!
-        setShowConfirmModal(false);
-        setItemToRemove(null);
-        async () => {
-            const userId = session?.user.id;
-            // 1. Fetch current liked_eateries
-            const { data: profileData, error: profileError } = await supabase
-                .from('profiles')
-                .select('favourite_eateries')
-                .eq('id', userId)
-                .single();
+        if (!itemToRemove) return;
 
-            if (profileError) {
-                console.error('Error fetching profile:', profileError.message);
+        try {
+            const result = await removeFromLikedEateries(session?.user.id, itemToRemove.id);
+
+            if (result.success) {
+                // Remove from local state
+                setProducts(products.filter(product => product.id !== itemToRemove.id));
+                console.log('Successfully removed eatery from liked list');
             } else {
-                let favouriteEateriesArr = Array.isArray(profileData?.favourite_eateries)
-                    ? profileData.favourite_eateries
-                    : [];
-                // 2. Add placeId if not already present
-                if (favouriteEateriesArr.includes(itemToRemove.placeId)) {
-                    const index = favouriteEateriesArr.indexOf(itemToRemove.placeId)
-                    favouriteEateriesArr.splice(index, 1)
-                    // 3. Update the profile
-                    const { error: updateError } = await supabase
-                        .from('profiles')
-                        .update({ favourite_eateries: favouriteEateriesArr })
-                        .eq('id', userId);
-                    if (updateError) {
-                        console.error('Error updating favourite_eateries:', updateError.message);
-                    }
-                }
+                console.error('Failed to remove eatery:', result.error);
             }
+        } catch (error) {
+            console.error('Unexpected error:', error);
+        } finally {
+            setShowConfirmModal(false);
+            setItemToRemove(null);
         }
     };
 
@@ -286,12 +270,10 @@ export default function Matches() {
 
             setFavourites(updatedFavorites);
 
-            // Optional: Show success message
             console.log(wasAdded ? 'Added to favorites' : 'Removed from favorites');
 
         } catch (error) {
             console.error('Error toggling favorite:', error);
-            // You might want to show an error toast here
         } finally {
             setShowFavouriteConfirm(false);
             setItemToFavorite(null);
