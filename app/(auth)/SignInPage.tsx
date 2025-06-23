@@ -15,7 +15,7 @@ const SignInScreen = () => {
     if (error) {
       Alert.alert(error.message)
     } else {
-      router.replace('/(tabs)/Discover')
+      router.replace('/(auth)/StartupScreen')
     }
   }
 
@@ -29,23 +29,11 @@ const SignInScreen = () => {
         <Text style={styles.title}>Sign In</Text>
 
         <View style={styles.centerAlign}>
-          <TouchableOpacity style={styles.googleButton}>
-            <View style={styles.googleButtonContent}>
-              <Image
-                  source={{ uri: 'https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png' }}
-                  style={styles.googleIcon}
-              />
-              <Text style={styles.googleButtonText}>Sign in with Google</Text>
-            </View>
-          </TouchableOpacity>
+          {/* Google sign-in removed */}
         </View>
 
         <View style={styles.centerAlign}>
-          <View style={styles.dividerContainer}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.dividerLine} />
-          </View>
+          {/* ---or--- divider removed */}
 
           <Text style={styles.inputLabel}>Email</Text>
           <TextInput
@@ -122,48 +110,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 45,
     fontWeight: 'bold',
-    marginBottom: 120,
-    marginTop: -80,
+    marginBottom: 160,
+    marginTop: -180,
     textAlign: 'center',
     color: 'white',
     fontFamily: 'Baloo-Regular',
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 6,
-  },
-  googleButton: {
-    width: '80%',
-    padding: 8,
-    borderRadius: 50,
-    backgroundColor: 'white',
-    alignItems: 'center',
-    marginBottom: 24,
-    borderWidth: 2,
-    borderColor: '#FE724C',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  googleButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  googleIcon: {
-    width: 24,
-    height: 24,
-    resizeMode: 'contain',
-    marginRight: 12,
-  },
-  googleButtonText: {
-    color: '#FE724C',
-    fontSize: 18,
-    fontFamily: 'Lexend-Bold',
   },
   dividerContainer: {
     flexDirection: 'row',

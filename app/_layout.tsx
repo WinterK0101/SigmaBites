@@ -60,13 +60,16 @@ export default function RootLayout() {
     }
 
     return (
-        <SessionProvider session={session} setSession={setSession}>
-            <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="index" />
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
-            </Stack>
+        <SessionProvider >
+                <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="index" />
+                    <Stack.Screen name="(tabs)" />
+                    <Stack.Screen name="(auth)" />
+                    <Stack.Screen name="soloSwiping" />
+                    <Stack.Screen name="groupSwiping" />
+                    <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
+                </Stack>
+
         </SessionProvider>
     );
 }

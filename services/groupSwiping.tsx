@@ -252,7 +252,7 @@ export const listenToGroup = (groupID: string, callback: (payload: any) => void)
     console.log('Setting up subscription for groupID:', groupID);
 
     return supabase
-        .channel(`group_participants_${groupID}`)
+        .channel(`group_${groupID}`) // Use a more specific channel name
         .on(
             'postgres_changes',
             {
@@ -323,7 +323,9 @@ export const listenToGroup = (groupID: string, callback: (payload: any) => void)
             if (status === 'SUBSCRIBED') {
                 console.log('Successfully subscribed to group updates');
             } else if (status === 'CHANNEL_ERROR') {
-                console.error('Error subscribing to group updates');
+                // console.error('Error subscribing to group updates');
+            } else if (status === 'CLOSED') {
+                console.log('Subscription closed');
             }
         });
 };
