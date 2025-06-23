@@ -370,10 +370,12 @@ export default function OtherUserProfile() {
                 style={styles.scrollView}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
+                bounces={false}
+                overScrollMode="never"
             >
                 {/* Profile Header */}
                 <LinearGradient colors={['#D03939', '#FE724C']} style={styles.header}>
-                    <View className="relative mt-16">
+                    <View className="relative mt-8">
                         <View style={styles.avatarShadow}>
                             <RemoteImage
                                 filePath={profile.avatar_url}
@@ -422,7 +424,7 @@ export default function OtherUserProfile() {
                         shadowOffset: { width: 0, height: 0 },
                         shadowOpacity: 0.2,
                         shadowRadius: 4,
-                        marginTop: -40,
+                        marginTop: -60,
                         minHeight: 110,
                     }}
                 >
@@ -576,7 +578,7 @@ const styles = StyleSheet.create({
     },
     backButton: {
         position: 'absolute',
-        top: 60,
+        top: 50,
         left: 20,
         width: 40,
         height: 40,
@@ -595,7 +597,7 @@ const styles = StyleSheet.create({
         borderRadius: '100%',
         alignSelf: 'center',
         overflow: 'hidden',
-        top: -60,
+        top: -80,
     },
     avatarShadow: {
         shadowColor: '#000',

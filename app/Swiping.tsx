@@ -482,6 +482,22 @@ export default function Swiping() {
                 ]}
                 className="flex-col items-start rounded-[20px] border-4 border-accent bg-white shadow-lg"
             >
+                <LinearGradient
+                    colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.3)', 'rgba(102,51,25,0.8)']}
+                    locations={[0, 0.6, 1]}
+                    style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: '100%',
+                        width: '100%',
+                        justifyContent: 'flex-end',
+                        padding: 20,
+                        borderRadius: 20,
+                        zIndex: 0,
+                    }}
+                />
                 <Image
                     source={{ uri: eatery.photo }}
                     className="size-full rounded-[16px]"

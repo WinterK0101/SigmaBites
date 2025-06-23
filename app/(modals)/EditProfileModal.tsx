@@ -171,7 +171,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   profilePictureContainer: {
-    alignItems: 'center',
     marginBottom: 16,
     position: 'relative',
   },
@@ -185,11 +184,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
+    alignSelf: 'center',
   },
   editIconButton: {
     position: 'absolute',
-    bottom: 8,
-    right: 8,
+    alignSelf: 'flex-end',
+    marginRight: '28%',
     backgroundColor: '#FE724C',
     borderColor: 'white',
     borderWidth: 2,

@@ -9,5 +9,6 @@ export default function ModalsLayout() {
                 presentation: route.name === 'RestaurantDetails' ? 'modal' : 'card'
             })}
         />
+
     );
 }
