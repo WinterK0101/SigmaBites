@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, Linking, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, Linking, TouchableOpacity, FlatList } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Eatery, Review } from "@/interfaces/interfaces";
@@ -59,6 +59,13 @@ export default function RestaurantDetails() {
         }
     }, []);
 
+    const renderItem = ({ item }: { item: Review }) => (
+        <View style={styles.reviewBox}>
+            <Text style={styles.reviewUser}>{item.author.displayName}</Text>
+            <Text style={styles.reviewText}>{item.text}</Text>
+        </View>
+    );
+
     return (
         <View style={{ flex: 1 }}>
             <Image
@@ -89,9 +96,17 @@ export default function RestaurantDetails() {
                         <Text style={styles.label}>Website:</Text>
                         <Text
                             style={[styles.value, { color: '#FF6B3E' }]}
-                            onPress={() => Linking.openURL('http://www.ajisen.com.sg/')}
+                            onPress={() => {
+                                if (eatery?.websiteUri) {
+                                    // Add https:// if not present to ensure valid URL
+                                    const url = eatery.websiteUri.startsWith('http') 
+                                        ? eatery.websiteUri 
+                                        : `https://${eatery.websiteUri}`;
+                                    Linking.openURL(url);
+                                }
+                            }}
                         >
-                            http://www.ajisen.com.sg/
+                            {eatery?.websiteUri || 'No website available'}
                         </Text>
 
                         <Text style={styles.label}>Phone:</Text>
@@ -99,12 +114,13 @@ export default function RestaurantDetails() {
                     </View>
 
                     <Text style={styles.sectionTitle}>Reviews</Text>
-                    <View style={styles.reviewBox}>
-                        <Text style={styles.reviewUser}>@User</Text>
-                        <Text style={styles.reviewText}>
-                            Lorem ipsum dolor sit amet, consectetur adipiscing…
-                        </Text>
-                    </View>
+                    <FlatList
+                        data={reviews}
+                        renderItem={renderItem}
+                        keyExtractor={(item) => String(item.id)}
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                    />
 
                     <Text style={styles.sectionTitle}>Friends Who Also Saved</Text>
                     <View style={styles.friendRow}>
@@ -194,6 +210,7 @@ const styles = StyleSheet.create({
         padding: 12,
         borderRadius: 10,
         marginBottom: 10,
+        marginRight: 10,
     },
     reviewUser: {
         fontWeight: '600',
