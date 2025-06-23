@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     View,
     Text,
@@ -6,20 +6,37 @@ import {
     StyleSheet,
     Modal,
     Alert,
+    Animated,
 } from 'react-native';
 import RemoteImage from '@/components/RemoteImage';
 import { useSession } from "@/context/SessionContext";
 import { acceptFriendRequest, rejectFriendRequest } from "@/services/friendService";
 
-export default function AcceptFriendRequestModal({
-                                                     visible,
-                                                     onClose,
-                                                     user,
-                                                     onSuccess
-                                                 }) {
+export default function AcceptFriendRequestModal({ visible, onClose, user, onSuccess }) {
     const [loading, setLoading] = useState(false);
+    const [accepted, setAccepted] = useState(false);
     const session = useSession();
     const currentUser = session?.user;
+
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        if (!visible) {
+            setAccepted(false);
+            fadeAnim.setValue(0); // Reset animation value
+        }
+    }, [visible]);
+
+    useEffect(() => {
+        if (accepted) {
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 300,
+                useNativeDriver: true,
+            }).start();
+        }
+    }, [accepted]);
+
 
     const handleAccept = async () => {
         if (!currentUser || !user) {
@@ -30,9 +47,8 @@ export default function AcceptFriendRequestModal({
         setLoading(true);
         try {
             await acceptFriendRequest(user.id, currentUser.id);
-            Alert.alert('Success', `You are now friends with @${user.username}!`);
+            setAccepted(true);
             onSuccess?.();
-            onClose();
         } catch (error) {
             console.error('Error accepting friend request:', error);
             Alert.alert('Error', error.message || 'Something went wrong');
@@ -67,61 +83,52 @@ export default function AcceptFriendRequestModal({
         <Modal visible={visible} transparent animationType="fade">
             <View style={styles.modalBackground}>
                 <View style={styles.modalContent}>
-                    {/* Close Button */}
-                    <TouchableOpacity
-                        style={styles.closeButton}
-                        onPress={onClose}
-                        activeOpacity={0.8}
-                        disabled={loading}
-                    >
+                    <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.8} disabled={loading}>
                         <Text style={styles.closeButtonText}>×</Text>
                     </TouchableOpacity>
 
-                    {/* Profile Picture */}
                     <View style={styles.profilePictureContainer}>
-                        <RemoteImage
-                            filePath={user.avatar_url}
-                            bucket="avatars"
-                            style={styles.profilePicture}
-                        />
+                        <RemoteImage filePath={user.avatar_url} bucket="avatars" style={styles.profilePicture} />
                     </View>
 
-                    {/* Title */}
-                    <Text style={styles.title}>Friend Request</Text>
-
-                    {/* User Info */}
-                    <View style={styles.userInfo}>
-                        <Text style={styles.username}>@{user.username}</Text>
-                        {user.name && (
-                            <Text style={styles.displayName}>{user.name}</Text>
-                        )}
-                    </View>
-
-                    <Text style={styles.message}>@{user.username} wants to be your friend</Text>
-
-                    {/* Buttons */}
-                    <View style={styles.buttonRow}>
-                        <TouchableOpacity
-                            style={styles.rejectButton}
-                            onPress={handleReject}
-                            activeOpacity={0.8}
-                            disabled={loading}
-                        >
-                            <Text style={styles.rejectButtonText}>
-                                {loading ? 'Loading...' : 'Reject'}
+                    {accepted ? (
+                        <Animated.View style={{ opacity: fadeAnim }}>
+                            <Text style={[styles.title, { fontSize: 22 }]}>You're now friends</Text>
+                            <Text style={styles.message}>
+                                You and <Text style={{ fontWeight: '600' }}>@{user.username}</Text> are now connected.
                             </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.acceptButton}
-                            onPress={handleAccept}
-                            activeOpacity={0.8}
-                            disabled={loading}
-                        >
-                            <Text style={styles.acceptButtonText}>
-                                {loading ? 'Loading...' : 'Accept'}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
+                            <TouchableOpacity
+                                style={[styles.acceptButton, { marginTop: 16 }]}
+                                onPress={onClose}
+                                activeOpacity={0.8}
+                            >
+                                <Text style={styles.acceptButtonText}>Got it!</Text>
+                            </TouchableOpacity>
+                        </Animated.View>
+                    ) : (
+                        <>
+                            <Text style={styles.title}>Friend Request</Text>
+                            <Text style={styles.message}>@{user.username} wants to be your friend</Text>
+                            <View style={styles.buttonRow}>
+                                <TouchableOpacity
+                                    style={styles.rejectButton}
+                                    onPress={handleReject}
+                                    activeOpacity={0.8}
+                                    disabled={loading}
+                                >
+                                    <Text style={styles.rejectButtonText}>{loading ? 'Loading...' : 'Reject'}</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.acceptButton}
+                                    onPress={handleAccept}
+                                    activeOpacity={0.8}
+                                    disabled={loading}
+                                >
+                                    <Text style={styles.acceptButtonText}>{loading ? 'Loading...' : 'Accept'}</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </>
+                    )}
                 </View>
             </View>
         </Modal>

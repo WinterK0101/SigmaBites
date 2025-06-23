@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -12,14 +12,19 @@ import { useSession } from "@/context/SessionContext";
 import { sendFriendRequest } from "@/services/friendService";
 
 export default function SendFriendRequestModal({
-                                                   visible,
-                                                   onClose,
-                                                   user,
-                                                   onSuccess
-                                               }) {
+    visible,
+    onClose,
+    user,
+    onSuccess
+}) {
     const [loading, setLoading] = useState(false);
+    const [sent, setSent] = useState(false); // ✅ New state
     const session = useSession();
     const currentUser = session?.user;
+
+    useEffect(() => {
+        if (!visible) setSent(false); // ✅ Reset when modal closes
+    }, [visible]);
 
     const handleSend = async () => {
         if (!currentUser || !user) {
@@ -30,9 +35,8 @@ export default function SendFriendRequestModal({
         setLoading(true);
         try {
             await sendFriendRequest(currentUser.id, user.id);
-            Alert.alert('Success', `Friend request sent to @${user.username}!`);
+            setSent(true); // ✅ Show success state
             onSuccess?.();
-            onClose();
         } catch (error) {
             console.error('Error sending friend request:', error);
             Alert.alert('Error', error.message || 'Something went wrong');
@@ -56,40 +60,54 @@ export default function SendFriendRequestModal({
                         />
                     </View>
 
-                    {/* Title */}
-                    <Text style={styles.title}>Send Friend Request</Text>
-
-                    {/* User Info */}
-                    <View style={styles.userInfo}>
-                        <Text style={styles.username}>@{user.username}</Text>
-                        {user.name && (
-                            <Text style={styles.displayName}>{user.name}</Text>
-                        )}
-                    </View>
-
-                    <Text style={styles.message}>Do you want to send a friend request to this user?</Text>
+                    {/* Title and Message */}
+                    {sent ? (
+                        <>
+                            <Text style={styles.title}>Friend Request Sent</Text>
+                            <Text style={styles.message}>
+                                You’ve sent a friend request to @{user.username}.
+                            </Text>
+                        </>
+                    ) : (
+                        <>
+                            <Text style={styles.title}>Send Friend Request</Text>
+                            <Text style={styles.message}>
+                                Do you want to send a friend request to @{user.username}?
+                            </Text>
+                        </>
+                    )}
 
                     {/* Buttons */}
-                    <View style={styles.buttonRow}>
-                        <TouchableOpacity
-                            style={styles.cancelButton}
-                            onPress={onClose}
-                            activeOpacity={0.8}
-                            disabled={loading}
-                        >
-                            <Text style={styles.cancelButtonText}>Cancel</Text>
-                        </TouchableOpacity>
+                    {sent ? (
                         <TouchableOpacity
                             style={styles.sendButton}
-                            onPress={handleSend}
+                            onPress={onClose}
                             activeOpacity={0.8}
-                            disabled={loading}
                         >
-                            <Text style={styles.sendButtonText}>
-                                {loading ? 'Loading...' : 'Send'}
-                            </Text>
+                            <Text style={styles.sendButtonText}>Got it</Text>
                         </TouchableOpacity>
-                    </View>
+                    ) : (
+                        <View style={styles.buttonRow}>
+                            <TouchableOpacity
+                                style={styles.cancelButton}
+                                onPress={onClose}
+                                activeOpacity={0.8}
+                                disabled={loading}
+                            >
+                                <Text style={styles.cancelButtonText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.sendButton}
+                                onPress={handleSend}
+                                activeOpacity={0.8}
+                                disabled={loading}
+                            >
+                                <Text style={styles.sendButtonText}>
+                                    {loading ? 'Loading...' : 'Send'}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
                 </View>
             </View>
         </Modal>
