@@ -23,34 +23,35 @@ Sigma Bites is a mobile application designed to help users discover nearby eater
 
 Sigma Bites addresses two core user scenarios:
 1. Users relaxing at home who want to explore and save future dining options.
-2. Users who are out, hungry, and need to make quick, collaborative decisions on where to eat.
+2. Users who are out, hungry, and need to make quick decisions on where to eat.
 
-Through a swipe interface, users can browse restaurants, match preferences with friends, and make plans seamlessly. The experience is tailored to both solo and group decision-making, enhancing how people interact with food and friends.
+Using a Tinder-style swipe interface, users can explore restaurants near them, match preferences with friends, and plan outings seamlessly. The experience is tailored to both solo and group decision-making, enhancing how people interact with food and friends.
 
 ---
 
 ## Key Features
 
 ### Swipe-Based Discovery
-- Users swipe right to like or left to skip nearby eateries.
+- Users swipe right to save, or swipe left to skip nearby eateries.
 - Real-time recommendations powered by the Google Places API.
 
 ### Solo Swipe Mode
-- Users are matched when they like the same place as a friend.
-- Enables instant invites and streamlined planning.
+- Users can discover new eateries nearby on their own.
+- As a bonus, users are "matched" when they swipe right on the same place as a friend.
+- Enables instant invites and streamlined planning for meals together.
 
 ### Group Swipe Mode
-- Friends can join a synchronized session.
-- The restaurant with the most votes is selected as the group match.
+- Friends can join a synchronized session to swipe through eateries to decide on where to eat together.
+- The restaurant(s) with the most votes will be selected, and users can also view the breakdown of the votes at the end.
 
 ### Saved Eateries and History
-- Users can favourite restaurants for future reference.
-- View recently saved places in a centralized display.
+- Users can view the restaurants they've previously swiped on, and even add certain restaurants to a favourites list for future reference.
+- View recently saved places in a centralized display on their profile.
 - See where friends have eaten and explore their recommendations.
 
 ### Social and Profile System
-- Users can add and follow friends, accept or reject friend requests, and manage privacy settings.
-- Activity is displayed in the “Bites Inbox,” including nearby friend alerts and matched recommendations.
+- Add friends, view their favorite eateries, and swipe together.
+- Receive friend requests and invitations to join group swiping sessions through a "Bites Inbox"
 
 ---
 
@@ -67,8 +68,8 @@ Through a swipe interface, users can browse restaurants, match preferences with 
 
 - **Frontend**: React Native
 - **Development Platform**: Expo Go
-- **Backend Services**: Firebase, Supabase 
-- **APIs**: Google Places API
+- **Backend Services**: Supabase 
+- **APIs**: Google Places API (Nearby Search, Place Photo, and Autocomplete)
 - **Version Control**: Git & GitHub
 
 ---
