@@ -14,6 +14,7 @@ Sigma Bites is a mobile application designed to help users discover nearby eater
 - [Technology Stack](#technology-stack)
 - [Installation and Setup](#installation-and-setup)
 - [Project Structure](#project-structure)
+- [Contributors](#contributors)
 
 ---
 
@@ -78,29 +79,34 @@ Through a swipe interface, users can browse restaurants, match preferences with 
    git clone https://github.com/your-username/sigma-bites.git
    cd sigma-bites
 2. **Install dependencies**
+    ```bash
    npm install
 4. **Set up environment variables**
    Create a .env file and add your Firebase and Google Places API credentials.
 5. **Start the development server**
+   ```bash
    npx expo start
-6. **Run on a device**
+7. **Run on a device**
 Install the Expo Go app on your iOS or Android device.
 Scan the QR code generated in the terminal to open the app.
 
 ## Project Structure
 
+```
 sigma-bites/
 ├── assets/                # Static images, logos, etc.
 ├── components/            # Reusable UI components
 ├── context/               # Context providers (e.g., session, auth)
 ├── navigation/            # Stack and tab navigation
-├── screens/               # Main screen component
+├── screens/               # Main screen components
 ├── services/              # Firebase, API integrations
 ├── utils/                 # Utility functions and helpers
 ├── App.js                 # App root file
 ├── app.json               # Expo configuration
 ├── .env                   # Environment configuration (not committed)
 └── README.md              # Project documentation
+```
+
 
 ## Contributors 
 Brought to you by Loong Kiat, Mun Kuan, Iniya, Michelle and Emeline. 
