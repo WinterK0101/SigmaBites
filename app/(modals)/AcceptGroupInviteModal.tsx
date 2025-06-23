@@ -19,7 +19,7 @@ export default function AcceptFriendRequestModal({
                                                      onSuccess
                                                  }) {
     const [loading, setLoading] = useState(false);
-    const {session} = useSession();
+    const session = useSession();
     const currentUser = session?.user;
     const inviteID = user?.inviteID;
     const router = useRouter();

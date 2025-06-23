@@ -56,7 +56,7 @@ const SignUpScreen = () => {
 
 
     if (data.session) {
-      router.replace('/(auth)/StartupScreen');
+      router.replace('/(tabs)/Discover');
     } else {
       Alert.alert("Success!", "Check your email to confirm your account.");
       router.replace('/(auth)/SignInPage');

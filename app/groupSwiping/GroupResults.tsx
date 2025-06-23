@@ -50,6 +50,21 @@ export default function GroupResults() {
         fetchVotes();
     }, [groupID]);
 
+    // const dummyTopEateries = [
+    //     {
+    //         displayName: "Josh's Grill",
+    //         photo: "https://picsum.photos/300/300?random=1",
+    //     },
+    //     {
+    //         displayName: "Ramen Place",
+    //         photo: "https://picsum.photos/300/300?random=2",
+    //     },
+    //     {
+    //         displayName: "Another Restaurant",
+    //         photo: "https://picsum.photos/300/300?random=3",
+    //     },
+    // ]
+
     // No eateries display
     if (!loading && topEateries.length === 0) {
         return (
@@ -195,18 +210,18 @@ export default function GroupResults() {
                             </TouchableOpacity>
 
                             {/* Position dots */}
-                            {topEateries.length > 1 && (
-                                <View className="flex-row justify-center">
-                                    {topEateries.map((_, i) => (
-                                        <View
-                                            key={i}
-                                            className={`w-2.5 h-2.5 rounded-full mx-1 ${
-                                                i === index ? 'bg-white' : 'bg-white/40'
-                                            }`}
-                                        />
-                                    ))}
-                                </View>
-                            )}
+                            <View className="flex-row justify-center">
+                                {topEateries.map((_, i) => (
+                                    <View
+                                        key={i}
+                                        className={`w-2.5 h-2.5 rounded-full mx-1 ${
+                                            i === index
+                                                ? 'bg-white'
+                                                : 'bg-white/40'
+                                        }`}
+                                    />
+                                ))}
+                            </View>
                         </View>
 
                         {/* Right Arrow */}

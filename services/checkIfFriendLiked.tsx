@@ -1,15 +1,7 @@
 import { Eatery, User } from "@/interfaces/interfaces";
-import {fetchUserFriends} from '@/services/friendService';
 
-export async function checkIfFriendLiked(eateryID: string, currentUser: string): Promise<User[]> {
+export function checkIfFriendLiked(likedEatery: any): User[] {
     const mutualLikes: User[] = [];
-    const friends: User[] = await fetchUserFriends(currentUser); // await needed
-
-    friends.forEach((friend: User) => {
-        if (friend.liked_eateries.includes(eateryID)) {
-            mutualLikes.push(friend);
-        }
-    });
-
+    // TODO: Add logic to check if friends liked this eatery
     return mutualLikes;
 }

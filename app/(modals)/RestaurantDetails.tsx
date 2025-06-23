@@ -1,18 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, Linking, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, Linking, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Eatery, Review } from "@/interfaces/interfaces";
 import { supabase } from '@/SupabaseConfig';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { addToFavorites } from '@/services/favouriteService';
-import { useSession } from '@/context/SessionContext';
 
 export default function RestaurantDetails() {
     const router = useRouter();
     const params = useLocalSearchParams();
     const insets = useSafeAreaInsets();
-    const {session} = useSession();
 
     const [eatery, setEatery] = useState<Eatery | null>(null);
     const [reviews, setReviews] = useState<Review[] | null>(null);
@@ -62,48 +59,6 @@ export default function RestaurantDetails() {
         }
     }, []);
 
-    const renderItem = ({ item }: { item: Review }) => (
-        <View style={styles.reviewBox}>
-            <Text style={styles.reviewUser}>{item.author.displayName}</Text>
-            <Text style={styles.reviewText}>{item.text}</Text>
-        </View>
-    );
-
-    // Handle onpress for Get Direction
-    const getDirectionOnPress = () => {
-        if (eatery){
-            const url = `https://www.google.com/maps/search/?api=1&query=${eatery.location.latitude},${eatery.location.longitude}`;
-            Linking.openURL(url);
-        }
-    }
-
-    // Handle onpress for heart button
-    const heartBtnOnPress = () => {
-        console.log("you have clicked the favourite button")
-        const retrieveFavourites = async () => {
-            const {data:currFav, error:fetchError} = await supabase
-            .from("profiles")
-            .select("favourite_eateries")
-            .eq("id", session?.user.id)
-            .single()
-
-            if (fetchError) console.log(fetchError.message)
-            
-            if (eatery && session && currFav)
-            {
-                addToFavorites(session.user.id, eatery.placeId, currFav.favourite_eateries)
-                console.log("added to favourites")
-            }
-            else{
-                console.log(eatery?.placeId)
-                console.log(session?.user.id)
-                console.log(currFav?.favourite_eateries)
-            }
-        }
-
-        retrieveFavourites()
-    }
-
     return (
         <View style={{ flex: 1 }}>
             <Image
@@ -134,17 +89,9 @@ export default function RestaurantDetails() {
                         <Text style={styles.label}>Website:</Text>
                         <Text
                             style={[styles.value, { color: '#FF6B3E' }]}
-                            onPress={() => {
-                                if (eatery?.websiteUri) {
-                                    // Add https:// if not present to ensure valid URL
-                                    const url = eatery.websiteUri.startsWith('http') 
-                                        ? eatery.websiteUri 
-                                        : `https://${eatery.websiteUri}`;
-                                    Linking.openURL(url);
-                                }
-                            }}
+                            onPress={() => Linking.openURL('http://www.ajisen.com.sg/')}
                         >
-                            {eatery?.websiteUri || 'No website available'}
+                            http://www.ajisen.com.sg/
                         </Text>
 
                         <Text style={styles.label}>Phone:</Text>
@@ -152,13 +99,12 @@ export default function RestaurantDetails() {
                     </View>
 
                     <Text style={styles.sectionTitle}>Reviews</Text>
-                    <FlatList
-                        data={reviews}
-                        renderItem={renderItem}
-                        keyExtractor={(item) => String(item.id)}
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                    />
+                    <View style={styles.reviewBox}>
+                        <Text style={styles.reviewUser}>@User</Text>
+                        <Text style={styles.reviewText}>
+                            Lorem ipsum dolor sit amet, consectetur adipiscing…
+                        </Text>
+                    </View>
 
                     <Text style={styles.sectionTitle}>Friends Who Also Saved</Text>
                     <View style={styles.friendRow}>
@@ -168,13 +114,13 @@ export default function RestaurantDetails() {
                 </ScrollView>
             </View>
 
-            {/* Bottom buttons */}
-            <View style={[styles.bottomButtons, { paddingBottom: insets.bottom + 24}]}>
-                <TouchableOpacity style={styles.heartButton} onPress={heartBtnOnPress}>
+            {/* Fixed bottom buttons */}
+            <View style={[styles.bottomButtons, { paddingBottom: insets.bottom }]}>
+                <TouchableOpacity style={styles.heartButton}>
                     <Ionicons name="heart" size={24} color="#fff" />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.directionsButton} onPress={getDirectionOnPress}>
+                <TouchableOpacity style={styles.directionsButton}>
                     <Text style={styles.directionsText}>Get Directions ➝</Text>
                 </TouchableOpacity>
             </View>
@@ -248,7 +194,6 @@ const styles = StyleSheet.create({
         padding: 12,
         borderRadius: 10,
         marginBottom: 10,
-        marginRight: 10,
     },
     reviewUser: {
         fontWeight: '600',

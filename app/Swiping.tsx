@@ -4,11 +4,9 @@ import {
     Image,
     TouchableOpacity,
     SafeAreaView,
-    Animated,
-    Dimensions,
-    PanResponder,
 } from 'react-native';
 
+import Swiper from 'react-native-deck-swiper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons, Entypo } from '@expo/vector-icons';
 import { LinearGradient } from "expo-linear-gradient";
@@ -16,55 +14,22 @@ import { distanceFromUser, getOpeningHoursForToday } from "@/services/apiDetails
 import { useEffect, useRef, useState, useCallback } from "react";
 import { checkIfFriendLiked } from "@/services/checkIfFriendLiked";
 import { dummyEateries } from '@/data/dummyEateries';
+import {completeSwiping, getWaitingStatus, updateSwipingSessionStatus} from "@/services/groupSwiping";
 import { supabase } from '@/SupabaseConfig';
-import {addVote, removeVote} from "@/services/votingService";
-import { useSession } from "@/context/SessionContext";
-import {
-    handleEateryLikedService,
-    handleSwipeCompletionService,
-    handleEndSessionService
-} from "@/services/swipingService";
-import {removeFromLikedEateries} from "@/services/eateryService";
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-const SWIPE_THRESHOLD = screenWidth * 0.25;
+import {addVote} from "@/services/votingService";
+import {useSession} from "@/context/SessionContext";
 
 export default function Swiping() {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [eateries, setEateries] = useState(dummyEateries);
+    const swiperRef = useRef<Swiper<any>>(null);
     const [lastSwipeWasRight, setLastSwipeWasRight] = useState(false);
-    const [isAnimating, setIsAnimating] = useState(false);
     const router = useRouter();
-    const {session} = useSession();
-    const currentUser = session?.user;
-    const insets = useSafeAreaInsets();
-
-    // Animation values for custom swiper
-    const pan = useRef(new Animated.ValueXY()).current;
-    const scale = useRef(new Animated.Value(1)).current;
-    const rotate = useRef(new Animated.Value(0)).current;
-    const nextCardScale = useRef(new Animated.Value(0.9)).current;
-    const nextCardOpacity = useRef(new Animated.Value(0.8)).current;
-
-    // Add ref to track current index for PanResponder
-    const currentIndexRef = useRef(currentIndex);
-    const eateriesRef = useRef(eateries);
-
-    // Update refs whenever state changes
-    useEffect(() => {
-        currentIndexRef.current = currentIndex;
-    }, [currentIndex]);
-
-    useEffect(() => {
-        eateriesRef.current = eateries;
-    }, [eateries]);
-
+    const currentUser = useSession()?.user;
     if (!currentUser) {
-        return null;
+        return;
     }
-
-    const { swipingMode, latitude, longitude, eateries: eateriesParam, useDummyData, groupID } = useLocalSearchParams();
+    const { swipingMode, latitude, longitude, eateries: eateriesParam, useDummyData, groupID} = useLocalSearchParams();
 
     const userLocation = latitude && longitude ? {
         coordinates: {
@@ -93,7 +58,7 @@ export default function Swiping() {
             }
         }
 
-        // Parsing actual eateries (solo mode or group mode with real data)
+        // Original logic for parsing actual eateries (solo mode or group mode with real data)
         let sourceEateries = dummyEateries;
         if (useDummyData !== 'true' && eateriesParam) {
             try {
@@ -115,107 +80,127 @@ export default function Swiping() {
         loadEateries();
     }, [initializeEateries]);
 
-    const handleSwipeLeft = useCallback((swipeIndex?: number) => {
-        // Use the passed index or fall back to current index
-        const actualIndex = swipeIndex ?? currentIndexRef.current;
-        const dislikedEatery = eateriesRef.current[actualIndex];
 
-        console.log(`Swipe Left - Index: ${actualIndex}, Eatery: ${dislikedEatery?.displayName}`);
-
-        if (!dislikedEatery) {
-            console.warn('No eatery found at index:', actualIndex);
-            return;
-        }
-
+    const handleSwipeLeft = useCallback((index: number) => {
         setLastSwipeWasRight(false);
-        console.log('Disliked:', dislikedEatery.displayName);
-    }, []);
+        console.log('Disliked:', eateries[index]?.displayName); // For testing and debugging
+    }, [eateries]);
 
-    const handleSwipeRight = useCallback(async (swipeIndex?: number) => {
-        // Use the passed index or fall back to current index
-        const actualIndex = swipeIndex ?? currentIndexRef.current;
-        const likedEatery = eateriesRef.current[actualIndex];
+    const handleSwipeRight = useCallback(async (index: number) => {
+        setLastSwipeWasRight(true);
+        const likedEatery = eateries[index];
+        console.log('Liked:', likedEatery.displayName); // For testing and debugging
 
-        console.log(`Swipe Right - Index: ${actualIndex}, Eatery: ${likedEatery?.displayName}`);
+        // --- Check if eatery exists in Eatery table, insert if not ---
+        if (likedEatery?.placeId) {
+            const { data: existing, error: checkError } = await supabase
+                .from('Eatery')
+                .select('placeId')
+                .eq('placeId', likedEatery.placeId)
+                .single();
 
-        if (!likedEatery) {
-            console.warn('No eatery found at index:', actualIndex);
-            return;
+            if (checkError && checkError.code !== 'PGRST116') {
+                // Only log error if not "no rows found"
+                console.error('Error checking Eatery table:', checkError.message);
+            } else if (!existing) {
+                const { error: insertError } = await supabase
+                    .from('Eatery')
+                    .insert([{
+                        placeId: likedEatery.placeId ?? null,
+                        displayName: likedEatery.displayName ?? null,
+                        formattedAddress: likedEatery.formattedAddress ?? null,
+                        location: likedEatery.location ?? null,
+                        websiteUri: likedEatery.websiteUri ?? null,
+                        googleMapsUri: likedEatery.googleMapsUri ?? null,
+                        currentOpeningHours: likedEatery.currentOpeningHours ?? null,
+                        types: likedEatery.types ?? null,
+                        primaryTypeDisplayName: likedEatery.primaryTypeDisplayName ?? null,
+                        rating: likedEatery.rating ?? null,
+                        userRatingCount: likedEatery.userRatingCount ?? null,
+                        priceLevel: likedEatery.priceLevel ?? null,
+                        photo: likedEatery.photo ?? null,
+                        editorialSummary: likedEatery.editorialSummary ?? null,
+                        generativeSummary: likedEatery.generativeSummary ?? null,
+                        internationalPhoneNumber: likedEatery.internationalPhoneNumber ?? null,
+                    }]);
+                if (insertError) {
+                    console.error('Error inserting Eatery:', insertError.message);
+                }
+            }
+
+            // --- Update liked_eateries in profiles table ---
+            // Get current user id
+            const { data: userData, error: userError } = await supabase.auth.getUser();
+            if (userError || !userData?.user?.id) {
+                console.error('Could not get current user:', userError?.message);
+            } else {
+                const userId = userData.user.id;
+                // 1. Fetch current liked_eateries
+                const { data: profileData, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('liked_eateries')
+                    .eq('id', userId)
+                    .single();
+
+                if (profileError) {
+                    console.error('Error fetching profile:', profileError.message);
+                } else {
+                    let likedEateriesArr = Array.isArray(profileData?.liked_eateries)
+                        ? profileData.liked_eateries
+                        : [];
+                    // 2. Add placeId if not already present
+                    if (!likedEateriesArr.includes(likedEatery.placeId)) {
+                        likedEateriesArr = [...likedEateriesArr, likedEatery.placeId];
+                        // 3. Update the profile
+                        const { error: updateError } = await supabase
+                            .from('profiles')
+                            .update({ liked_eateries: likedEateriesArr })
+                            .eq('id', userId);
+                        if (updateError) {
+                            console.error('Error updating liked_eateries:', updateError.message);
+                        }
+                    }
+                }
+            }
         }
 
-        setLastSwipeWasRight(true);
-
-        // Handle database operations using service
-        await handleEateryLikedService(likedEatery, currentUser.id);
-
-        if (swipingMode === 'group') {
+        if (swipingMode === 'solo') {
+            // TODO: Create checkIfFriendLiked function
+            const mutualLikes = checkIfFriendLiked(likedEatery);
+            if (mutualLikes) {
+                router.push({
+                    pathname: '/(modals)/MatchedWithFriends',
+                    params: {
+                        restaurantImage: likedEatery.photo,
+                        matchedFriends: JSON.stringify(mutualLikes),
+                    },
+                });
+            } else {
+                router.push({
+                    pathname: '/(modals)/LikedConfirmation',
+                    params: {
+                        restaurantImage: likedEatery.photo,
+                    }
+                })
+            }
+        }
+        else if (swipingMode === 'group') {
             await addVote(groupID as string, currentUser.id, likedEatery.placeId);
         }
-    }, [swipingMode, groupID, currentUser.id]);
-
-    // Handle navigation after swipe for solo mode
-    const handleSoloModeNavigation = useCallback(async (likedEatery: any) => {
-        if (swipingMode !== 'solo') return;
-
-        const friendsData = await checkIfFriendLiked(likedEatery.placeId, currentUser.id);
-        if (friendsData.length > 0) {
-            router.push({
-                pathname: '/soloSwiping/MatchedWithFriends',
-                params: {
-                    eatery: JSON.stringify(likedEatery),
-                    friends: JSON.stringify(friendsData),
-                },
-            });
-        } else {
-            router.push({
-                pathname: '/soloSwiping/LikedConfirmation',
-                params: {
-                    eatery: JSON.stringify(likedEatery),
-                }
-            });
-        }
-    }, [swipingMode, currentUser.id, router]);
+    }, [eateries, router, swipingMode]);
 
     const handleSwipeBack = useCallback(() => {
-        if (isAnimating || currentIndex === 0) {
-            if (currentIndex === 0) {
-                router.back();
-            }
-            return;
+        if (!swiperRef.current) return;
+        if (currentIndex === 0) {
+            router.back(); // Returns to Discover if at the first card
         }
-        removeFromLikedEateries(currentUser.id, eateries[currentIndex].placeId); // NOT SURE IF IT WORKS
-        if (swipingMode === 'group') {
-            removeVote(groupID as string, currentUser.id, eateries[currentIndex].placeId); // NOT SURE IF IT WORKS
+        if (currentIndex > 0) {
+            swiperRef.current.jumpToCardIndex(currentIndex - 1);
+            setCurrentIndex(currentIndex - 1);
         }
-        setIsAnimating(true);
-        const prevIndex = currentIndex - 1;
-        setCurrentIndex(prevIndex);
-
-        // Reset animations immediately
-        pan.setValue({ x: 0, y: 0 });
-        rotate.setValue(0);
-        scale.setValue(1);
-
-        // Smoothly animate the next card scaling
-        Animated.parallel([
-            Animated.timing(nextCardScale, {
-                toValue: 0.9,
-                duration: 200,
-                useNativeDriver: false,
-            }),
-            Animated.timing(nextCardOpacity, {
-                toValue: 0.8,
-                duration: 200,
-                useNativeDriver: false,
-            })
-        ]).start(() => {
-            setIsAnimating(false);
-        });
-    }, [currentIndex, pan, scale, rotate, nextCardScale, nextCardOpacity, isAnimating, router]);
+    }, [currentIndex]);
 
     const handleMenuPress = useCallback(() => {
-        if (isAnimating) return;
-
         const currentEatery = eateries[currentIndex];
         if (!currentEatery) return;
         router.push({
@@ -225,19 +210,43 @@ export default function Swiping() {
                 eatery: JSON.stringify(currentEatery),
             },
         });
-    }, [eateries, currentIndex, router, isAnimating]);
+    }, [eateries, currentIndex, router]);
 
     const handleSwipedAll = useCallback(async () => {
         try {
-            await handleSwipeCompletionService({
-                swipingMode: swipingMode as string,
-                lastSwipeWasRight,
-                groupID: groupID as string,
-                currentUserId: currentUser.id,
-                eateries,
-                router,
-                handleSoloModeNavigation
-            });
+            if (swipingMode === 'solo') {
+                if (!lastSwipeWasRight) {
+                    router.replace('/(modals)/NoMatches');
+                }
+            } else if (swipingMode === 'group') {
+                if (!groupID) {
+                    console.error('No group ID available');
+                    return;
+                }
+
+                // Mark current user's swiping as completed
+                await completeSwiping(groupID as string, currentUser.id);
+
+                // Check if all participants have completed swiping
+                const waitingStatus = await getWaitingStatus(groupID as string);
+
+                if (waitingStatus.everyoneReady) {
+                    // Update session status before navigation
+                    await updateSwipingSessionStatus(groupID as string, 'completed');
+
+                    // Navigate to results immediately
+                    router.replace({
+                        pathname: '/groupSwiping/GroupResults',
+                        params: {groupID: groupID as string},
+                    });
+                } else {
+                    // Still waiting for others, go to waiting screen
+                    router.replace({
+                        pathname: '/groupSwiping/Waiting',
+                        params: { groupID: groupID as string }
+                    });
+                }
+            }
         } catch (error) {
             console.error('Error handling swipe completion:', error);
             // Fallback navigation
@@ -248,242 +257,24 @@ export default function Swiping() {
                 });
             }
         }
-    }, [lastSwipeWasRight, router, swipingMode, groupID, currentUser.id, eateries, handleSoloModeNavigation]);
+    }, [lastSwipeWasRight, router, swipingMode, groupID, currentUser.id]);
 
-    // End session handler
-    const handleEndSession = useCallback(async () => {
-        try {
-            await handleEndSessionService({
-                swipingMode: swipingMode as string,
-                groupID: groupID as string,
-                currentUserId: currentUser.id,
-                router
-            });
-        } catch (error) {
-            console.error('Error handling end session:', error);
-            if (swipingMode === 'group') {
-                router.replace({
-                    pathname: '/groupSwiping/Waiting',
-                    params: { groupID: groupID as string }
-                });
-            } else {
-                router.back();
-            }
-        }
-    }, [swipingMode, groupID, currentUser.id, router]);
-
-    // Reset animations helper
-    const resetAnimations = useCallback(() => {
-        pan.setValue({ x: 0, y: 0 });
-        rotate.setValue(0);
-        scale.setValue(1);
-
-        // Smoothly animate the next card scaling
-        Animated.parallel([
-            Animated.timing(nextCardScale, {
-                toValue: 0.9,
-                duration: 200,
-                useNativeDriver: false,
-            }),
-            Animated.timing(nextCardOpacity, {
-                toValue: 0.8,
-                duration: 200,
-                useNativeDriver: false,
-            })
-        ]).start();
-    }, [pan, rotate, scale, nextCardScale, nextCardOpacity]);
-
-    // Complete swipe action and move to next card
-    const completeSwipe = useCallback((direction: 'left' | 'right') => {
-        // Use the ref to get the actual current index at the time of swipe
-        const swipeIndex = currentIndexRef.current;
-        const currentEatery = eateriesRef.current[swipeIndex];
-        const nextIndex = swipeIndex + 1;
-        const isLastCard = nextIndex >= eateriesRef.current.length;
-
-        console.log(`Complete Swipe ${direction} - Index: ${swipeIndex}, Eatery: ${currentEatery?.displayName}`);
-
-        // Process swipe logic FIRST with the correct index
-        if (direction === 'right') {
-            handleSwipeRight(swipeIndex).then(() => {
-                // Navigate on every right swipe in solo mode, not just the last card
-                if (swipingMode === 'solo') {
-                    handleSoloModeNavigation(currentEatery);
-                }
-            }).catch(error => {
-                console.error('Error handling right swipe:', error);
-            });
-        } else {
-            handleSwipeLeft(swipeIndex);
-        }
-
-        // THEN move to next card for UI
-        if (!isLastCard) {
-            setCurrentIndex(nextIndex);
-            resetAnimations();
-        }
-
-        // Handle completion if last card
-        if (isLastCard) {
-            handleSwipedAll().catch(error => {
-                console.error('Error handling swipe completion:', error);
-            });
-        }
-    }, [handleSwipeRight, handleSwipeLeft, handleSwipedAll, resetAnimations, swipingMode, handleSoloModeNavigation]);
-
-    // PanResponder for handling gestures
-    const panResponder = useRef(
-        PanResponder.create({
-            onMoveShouldSetPanResponder: (evt, gestureState) => {
-                return !isAnimating && (Math.abs(gestureState.dx) > 5 || Math.abs(gestureState.dy) > 5);
-            },
-            onPanResponderGrant: () => {
-                if (isAnimating) return;
-                pan.setOffset({
-                    x: pan.x._value,
-                    y: pan.y._value,
-                });
-            },
-            onPanResponderMove: (evt, gestureState) => {
-                if (isAnimating) return;
-                pan.setValue({ x: gestureState.dx, y: gestureState.dy });
-                const rotation = gestureState.dx * 0.1;
-                rotate.setValue(rotation);
-            },
-            onPanResponderRelease: (evt, gestureState) => {
-                if (isAnimating) return;
-
-                setIsAnimating(true);
-                pan.flattenOffset();
-
-                const { dx, dy } = gestureState;
-                const swipeThreshold = SWIPE_THRESHOLD;
-
-                console.log(`Pan release - Current index from ref: ${currentIndexRef.current}`);
-
-                if (Math.abs(dx) > swipeThreshold) {
-                    // Swipe animation
-                    const direction = dx > 0 ? screenWidth : -screenWidth;
-                    const finalRotation = dx > 0 ? 30 : -30;
-
-                    Animated.parallel([
-                        Animated.timing(pan, {
-                            toValue: { x: direction, y: dy },
-                            duration: 200,
-                            useNativeDriver: false,
-                        }),
-                        Animated.timing(rotate, {
-                            toValue: finalRotation,
-                            duration: 200,
-                            useNativeDriver: false,
-                        })
-                    ]).start(() => {
-                        completeSwipe(dx > 0 ? 'right' : 'left');
-                        setIsAnimating(false);
-                    });
-                } else {
-                    // Spring back to center
-                    Animated.parallel([
-                        Animated.spring(pan, {
-                            toValue: { x: 0, y: 0 },
-                            useNativeDriver: false,
-                        }),
-                        Animated.spring(rotate, {
-                            toValue: 0,
-                            useNativeDriver: false,
-                        })
-                    ]).start(() => {
-                        setIsAnimating(false);
-                    });
-                }
-            },
-        })
-    ).current;
-
-    // Programmatic swipe functions
-    const swipeLeft = useCallback(async () => {
-        if (isAnimating) return;
-
-        setIsAnimating(true);
-        Animated.parallel([
-            Animated.timing(pan, {
-                toValue: { x: -screenWidth, y: 0 },
-                duration: 250,
-                useNativeDriver: false,
-            }),
-            Animated.timing(rotate, {
-                toValue: -30,
-                duration: 250,
-                useNativeDriver: false,
-            })
-        ]).start(() => {
-            completeSwipe('left');
-            setIsAnimating(false);
-        });
-    }, [isAnimating, pan, rotate, completeSwipe]);
-
-    const swipeRight = useCallback(async () => {
-        if (isAnimating) return;
-
-        setIsAnimating(true);
-        Animated.parallel([
-            Animated.timing(pan, {
-                toValue: { x: screenWidth, y: 0 },
-                duration: 250,
-                useNativeDriver: false,
-            }),
-            Animated.timing(rotate, {
-                toValue: 30,
-                duration: 250,
-                useNativeDriver: false,
-            })
-        ]).start(() => {
-            completeSwipe('right');
-            setIsAnimating(false);
-        });
-    }, [isAnimating, pan, rotate, completeSwipe]);
-
-    // Render a single card
-    const renderCard = useCallback((eatery: any, index: number, isActive: boolean = false) => {
+    // Function for creating the cards
+    const renderCard = useCallback((eatery : any) => {
         if (!eatery) return null;
 
-        const cardStyle = isActive ? {
-            transform: [
-                { translateX: pan.x },
-                { translateY: pan.y },
-                {
-                    rotate: rotate.interpolate({
-                        inputRange: [-100, 0, 100],
-                        outputRange: ['-30deg', '0deg', '30deg'],
-                        extrapolate: 'clamp'
-                    })
-                },
-                { scale: scale },
-            ],
-            zIndex: 100,
-        } : {
-            transform: [{ scale: nextCardScale }],
-            opacity: nextCardOpacity,
-            zIndex: 50 - (index - currentIndex),
-        };
-
-        const cardProps = isActive ? panResponder.panHandlers : {};
-
         return (
-            <Animated.View
-                key={`${eatery.placeId}-${index}`}
-                {...cardProps}
-                style={[
-                    cardStyle,
-                    {
-                        position: 'absolute',
-                        width: screenWidth - 40,
-                        height: 500,
-                        marginTop: -100,
-                        alignSelf: 'center',
-                    }
-                ]}
-                className="flex-col items-start rounded-[20px] border-4 border-accent bg-offwhite shadow-lg"
+            <View
+                className="mt-14 flex-col items-start rounded-[20px] border-4 border-accent h-[500px] bg-white"
+                style={{
+                    shadowColor: '#000',
+                    shadowOffset: {
+                        width: 0,
+                        height: 4,
+                    },
+                    shadowOpacity: 0.20,
+                    shadowRadius: 5,
+                }}
             >
                 <LinearGradient
                     colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.3)', 'rgba(102,51,25,0.8)']}
@@ -503,8 +294,11 @@ export default function Swiping() {
                 />
                 <Image
                     source={{ uri: eatery.photo }}
-                    className="size-full rounded-[16px]"
-                    style={{ zIndex: -3 }}
+                    className="size-full"
+                    style={{
+                        zIndex: -3,
+                        borderRadius: 16,
+                    }}
                     resizeMode="cover"
                 />
                 <View className="absolute bottom-2 p-5 z-10">
@@ -523,73 +317,56 @@ export default function Swiping() {
                         </Text>
                     </View>
                 </View>
-            </Animated.View>
+            </View>
         );
-    }, [pan, rotate, scale, nextCardScale, nextCardOpacity, panResponder, userLocation, currentIndex]);
+    }, [userLocation]);
 
     return (
         <SafeAreaView className="flex-1 bg-offwhite">
-            {/* Counter */}
-            <View className="flex-row justify-between items-center px-5 py-3">
-                <Text className="font-lexend-regular text-lg text-accent">
-                    {currentIndex + 1}/{eateries.length} restaurants
-                </Text>
-                <TouchableOpacity
-                    className="bg-accent px-4 py-2 rounded-full"
-                    onPress={handleEndSession}
-                    disabled={isAnimating}
-                >
-                    <Text className="font-baloo-regular text-white text-sm">
-                        End Session
-                    </Text>
-                </TouchableOpacity>
-            </View>
-
-            <View className="flex-1 justify-center items-center">
-                {/* Render stack of cards */}
-                {eateries.slice(currentIndex, currentIndex + 3).map((eatery, index) => {
-                    const cardIndex = currentIndex + index;
-                    const isActive = index === 0;
-                    return renderCard(eatery, cardIndex, isActive);
-                })}
-            </View>
-
-            <View
-                className="absolute w-full flex-row items-end justify-between px-8"
-                style = {{
-                    bottom: insets.bottom + 32,
+            <Swiper
+                ref={swiperRef}
+                cards={eateries}
+                renderCard={renderCard}
+                onSwipedLeft={handleSwipeLeft}
+                onSwipedRight={handleSwipeRight}
+                onSwipedAll={handleSwipedAll}
+                onSwiped={(index) => {
+                    const newIndex = index + 1;
+                    setCurrentIndex(newIndex);
                 }}
-            >
+                cardIndex={0}
+                stackSize={3}
+                stackSeparation={0}
+                stackScale={0}
+                backgroundColor="transparent"
+                verticalSwipe={false}
+            />
+
+            <View className="absolute bottom-10 w-full flex-row justify-evenly px-5">
                 <TouchableOpacity
-                    className="w-16 h-16 rounded-full bg-white justify-center items-center shadow-inner border-2 border-grey"
+                    className="w-[66px] h-[66px] rounded-full bg-white justify-center items-center shadow"
                     onPress={handleSwipeBack}
-                    disabled={isAnimating}
                 >
                     <Ionicons name="arrow-back" size={30} color="#000" />
                 </TouchableOpacity>
 
-                <View className="flex-row justify-between w-52">
-                    <TouchableOpacity
-                        className="w-24 h-24 rounded-full bg-accent justify-center items-center shadow-inner"
-                        onPress={swipeLeft}
-                        disabled={isAnimating}
-                    >
-                        <MaterialCommunityIcons name="thumb-down-outline" size={36} color="white" />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        className="w-24 h-24 rounded-full bg-accent justify-center items-center shadow-inner"
-                        onPress={swipeRight}
-                        disabled={isAnimating}
-                    >
-                        <MaterialCommunityIcons name="thumb-up-outline" size={36} color="white" />
-                    </TouchableOpacity>
-                </View>
+                <TouchableOpacity
+                    className="w-[66px] h-[66px] rounded-full bg-accent justify-center items-center shadow"
+                    onPress={() => swiperRef.current?.swipeLeft()}
+                >
+                    <MaterialCommunityIcons name="thumb-down-outline" size={36} color="white" />
+                </TouchableOpacity>
 
                 <TouchableOpacity
-                    className="w-16 h-16 rounded-full bg-white justify-center items-center shadow-inner border-2 border-grey"
+                    className="w-[66px] h-[66px] rounded-full bg-accent justify-center items-center shadow"
+                    onPress={() => swiperRef.current?.swipeRight()}
+                >
+                    <MaterialCommunityIcons name="thumb-up-outline" size={36} color="white" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    className="w-[66px] h-[66px] rounded-full bg-white justify-center items-center shadow border-2 border-white"
                     onPress={handleMenuPress}
-                    disabled={isAnimating}
                 >
                     <Entypo name="menu" size={28} color="#000" />
                 </TouchableOpacity>

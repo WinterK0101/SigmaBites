@@ -59,8 +59,7 @@ const getFriendButtonTextStyle = (status: FriendStatus, styles) => {
 
 export default function OtherUserProfile() {
     const router = useRouter();
-    const { session } = useSession()
-    const currentUser = session?.user;
+    const currentUser = useSession()?.user;
     if (!currentUser) return;
     const { username } = useLocalSearchParams();
 
@@ -371,12 +370,10 @@ export default function OtherUserProfile() {
                 style={styles.scrollView}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
-                bounces={false}
-                overScrollMode="never"
             >
                 {/* Profile Header */}
                 <LinearGradient colors={['#D03939', '#FE724C']} style={styles.header}>
-                    <View className="relative mt-8">
+                    <View className="relative mt-16">
                         <View style={styles.avatarShadow}>
                             <RemoteImage
                                 filePath={profile.avatar_url}
@@ -425,7 +422,7 @@ export default function OtherUserProfile() {
                         shadowOffset: { width: 0, height: 0 },
                         shadowOpacity: 0.2,
                         shadowRadius: 4,
-                        marginTop: -60,
+                        marginTop: -40,
                         minHeight: 110,
                     }}
                 >
@@ -579,7 +576,7 @@ const styles = StyleSheet.create({
     },
     backButton: {
         position: 'absolute',
-        top: 50,
+        top: 60,
         left: 20,
         width: 40,
         height: 40,
@@ -598,7 +595,7 @@ const styles = StyleSheet.create({
         borderRadius: '100%',
         alignSelf: 'center',
         overflow: 'hidden',
-        top: -80,
+        top: -60,
     },
     avatarShadow: {
         shadowColor: '#000',

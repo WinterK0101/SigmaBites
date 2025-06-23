@@ -12,12 +12,10 @@ import {
 import { useSession } from "@/context/SessionContext";
 import RemoteImage from "@/components/RemoteImage";
 import { useFriendsStore } from "@/store/friendsStore";
-import { useInboxStore } from "@/store/inboxStore";
 
 export default function FriendsScreen() {
   const router = useRouter();
-  const {session} = useSession();
-  const user = session?.user;
+  const user = useSession()?.user;
   const {
     friends,
     isLoading,
@@ -26,9 +24,6 @@ export default function FriendsScreen() {
     unsubscribe
   } = useFriendsStore();
 
-  // Add inbox store
-  const { hasNewMessage, clearNewMessageFlag, subscribeToNewMessages, unsubscribeFromMessages } = useInboxStore();
-
   // Fetch friends and set up real-time subscription when screen is focused
   useFocusEffect(
       useCallback(() => {
@@ -36,19 +31,15 @@ export default function FriendsScreen() {
           // Fetch initial friends data
           fetchFriends(user.id);
 
-          // Set up real-time subscription for friends
+          // Set up real-time subscription
           subscribeToFriendChanges(user.id);
-
-          // Set up real-time subscription for new messages
-          subscribeToNewMessages(user.id);
         }
 
         // Cleanup function - runs when screen loses focus
         return () => {
           unsubscribe();
-          unsubscribeFromMessages();
         };
-      }, [user?.id, fetchFriends, subscribeToFriendChanges, unsubscribe, subscribeToNewMessages, unsubscribeFromMessages])
+      }, [user?.id, fetchFriends, subscribeToFriendChanges, unsubscribe])
   );
 
   const handleFriendPress = (friend: User) => {
@@ -66,27 +57,13 @@ export default function FriendsScreen() {
             <Text className="font-baloo-regular text-accent text-4xl pt-4">Friends</Text>
             <View className="flex-row items-center gap-2.5">
               {/* Mail Icon to go to Inbox */}
-              <TouchableOpacity onPress={() => {
-                clearNewMessageFlag(); // Clear the flag when user goes to inbox
-                router.push('/Inbox');
-              }}>
-                <View className="mr-2.5">
-                  <Icon name="mail-outline" size={24} color="#fe724c" />
-                  {/* Show red dot only if there's a new message flag */}
-                  {hasNewMessage && (
-                      <View
-                          style={{
-                            position: 'absolute',
-                            top: -2,
-                            right: -2,
-                            width: 10,
-                            height: 10,
-                            borderRadius: 5,
-                            backgroundColor: 'red',
-                          }}
-                      />
-                  )}
-                </View>
+              <TouchableOpacity onPress={() => router.push('/Inbox')}>
+                <Icon
+                    name="mail-outline"
+                    size={24}
+                    color="#fe724c"
+                    className="mr-2.5"
+                />
               </TouchableOpacity>
 
               {/* Add Friend Button */}

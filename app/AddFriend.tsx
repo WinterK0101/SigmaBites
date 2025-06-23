@@ -144,8 +144,8 @@ export default function AddFriendScreen() {
                                         style={{ width: 50, height: 50, borderRadius: 25 }}
                                     />
                                     <View className="flex-1 ml-3">
-                                        <Text className="font-lexend-regular text-primary text-base">
-                                            @{user.username}
+                                        <Text className="font-lexend-medium text-primary text-base">
+                                            {user.username}
                                         </Text>
                                     </View>
                                     {searchQuery.trim() === '' && (

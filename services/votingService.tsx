@@ -13,21 +13,6 @@ export async function addVote(groupID: string, userID: string, eateryID: string)
     }
 }
 
-export async function removeVote(groupID: string, userID: string, eateryID: string): Promise<void> {
-    const { error } = await supabase
-        .from('votes')
-        .delete()
-        .match({
-            groupID: groupID,
-            userID: userID,
-            eateryID: eateryID,
-        });
-
-    if (error) {
-        throw error;
-    }
-}
-
 export async function getAllVotes(groupID: string): Promise<{ eateryID: string; count: number }[] | null> {
     const { data: votes, error } = await supabase
         .from('votes')

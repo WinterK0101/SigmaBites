@@ -16,7 +16,6 @@ export default function AcceptFriendRequestModal({ visible, onClose, user, onSuc
     const [loading, setLoading] = useState(false);
     const [accepted, setAccepted] = useState(false);
     const session = useSession();
-    const { session } = useSession();
     const currentUser = session?.user;
 
     const fadeAnim = useRef(new Animated.Value(0)).current;

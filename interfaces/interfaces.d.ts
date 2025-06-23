@@ -25,7 +25,6 @@ export interface Eatery {
 }
 
 export interface Review {
-    id: number;
     author: {
         displayName: string;
         uri: string;
