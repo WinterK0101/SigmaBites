@@ -15,7 +15,7 @@ const SignInScreen = () => {
     if (error) {
       Alert.alert(error.message)
     } else {
-      router.replace('/(tabs)/Discover')
+      router.replace('/(auth)/StartupScreen')
     }
   }
 
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     fontSize: 45,
     fontWeight: 'bold',
     marginBottom: 160,
-    marginTop: -120,
+    marginTop: -180,
     textAlign: 'center',
     color: 'white',
     fontFamily: 'Baloo-Regular',
