@@ -4,9 +4,11 @@ import {
     Image,
     TouchableOpacity,
     SafeAreaView,
+    Animated,
+    Dimensions,
+    PanResponder,
 } from 'react-native';
 
-import Swiper from 'react-native-deck-swiper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons, Entypo } from '@expo/vector-icons';
 import { LinearGradient } from "expo-linear-gradient";
@@ -19,16 +21,27 @@ import { supabase } from '@/SupabaseConfig';
 import {addVote} from "@/services/votingService";
 import {useSession} from "@/context/SessionContext";
 
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const SWIPE_THRESHOLD = screenWidth * 0.25;
+
 export default function Swiping() {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [eateries, setEateries] = useState(dummyEateries);
-    const swiperRef = useRef<Swiper<any>>(null);
     const [lastSwipeWasRight, setLastSwipeWasRight] = useState(false);
     const router = useRouter();
     const currentUser = useSession()?.user;
+
+    // Animation values for custom swiper
+    const pan = useRef(new Animated.ValueXY()).current;
+    const scale = useRef(new Animated.Value(1)).current;
+    const rotate = useRef(new Animated.Value(0)).current;
+    const nextCardScale = useRef(new Animated.Value(0.9)).current;
+    const nextCardOpacity = useRef(new Animated.Value(0.8)).current;
+
     if (!currentUser) {
-        return;
+        return null;
     }
+
     const { swipingMode, latitude, longitude, eateries: eateriesParam, useDummyData, groupID} = useLocalSearchParams();
 
     const userLocation = latitude && longitude ? {
@@ -80,15 +93,16 @@ export default function Swiping() {
         loadEateries();
     }, [initializeEateries]);
 
-
-    const handleSwipeLeft = useCallback((index: number) => {
+    const handleSwipeLeft = useCallback((index?: number) => {
+        const swipeIndex = index ?? currentIndex;
         setLastSwipeWasRight(false);
-        console.log('Disliked:', eateries[index]?.displayName); // For testing and debugging
-    }, [eateries]);
+        console.log('Disliked:', eateries[swipeIndex]?.displayName); // For testing and debugging
+    }, [eateries, currentIndex]);
 
-    const handleSwipeRight = useCallback(async (index: number) => {
+    const handleSwipeRight = useCallback(async (index?: number) => {
+        const swipeIndex = index ?? currentIndex;
         setLastSwipeWasRight(true);
-        const likedEatery = eateries[index];
+        const likedEatery = eateries[swipeIndex];
         console.log('Liked:', likedEatery.displayName); // For testing and debugging
 
         // --- Check if eatery exists in Eatery table, insert if not ---
@@ -222,18 +236,22 @@ export default function Swiping() {
         else if (swipingMode === 'group') {
             await addVote(groupID as string, currentUser.id, likedEatery.placeId);
         }
-    }, [eateries, router, swipingMode, groupID, currentUser.id]);
+    }, [eateries, router, swipingMode, groupID, currentUser.id, currentIndex]);
 
     const handleSwipeBack = useCallback(() => {
-        if (!swiperRef.current) return;
         if (currentIndex === 0) {
             router.back(); // Returns to Discover if at the first card
         }
         if (currentIndex > 0) {
-            swiperRef.current.jumpToCardIndex(currentIndex - 1);
             setCurrentIndex(currentIndex - 1);
+            // Reset animations
+            pan.setValue({ x: 0, y: 0 });
+            rotate.setValue(0);
+            scale.setValue(1);
+            nextCardScale.setValue(0.9);
+            nextCardOpacity.setValue(0.8);
         }
-    }, [currentIndex]);
+    }, [currentIndex, pan, scale, nextCardScale, nextCardOpacity]);
 
     const handleMenuPress = useCallback(() => {
         const currentEatery = eateries[currentIndex];
@@ -295,48 +313,198 @@ export default function Swiping() {
                 });
             }
         }
-    }, [lastSwipeWasRight, router, swipingMode, groupID, currentUser.id]);
+    }, [lastSwipeWasRight, router, swipingMode, groupID, currentUser.id, eateries.length, handleSwipeRight]);
+
+    // End session handler
+    const handleEndSession = useCallback(() => {
+        handleSwipedAll();
+    }, [handleSwipedAll]);
+
+    // PanResponder for handling gestures
+    const panResponder = useRef(
+        PanResponder.create({
+            onMoveShouldSetPanResponder: (evt, gestureState) => {
+                return Math.abs(gestureState.dx) > 5 || Math.abs(gestureState.dy) > 5;
+            },
+            onPanResponderGrant: () => {
+                pan.setOffset({
+                    x: pan.x._value,
+                    y: pan.y._value,
+                });
+            },
+            onPanResponderMove: (evt, gestureState) => {
+                // Update pan position
+                pan.setValue({ x: gestureState.dx, y: gestureState.dy });
+
+                // Add rotation based on horizontal movement
+                const rotation = gestureState.dx * 0.1; // Adjust multiplier for more/less rotation
+                rotate.setValue(rotation);
+            },
+            onPanResponderRelease: (evt, gestureState) => {
+                pan.flattenOffset();
+
+                const { dx, dy } = gestureState;
+                const swipeThreshold = SWIPE_THRESHOLD;
+
+                if (Math.abs(dx) > swipeThreshold) {
+                    // Swipe animation with rotation
+                    const direction = dx > 0 ? screenWidth : -screenWidth;
+                    const finalRotation = dx > 0 ? 30 : -30; // Degrees
+
+                    Animated.parallel([
+                        Animated.timing(pan, {
+                            toValue: { x: direction, y: dy },
+                            duration: 200,
+                            useNativeDriver: false,
+                        }),
+                        Animated.timing(rotate, {
+                            toValue: finalRotation,
+                            duration: 200,
+                            useNativeDriver: false,
+                        })
+                    ]).start(() => {
+                        // Handle swipe logic
+                        if (dx > 0) {
+                            handleSwipeRight();
+                        } else {
+                            handleSwipeLeft();
+                        }
+
+                        // Move to next card
+                        const nextIndex = currentIndex + 1;
+                        if (nextIndex >= eateries.length) {
+                            handleSwipedAll();
+                        } else {
+                            setCurrentIndex(nextIndex);
+                            // Reset animations
+                            pan.setValue({ x: 0, y: 0 });
+                            rotate.setValue(0);
+                            scale.setValue(1);
+                            nextCardScale.setValue(0.9);
+                            nextCardOpacity.setValue(0.8);
+                        }
+                    });
+                } else {
+                    // Spring back to center with rotation reset
+                    Animated.parallel([
+                        Animated.spring(pan, {
+                            toValue: { x: 0, y: 0 },
+                            useNativeDriver: false,
+                        }),
+                        Animated.spring(rotate, {
+                            toValue: 0,
+                            useNativeDriver: false,
+                        })
+                    ]).start();
+                }
+            },
+        })
+    ).current;
+
+    // Programmatic swipe functions
+    const swipeLeft = useCallback(() => {
+        Animated.parallel([
+            Animated.timing(pan, {
+                toValue: { x: -screenWidth, y: 0 },
+                duration: 250,
+                useNativeDriver: false,
+            }),
+            Animated.timing(rotate, {
+                toValue: -30,
+                duration: 250,
+                useNativeDriver: false,
+            })
+        ]).start(() => {
+            handleSwipeLeft();
+            const nextIndex = currentIndex + 1;
+            if (nextIndex >= eateries.length) {
+                handleSwipedAll();
+            } else {
+                setCurrentIndex(nextIndex);
+                pan.setValue({ x: 0, y: 0 });
+                rotate.setValue(0);
+                scale.setValue(1);
+                nextCardScale.setValue(0.9);
+                nextCardOpacity.setValue(0.8);
+            }
+        });
+    }, [pan, rotate, handleSwipeLeft, currentIndex, eateries.length, handleSwipedAll, scale, nextCardScale, nextCardOpacity]);
+
+    const swipeRight = useCallback(() => {
+        Animated.parallel([
+            Animated.timing(pan, {
+                toValue: { x: screenWidth, y: 0 },
+                duration: 250,
+                useNativeDriver: false,
+            }),
+            Animated.timing(rotate, {
+                toValue: 30,
+                duration: 250,
+                useNativeDriver: false,
+            })
+        ]).start(() => {
+            handleSwipeRight();
+            const nextIndex = currentIndex + 1;
+            if (nextIndex >= eateries.length) {
+                handleSwipedAll();
+            } else {
+                setCurrentIndex(nextIndex);
+                pan.setValue({ x: 0, y: 0 });
+                rotate.setValue(0);
+                scale.setValue(1);
+                nextCardScale.setValue(0.9);
+                nextCardOpacity.setValue(0.8);
+            }
+        });
+    }, [pan, rotate, handleSwipeRight, currentIndex, eateries.length, handleSwipedAll, scale, nextCardScale, nextCardOpacity]);
 
     // Function for creating the cards
-    const renderCard = useCallback((eatery : any) => {
+    const renderCard = useCallback((eatery: any, index: number, isActive: boolean = false) => {
         if (!eatery) return null;
 
+        const animatedStyle = isActive ? {
+            transform: [
+                { translateX: pan.x },
+                { translateY: pan.y },
+                { rotate: rotate.interpolate({
+                        inputRange: [-100, 0, 100],
+                        outputRange: ['-30deg', '0deg', '30deg'],
+                        extrapolate: 'clamp'
+                    })},
+                { scale: scale },
+            ],
+        } : {
+            transform: [
+                { scale: nextCardScale },
+            ],
+            opacity: nextCardOpacity,
+        };
+
         return (
-            <View
-                className="mt-14 flex-col items-start rounded-[20px] border-4 border-accent h-[500px] bg-white"
-                style={{
-                    shadowColor: '#000',
-                    shadowOffset: {
-                        width: 0,
-                        height: 4,
-                    },
-                    shadowOpacity: 0.20,
-                    shadowRadius: 5,
-                }}
+            <Animated.View
+                key={`${eatery.placeId}-${index}`}
+                style={[
+                    animatedStyle,
+                    {
+                        position: 'absolute',
+                        width: screenWidth - 40,
+                        height: 500,
+                        marginTop: -100,
+                        alignSelf: 'center',
+                        zIndex: isActive ? 100 : 50 - index, // Higher zIndex for active card
+                    }
+                ]}
+                className="flex-col items-start rounded-[20px] border-4 border-accent bg-white shadow-lg"
             >
                 <LinearGradient
                     colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.3)', 'rgba(102,51,25,0.8)']}
                     locations={[0, 0.6, 1]}
-                    style={{
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        height: '100%',
-                        width: '100%',
-                        justifyContent: 'flex-end',
-                        padding: 20,
-                        borderRadius: 20,
-                        zIndex: 0,
-                    }}
+                    style={{zIndex: 0}}
                 />
                 <Image
                     source={{ uri: eatery.photo }}
-                    className="size-full"
-                    style={{
-                        zIndex: -3,
-                        borderRadius: 16,
-                    }}
+                    className="size-full rounded-[16px]"
+                    style={{ zIndex: -3 }}
                     resizeMode="cover"
                 />
                 <View className="absolute bottom-2 p-5 z-10">
@@ -355,55 +523,116 @@ export default function Swiping() {
                         </Text>
                     </View>
                 </View>
-            </View>
+            </Animated.View>
         );
-    }, [userLocation]);
+    }, [userLocation, pan, scale, rotate, nextCardScale, nextCardOpacity]);
 
     return (
         <SafeAreaView className="flex-1 bg-offwhite">
-            <Swiper
-                ref={swiperRef}
-                cards={eateries}
-                renderCard={renderCard}
-                onSwipedLeft={handleSwipeLeft}
-                onSwipedRight={handleSwipeRight}
-                onSwipedAll={handleSwipedAll}
-                onSwiped={(index) => {
-                    const newIndex = index + 1;
-                    setCurrentIndex(newIndex);
-                }}
-                cardIndex={0}
-                stackSize={3}
-                stackSeparation={0}
-                stackScale={0}
-                backgroundColor="transparent"
-                verticalSwipe={false}
-            />
+            {/* Counter */}
+            <View className="flex-row justify-between items-center px-5 py-3">
+                <Text className="font-lexend-regular text-lg text-accent">
+                    {currentIndex + 1}/{eateries.length} restaurants
+                </Text>
+                <TouchableOpacity
+                    className="bg-accent px-4 py-2 rounded-full"
+                    onPress={handleEndSession}
+                >
+                    <Text className="font-baloo-regular text-white text-sm">
+                        End Session
+                    </Text>
+                </TouchableOpacity>
+            </View>
+
+            <View className="flex-1 justify-center items-center">
+                {/* Render stack of cards */}
+                {eateries.slice(currentIndex, currentIndex + 3).map((eatery, index) => {
+                    const cardIndex = currentIndex + index;
+                    const isActive = index === 0;
+
+                    if (isActive) {
+                        return (
+                            <Animated.View
+                                key={cardIndex}
+                                {...panResponder.panHandlers}
+                                style={[
+                                    {
+                                        transform: [
+                                            { translateX: pan.x },
+                                            { translateY: pan.y },
+                                            { rotate: rotate.interpolate({
+                                                    inputRange: [-100, 0, 100],
+                                                    outputRange: ['-30deg', '0deg', '30deg'],
+                                                    extrapolate: 'clamp'
+                                                })},
+                                            { scale: scale },
+                                        ],
+                                    },
+                                    {
+                                        position: 'absolute',
+                                        width: screenWidth - 40,
+                                        height: 500,
+                                        marginTop: -100,
+                                        alignSelf: 'center',
+                                        zIndex: 100, // Highest zIndex for active card
+                                    }
+                                ]}
+                                className="flex-col items-start rounded-[20px] border-4 border-accent bg-white shadow-lg"
+                            >
+                                <Image
+                                    source={{ uri: eatery.photo }}
+                                    className="size-full rounded-[16px]"
+                                    style={{ zIndex: -3 }}
+                                    resizeMode="cover"
+                                />
+                                <View className="absolute bottom-2 p-5 z-10">
+                                    <Text className="font-lexend-bold text-2xl text-white">
+                                        {eatery.displayName}
+                                    </Text>
+                                    <Text className="font-lexend-regular text-sm text-white">
+                                        {distanceFromUser(userLocation, eatery.location)}  •  {eatery.primaryTypeDisplayName}  •  {getOpeningHoursForToday(eatery)}
+                                    </Text>
+                                    <Text className="font-lexend-regular text-sm text-white/80 mt-2">
+                                        ★ {eatery.rating?.toFixed?.(1) ?? 'N/A'}  •  {'$'.repeat(eatery.priceLevel ?? 0)}
+                                    </Text>
+                                    <View className="flex-row mt-2 items-center">
+                                        <Text className="bg-white/20 font-lexend-regular px-3 py-1 rounded-full text-white text-xs">
+                                            {eatery.currentOpeningHours?.openNow ? 'Open now' : 'Closed'}
+                                        </Text>
+                                    </View>
+                                </View>
+                            </Animated.View>
+                        );
+                    } else {
+                        return renderCard(eatery, cardIndex, false);
+                    }
+                })}
+            </View>
 
             <View className="absolute bottom-10 w-full flex-row justify-evenly px-5">
                 <TouchableOpacity
-                    className="w-[66px] h-[66px] rounded-full bg-white justify-center items-center shadow"
+                    className="w-[66px] h-[66px] rounded-full bg-white justify-center items-center shadow-md"
                     onPress={handleSwipeBack}
                 >
                     <Ionicons name="arrow-back" size={30} color="#000" />
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    className="w-[66px] h-[66px] rounded-full bg-accent justify-center items-center shadow"
-                    onPress={() => swiperRef.current?.swipeLeft()}
+                    className="w-[66px] h-[66px] rounded-full bg-accent justify-center items-center shadow-md"
+                    onPress={swipeLeft}
                 >
                     <MaterialCommunityIcons name="thumb-down-outline" size={36} color="white" />
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    className="w-[66px] h-[66px] rounded-full bg-accent justify-center items-center shadow"
-                    onPress={() => swiperRef.current?.swipeRight()}
+                    className="w-[66px] h-[66px] rounded-full bg-accent justify-center items-center shadow-md"
+                    onPress={swipeRight}
                 >
                     <MaterialCommunityIcons name="thumb-up-outline" size={36} color="white" />
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    className="w-[66px] h-[66px] rounded-full bg-white justify-center items-center shadow border-2 border-white"
+                    className="w-[66px] h-[66px] rounded-full bg-white justify-center items-center shadow-md border-2 border-white"
                     onPress={handleMenuPress}
                 >
                     <Entypo name="menu" size={28} color="#000" />

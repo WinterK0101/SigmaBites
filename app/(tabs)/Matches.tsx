@@ -287,42 +287,10 @@ export default function Matches() {
 
             setFavourites(updatedFavorites);
 
-            async () => {
-              // Get current user id
-              const userId = session?.user.id;
-                  // 1. Fetch current liked_eateries
-                  const { data: profileData, error: profileError } = await supabase
-                      .from('profiles')
-                      .select('favourite_eateries')
-                      .eq('id', userId)
-                      .single();
-
-                  if (profileError) {
-                      console.error('Error fetching profile:', profileError.message);
-                  } else {
-                      let favouriteEateriesArr = Array.isArray(profileData?.favourite_eateries)
-                          ? profileData.favourite_eateries
-                          : [];
-                      // 2. Add placeId if not already present
-                      if (!favouriteEateriesArr.includes(itemToFavorite.placeId)) {
-                          favouriteEateriesArr = [...favouriteEateriesArr, itemToFavorite.placeId];
-                          // 3. Update the profile
-                          const { error: updateError } = await supabase
-                              .from('profiles')
-                              .update({ favourite_eateries: favouriteEateriesArr })
-                              .eq('id', userId);
-                          if (updateError) {
-                              console.error('Error updating favourite_eateries:', updateError.message);
-                          }
-                      }
-                  }
-            }
-            // Optional: Show success message
             console.log(wasAdded ? 'Added to favorites' : 'Removed from favorites');
 
         } catch (error) {
             console.error('Error toggling favorite:', error);
-            // You might want to show an error toast here
         } finally {
             setShowFavouriteConfirm(false);
             setItemToFavorite(null);
