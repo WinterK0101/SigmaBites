@@ -45,7 +45,8 @@ const retrieveRequests = async (currentUserId: string): Promise<Message[]> => {
     const { data: requests, error } = await supabase
         .from('inbox')
         .select('id, friendshipID, inviteID, type, sender, created_at')
-        .eq('receiver', currentUserId);
+        .eq('receiver', currentUserId)
+        .order('created_at', { ascending: false });
     if (error) {
         console.error('[Debug] Error fetching requests:', error);
         throw new Error(`Failed to fetch requests: ${error.message}`);
@@ -107,7 +108,8 @@ const retrieveRequests = async (currentUserId: string): Promise<Message[]> => {
 
 export default function InboxScreen() {
     const router = useRouter();
-    const currentUser = useSession()?.user;
+    const {session} = useSession();
+    const currentUser = session?.user;
     const [messages, setMessages] = useState<Message[]>([]);
     const [friendModalVisible, setFriendModalVisible] = useState(false);
     const [groupInviteModalVisible, setGroupInviteModalVisible] = useState(false);

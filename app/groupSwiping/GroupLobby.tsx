@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Collapsible } from "react-native-fast-collapsible";
-import {Eatery, GroupParticipant, GroupSession, LocationData} from "@/interfaces/interfaces";
+import { Eatery, GroupParticipant, GroupSession, LocationData } from "@/interfaces/interfaces";
 import { useSession } from '@/context/SessionContext';
 import RemoteImage from '@/components/RemoteImage';
 import {
@@ -13,11 +13,11 @@ import {
     getParticipants,
     listenToGroup,
     leaveGroup,
-    updateSwipingSessionStatus
 } from "@/services/groupSwiping";
-import {getNearbyEateries} from "@/services/eaterySearch";
-import {filterEateries} from "@/services/filterService";
-import { supabase } from '@/SupabaseConfig'; // Add this import
+import { getNearbyEateries } from "@/services/eaterySearch";
+import { filterEateries } from "@/services/filterService";
+import { supabase } from '@/SupabaseConfig';
+import ConfirmationModal from '@/components/ConfirmationModal';
 
 // Helper function to safely parse JSON from database
 const safeJsonParse = (data: any, fallback: any = null) => {
@@ -54,7 +54,7 @@ export default function GroupLobby() {
 
     const insets = useSafeAreaInsets();
     const router = useRouter();
-    const session = useSession();
+    const {session} = useSession();
     const user = session?.user;
 
     // State
@@ -63,6 +63,7 @@ export default function GroupLobby() {
     const [isLoading, setIsLoading] = useState(true);
     const [isFiltersVisible, setFiltersVisible] = useState(false);
     const [isStarting, setIsStarting] = useState(false);
+    const [showLeaveModal, setShowLeaveModal] = useState(false);
 
     // Get data directly from group session (much cleaner!)
     const parsedLocationData: LocationData = groupSession?.location
@@ -164,12 +165,18 @@ export default function GroupLobby() {
                 setParticipants(prev => prev.filter(p => p.memberID !== payload.old.memberID));
             } else if (payload.eventType === 'UPDATE') {
                 console.log('Participant updated:', payload.new);
-                // Update specific participant
-                setParticipants(prev => prev.map(p =>
-                    p.memberID === payload.new.memberID
-                        ? { ...p, joinStatus: payload.new.joinStatus, swipingStatus: payload.new.swipingStatus }
-                        : p
-                ));
+
+                // If someone's status changed to 'leaving', remove them from the UI immediately
+                if (payload.new.joinStatus === 'leaving') {
+                    setParticipants(prev => prev.filter(p => p.memberID !== payload.new.memberID));
+                } else {
+                    // Normal update for other status changes
+                    setParticipants(prev => prev.map(p =>
+                        p.memberID === payload.new.memberID
+                            ? { ...p, joinStatus: payload.new.joinStatus, swipingStatus: payload.new.swipingStatus }
+                            : p
+                    ));
+                }
             } else if (payload.eventType === 'INSERT') {
                 console.log('Participant added:', payload.new);
                 // Reload to get full participant data with user info
@@ -184,8 +191,6 @@ export default function GroupLobby() {
             // Check if swiping has started and current user is not the host
             if (updatedSession.status === 'active' && user?.id !== updatedSession.hostID) {
                 console.log('Swiping started by host, navigating to swiping screen...');
-
-                // Navigate to swiping screen - each user will fetch their own eateries data
                 await navigateToSwiping();
             }
         }
@@ -217,29 +222,34 @@ export default function GroupLobby() {
         }, [groupID, user?.id])
     );
 
-    const handleLeaveGroup = async () => {
+    const handleLeaveGroup = () => {
+        setShowLeaveModal(true);
+    };
+
+    const confirmLeaveGroup = async () => {
         if (!groupID || !user?.id) return;
 
-        Alert.alert(
-            'Leave Group',
-            'Are you sure you want to leave this group session?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Leave',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await leaveGroup(groupID as string, user.id);
-                            router.back();
-                        } catch (error) {
-                            console.error('Error leaving group:', error);
-                            Alert.alert('Error', 'Failed to leave group');
-                        }
-                    }
-                }
-            ]
-        );
+        try {
+            // First, update the participant's status to 'leaving' instead of deleting immediately
+            // This triggers an UPDATE event that other users can listen to
+            await supabase
+                .from('group_participants')
+                .update({ joinStatus: 'leaving' })
+                .eq('groupID', groupID)
+                .eq('memberID', user.id);
+
+            // Give a small delay to ensure the update propagates to other users
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Delete the participant record
+            await leaveGroup(groupID as string, user.id);
+
+            setShowLeaveModal(false);
+            router.back();
+        } catch (error) {
+            console.error('Error leaving group:', error);
+            Alert.alert('Error', 'Failed to leave group');
+        }
     };
 
     const handleStartSwiping = async () => {
@@ -304,7 +314,6 @@ export default function GroupLobby() {
             </LinearGradient>
 
             <ScrollView className="flex-1 px-6">
-
                 {/* Filters */}
                 {parsedLocationData && (
                     <View className="bg-white p-5 mt-6 rounded-2xl border-2 border-grey">
@@ -334,7 +343,7 @@ export default function GroupLobby() {
                                 </Text>
                                 <Text className="text-black text-xs mt-2 font-lexend-regular">
                                     <Text className="font-lexend-bold">Search Radius: </Text>
-                                    <Text>{parsedFilters.radius/1000} km</Text>
+                                    <Text>{parsedFilters.radius / 1000} km</Text>
                                 </Text>
                                 <Text className="text-black text-xs mt-2 font-lexend-regular">
                                     <Text className="font-lexend-bold">Price Levels: </Text>
@@ -383,10 +392,10 @@ export default function GroupLobby() {
                                     style={{ width: 50, height: 50, borderRadius: 25 }}
                                 />
                                 <View className="flex-1 ml-4">
-                                    <Text className="font-lexend-bold text-black text-base">
+                                    <Text className="font-lexend-bold text-primary text-base">
                                         {participant.user?.name || 'Unknown User'}
                                     </Text>
-                                    <Text className="font-lexend-regular text-black text-xs">
+                                    <Text className="font-lexend-regular text-primary text-xs">
                                         @{participant.user?.username || 'unknown'}
                                     </Text>
                                 </View>
@@ -445,10 +454,18 @@ export default function GroupLobby() {
                         <Text className="text-center text-[#6C6C6C] text-xs mt-2 font-lexend-regular">
                             Need at least 2 members to start
                         </Text>
-
                     )}
                 </View>
             )}
+
+            <ConfirmationModal
+                visible={showLeaveModal}
+                title="Leave Group"
+                message="Are you sure you want to leave this group session?"
+                confirmText="Leave"
+                onCancel={() => setShowLeaveModal(false)}
+                onConfirm={confirmLeaveGroup}
+            />
         </View>
     );
 }
