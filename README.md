@@ -14,9 +14,6 @@ Sigma Bites is a mobile application designed to help users discover nearby eater
 - [Technology Stack](#technology-stack)
 - [Installation and Setup](#installation-and-setup)
 - [Project Structure](#project-structure)
-- [Contributing](#contributing)
-- [License](#license)
-- [Contact](#contact)
 
 ---
 
