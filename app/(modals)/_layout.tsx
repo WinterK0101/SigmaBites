@@ -6,9 +6,12 @@ export default function ModalsLayout() {
         <Stack
             screenOptions={({ route }) => ({
                 headerShown: false,
-                presentation: route.name === 'RestaurantDetails' ? 'modal' : 'card'
+                presentation: 'modal'
             })}
-        />
+        >
+            <Stack.Screen name="RestaurantDetails" options={{ presentation: 'card' }} />
+            <Stack.Screen name="OtherUserProfile" options={{ presentation: 'card' }} />
+        </Stack>
 
     );
 }

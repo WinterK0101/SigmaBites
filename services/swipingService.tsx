@@ -21,9 +21,11 @@ export const handleEateryLikedService = async (likedEatery, userId) => {
         ]);
 
         const operations = [];
+        let isNewEatery = false;
 
         // Add eatery insert operation if needed
         if (eateryCheck.error?.code === 'PGRST116') { // No rows found
+            isNewEatery = true;
             operations.push(
                 supabase
                     .from('Eatery')
@@ -76,8 +78,8 @@ export const handleEateryLikedService = async (likedEatery, userId) => {
             );
         }
 
-        // Handle reviews insert
-        if (Array.isArray(likedEatery.reviews) && likedEatery.reviews.length > 0) {
+        // Insert reviews when eatery is new!
+        if (isNewEatery && Array.isArray(likedEatery.reviews) && likedEatery.reviews.length > 0) {
             const reviewsToInsert = likedEatery.reviews.map(review => {
                 let authorObj = review.author;
                 if (typeof authorObj !== 'object' || authorObj === null) {

@@ -13,6 +13,7 @@ import {checkIfFriendLiked} from "@/services/checkIfFriendLiked";
 import RemoteImage from "@/components/RemoteImage";
 
 export default function RestaurantDetails() {
+
     const router = useRouter();
     const params = useLocalSearchParams();
     const insets = useSafeAreaInsets();

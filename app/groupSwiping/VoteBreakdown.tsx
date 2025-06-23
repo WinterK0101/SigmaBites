@@ -103,7 +103,7 @@ export default function VoteBreakdown() {
                 ) : (
                     eateries.map((eatery: Eatery) => (
                         <TouchableOpacity
-                            className="rounded-2xl w-full mb-2 h-1/5 border-2 px-6 py-2 flex-row items-center"
+                            className="rounded-2xl w-full mb-2 h-[100] border-2 px-6 py-2 flex-row items-center"
                             key={eatery.placeId}
                             activeOpacity={0.8}
                             onPress={() => {router.push({

@@ -12,11 +12,12 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
+import * as Linking from 'expo-linking'; // Add this import
 import {images} from '@/constants/images';
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSession } from '@/context/SessionContext';
 import RemoteImage from '@/components/RemoteImage';
-import {User} from '@/interfaces/interfaces'
+import {Eatery, User} from '@/interfaces/interfaces'
 import {fetchUserByID} from "@/services/userService";
 
 export default function MatchedWithFriends() {
@@ -24,7 +25,7 @@ export default function MatchedWithFriends() {
     const user = session?.user;
     const { eatery: eateryParam, friends: friendsParam} = useLocalSearchParams();
     const router = useRouter();
-    const [eatery, setEatery] = useState(null);
+    const [eatery, setEatery] = useState<Eatery | null>(null);
     const [friends, setFriends] = useState<User[]>();
     const [currentUser, setCurrentUser] = useState<User>(null);
     const [loading, setLoading] = useState(true);
@@ -54,7 +55,6 @@ export default function MatchedWithFriends() {
 
         fetchData();
     }, [eateryParam, friendsParam, user?.id]);
-
 
     // Show loading state
     if (loading) {
@@ -89,7 +89,7 @@ export default function MatchedWithFriends() {
     }
 
     // Generate restaurant link for sharing
-    const restaurantLink = `linkhere`;
+    const restaurantLink = `Link to Restaurant Details Page`
 
     const copyToClipboard = async () => {
         await Clipboard.setStringAsync(restaurantLink);

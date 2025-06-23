@@ -138,7 +138,7 @@ export default function GroupLobby() {
             filteredEateries = filterEateries(eateries, parsedFilters);
         }
 
-        router.push({
+        router.replace({
             pathname: '/Swiping',
             params: {
                 swipingMode: 'group',
