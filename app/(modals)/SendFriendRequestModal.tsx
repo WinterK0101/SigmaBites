@@ -18,6 +18,8 @@ export default function SendFriendRequestModal({
     onSuccess
 }) {
     const [loading, setLoading] = useState(false);
+    const [sent, setSent] = useState(false); // ✅ New state
+    const session = useSession();
     const { session } = useSession();
     const currentUser = session?.user;
 
