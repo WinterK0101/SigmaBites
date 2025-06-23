@@ -21,8 +21,6 @@ export async function fetchEateryByID(id: string): Promise<Eatery | null> {
     return data as Eatery;
 }
 
-import { supabase } from '@/SupabaseConfig';
-
 export const removeFromLikedEateries = async (userId, placeId) => {
     try {
         // 1. Fetch current liked_eateries
