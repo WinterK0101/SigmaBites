@@ -57,7 +57,8 @@ export default function RootLayout() {
 
     return (
         <SessionProvider >
-                <Stack screenOptions={{ headerShown: false }}>\
+                <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="index"/>
                     <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
                     <Stack.Screen
                         name="(tabs)"

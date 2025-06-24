@@ -9,10 +9,11 @@ import {
     Pressable,
     Alert,
     ScrollView,
+    StyleSheet,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
-import * as Linking from 'expo-linking'; // Add this import
+import * as Linking from 'expo-linking';
 import {images} from '@/constants/images';
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSession } from '@/context/SessionContext';
@@ -56,7 +57,70 @@ export default function MatchedWithFriends() {
         fetchData();
     }, [eateryParam, friendsParam, user?.id]);
 
-    // Show loading state
+    // Function to show multiple friends
+    const renderFriendAvatars = () => {
+        if (!friends || friends.length === 0) return null;
+
+        const count = friends.length;
+        const friendImageList = friends.map(friend => friend.avatar_url);
+
+        if (count === 1) {
+            return (
+                <View style={styles.friendBubble}>
+                    <RemoteImage
+                        filePath={friendImageList[0]}
+                        bucket="avatars"
+                        style={styles.fullSize}
+                    />
+                </View>
+            );
+        }
+
+        if (count === 2) {
+            return (
+                <View style={[styles.friendBubble, { flexDirection: 'row' }]}>
+                    {friendImageList.slice(0, 2).map((uri, index) => (
+                        <View
+                            key={index}
+                            style={[
+                                styles.half,
+                                index === 0 ? styles.leftHalf : styles.rightHalf,
+                            ]}
+                        >
+                            <RemoteImage
+                                filePath={uri}
+                                bucket="avatars"
+                                style={styles.fullSize}
+                            />
+                        </View>
+                    ))}
+                </View>
+            );
+        }
+
+        // For 3+ friends
+        return (
+            <View style={[styles.friendBubble, { flexDirection: 'row' }]}>
+                {friendImageList.slice(0, 3).map((uri, index) => (
+                    <View
+                        key={index}
+                        style={[
+                            styles.third,
+                            index === 0 ? styles.leftThird :
+                                index === 1 ? styles.middleThird : styles.rightThird,
+                        ]}
+                    >
+                        <RemoteImage
+                            filePath={uri}
+                            bucket="avatars"
+                            style={styles.fullSize}
+                        />
+                    </View>
+                ))}
+            </View>
+        );
+    };
+
     if (loading) {
         return (
             <ImageBackground
@@ -69,7 +133,6 @@ export default function MatchedWithFriends() {
         );
     }
 
-    // Show error state if no eatery data
     if (!eatery) {
         return (
             <ImageBackground
@@ -132,7 +195,7 @@ export default function MatchedWithFriends() {
                 <View className="flex-row mb-[-40px] items-center">
                     {/* User's avatar */}
                     <RemoteImage
-                        filePath={currentUser.avatar_url}
+                        filePath={currentUser?.avatar_url}
                         bucket="avatars"
                         style={{
                             width: 150,
@@ -145,17 +208,10 @@ export default function MatchedWithFriends() {
                         }}
                     />
 
-                    {/* Friends avatars */}
+                    {/* Dynamic friends avatars */}
                     <View className="relative -mx-5 z-10">
-                        <View className="w-[150px] h-[150px] rounded-full overflow-hidden border-4 border-white bg-gray-300">
-                            <RemoteImage
-                                filePath={friends[0].avatar_url}
-                                bucket="avatars"
-                                style={{ width: '100%', height: '100%', borderRadius: 25 }}
-                            />
-                        </View>
+                        {renderFriendAvatars()}
 
-                        {/* More friends indicator */}
                         <TouchableOpacity
                             className="absolute -bottom-0 -right-0 w-10 h-10 rounded-full bg-white items-center justify-center shadow-lg"
                             onPress={() => setFriendsListVisible(true)}
@@ -311,3 +367,31 @@ export default function MatchedWithFriends() {
         </ImageBackground>
     );
 }
+
+// Styles for the friends
+const styles = StyleSheet.create({
+    friendBubble: {
+        width: 150,
+        height: 150,
+        borderRadius: 75,
+        overflow: 'hidden',
+        borderWidth: 4,
+        borderColor: 'white',
+        backgroundColor: '#f0f0f0',
+    },
+    fullSize: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 0,
+    },
+    half: {
+        width: '50%',
+        height: '100%',
+        overflow: 'hidden',
+    },
+    third: {
+        width: '33.33%',
+        height: '100%',
+        overflow: 'hidden',
+    },
+});
