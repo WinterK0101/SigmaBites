@@ -1,67 +1,75 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import './globals.css';
-import { useColorScheme } from '@/components/useColorScheme';
+import { Session } from '@supabase/supabase-js';
+import { supabase } from '@/SupabaseConfig';
+import { SessionProvider } from '@/context/SessionContext';
 
 export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
+    ErrorBoundary,
 } from 'expo-router';
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+    initialRouteName: '(tabs)',
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [fontsLoaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    ...FontAwesome.font,
-    "Lexend-Bold": require('../assets/fonts/Lexend-Bold.ttf'),
-    "Lexend-Regular": require('../assets/fonts/Lexend-Regular.ttf'),
-    "Lexend-Variable": require('../assets/fonts/Lexend-Variable.ttf'),
-    "Baloo-Regular": require('../assets/fonts/Baloo-Regular.ttf'),
-  });
+    const [fontsLoaded, error] = useFonts({
+        'Lexend-Bold': require('../assets/fonts/Lexend-Bold.ttf'),
+        'Lexend-Regular': require('../assets/fonts/Lexend-Regular.ttf'),
+        'Lexend-Variable': require('../assets/fonts/Lexend-Variable.ttf'),
+        'Baloo-Regular': require('../assets/fonts/Baloo-Regular.ttf'),
+    });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
-  useEffect(() => {
-    if (error) throw error;
-  }, [error]);
+    const [session, setSession] = useState<Session | null>(null);
 
-  useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hideAsync(); // If fonts have loaded, splash screen will be hidden
-    }
-  }, [fontsLoaded]); // Checks if fonts are loaded
+    useEffect(() => {
+        // Get current session
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setSession(session);
+        });
 
-  if (!fontsLoaded) {
-    return null;
-  }
+        // Subscribe to auth state changes
+        const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+            setSession(session);
+        });
 
-  return <RootLayoutNav />;
-}
+        // Cleanup
+        return () => {
+            authListener.subscription.unsubscribe();
+        };
+    }, []);
 
-function RootLayoutNav() {
-  const colorScheme = useColorScheme();
+    useEffect(() => {
+        if (error) throw error;
+    }, [error]);
 
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        {
-          //<Stack.Screen name="index" options={{ headerShown: false }} />
+    useEffect(() => {
+        if (fontsLoaded) {
+            SplashScreen.hideAsync();
         }
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-    </ThemeProvider>
-  );
-}
+    }, [fontsLoaded]);
 
+    if (!fontsLoaded) {
+        return null;
+    }
+
+    return (
+        <SessionProvider >
+                <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="index" />
+                    <Stack.Screen name="(tabs)" />
+                    <Stack.Screen name="(auth)" />
+                    <Stack.Screen name="soloSwiping" />
+                    <Stack.Screen name="groupSwiping" />
+                    <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
+                </Stack>
+
+        </SessionProvider>
+    );
+}

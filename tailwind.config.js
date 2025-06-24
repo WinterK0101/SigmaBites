@@ -12,9 +12,10 @@ module.exports = {
         "lexend-variable": ['Lexend-Variable', 'sans-serif'],
       },
       colors: {
-        offwhite: "#F8F8F8",
+        offwhite: "#fafafa",
         accent: "#FE724C",
-        grey: "#D9D9D9"
+        grey: "#D9D9D9",
+        primary: "#272D2F"
       }
     },
   },

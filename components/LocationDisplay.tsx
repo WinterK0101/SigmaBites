@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { getCurrentLocation, LocationData } from "@/services/locationService";
+import { getCurrentLocation} from "@/services/locationService";
+import { LocationData } from '@/interfaces/interfaces';
 import { icons } from "@/constants/icons";
 import { Text, TouchableOpacity, View } from "react-native";
 
@@ -24,7 +25,7 @@ export const LocationDisplay = ({selectedLocation, onLocationChange}: LocationDi
         setDisplayText('Getting location...');
 
         try {
-            const locationData = await getCurrentLocation();
+            const locationData = await getCurrentLocation(false);
             setDisplayText(locationData.address);
 
             if (onLocationChange) {

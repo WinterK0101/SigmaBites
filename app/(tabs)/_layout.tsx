@@ -5,9 +5,15 @@ import Friends from "@/app/(tabs)/Friends";
 import Profile from "@/app/(tabs)/Profile";
 import Discover from "@/app/(tabs)/Discover";
 import {icons} from "@/constants/icons";
+import * as NavigationBar from 'expo-navigation-bar';
+import {useEffect} from "react";
 
 const Tab = createMaterialTopTabNavigator();
 const TabLayout = () => {
+    useEffect(() => {
+        // Hide the Android navigation bar when this component is mounted
+        NavigationBar.setVisibilityAsync('hidden');
+    }, []);
     return (
         <Tab.Navigator
             tabBarPosition="bottom"
@@ -54,7 +60,7 @@ const TabLayout = () => {
             <Tab.Screen name="Matches"
                         component={Matches}
                         options={{
-                            title: "Matches",
+                            title: "Like History",
                             tabBarIcon: ({ focused, color }) => (
                                 <icons.matches height={25} width={25} stroke={color}/>
                             )
