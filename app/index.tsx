@@ -16,11 +16,11 @@ export default function StartPage() {
           </View>
 
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button} onPress={() => router.push('/(auth)/SignInPage')}>
+            <TouchableOpacity style={styles.button} onPress={() => router.push('(auth)/SignInPage')}>
               <Text style={styles.buttonText}>Sign in</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => router.push('/(auth)/SignUpPage')}>
+            <TouchableOpacity onPress={() => router.push('(auth)/SignUpPage')}>
               <Text style={styles.linkText}>Create an account</Text>
             </TouchableOpacity>
           </View>
