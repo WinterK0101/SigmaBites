@@ -32,7 +32,7 @@ export default function Discover() {
     const [selectedCuisines, setSelectedCuisines] = useState(new Set(['All']));
     const [searchOpen, setSearchOpen] = useState(true);
     const [minimumRating, setMinimumRating] = useState(1);
-    const [useDummyData, setUseDummyData] = useState(true); // Toggle for testing
+    const [useDummyData, setUseDummyData] = useState(false); // Toggle for testing
 
     const priceLevelOptions = [1, 2, 3, 4];
     const cuisineOptions = ['All', 'Japanese', 'Korean', 'Chinese', 'Indian', 'Thai', 'American', 'Asian'];
@@ -316,17 +316,17 @@ export default function Discover() {
                     />
                 </View>
 
-                {/* Testing Toggle */}
-                <View className="mt-4 mb-2">
-                    <Text className="font-lexend-bold text-primary text-base mb-3">Use Dummy Data (Testing)</Text>
-                    <Switch
-                        trackColor={{ false: '#767577', true: '#fe724c' }}
-                        thumbColor={useDummyData ? '#ffffff' : '#f4f3f4'}
-                        ios_backgroundColor="#d9d9d9"
-                        onValueChange={setUseDummyData}
-                        value={useDummyData}
-                    />
-                </View>
+                {/*/!* Testing Toggle *!/*/}
+                {/*<View className="mt-4 mb-2">*/}
+                {/*    <Text className="font-lexend-bold text-primary text-base mb-3">Use Dummy Data (Testing)</Text>*/}
+                {/*    <Switch*/}
+                {/*        trackColor={{ false: '#767577', true: '#fe724c' }}*/}
+                {/*        thumbColor={useDummyData ? '#ffffff' : '#f4f3f4'}*/}
+                {/*        ios_backgroundColor="#d9d9d9"*/}
+                {/*        onValueChange={setUseDummyData}*/}
+                {/*        value={useDummyData}*/}
+                {/*    />*/}
+                {/*</View>*/}
 
                 {/* Start Swiping Button */}
                 <TouchableOpacity
