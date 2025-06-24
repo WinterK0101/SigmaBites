@@ -33,6 +33,19 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "1899010d-4508-478e-bbff-d515a59a0caa"
+      }
+    },
+    "owner": "irusuugen",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/1899010d-4508-478e-bbff-d515a59a0caa"
     }
   }
 }

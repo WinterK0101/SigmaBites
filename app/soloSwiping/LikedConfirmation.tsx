@@ -64,7 +64,7 @@ export default function LikedConfirmation() {
                     lineHeight: 52,
                 }}
             >
-                It's a match!
+                You liked this!
             </Text>
 
             <View className="flex-row items-center justify-center mb-12 relative">
