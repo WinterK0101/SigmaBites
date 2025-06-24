@@ -434,7 +434,7 @@ export default function OtherUserProfile() {
                     {recentlySaved.length === 0 ? (
                         <EmptyRecentlySavedState />
                     ) : (
-                        <View className="flex-row justify-center flex-wrap items-center gap-x-10 gap-y-4">
+                        <View className="flex-row items-center">
                             {recentlySaved.map((eatery) => (
                                 <TouchableOpacity
                                     key={eatery.placeId}
