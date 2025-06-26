@@ -279,7 +279,7 @@ export default function Profile() {
     fetchAndUpdateProfile();
   }, [fetchAndUpdateProfile]);
 
-  // Add focus effect to refresh data when screen comes into focus
+  // Focus effect to refresh data when screen comes into focus
   useFocusEffect(
       useCallback(() => {
         // Refresh profile data when screen comes into focus
