@@ -522,7 +522,7 @@ export default function OtherUserProfile() {
                                                 }}
                                             >
                                                 <Text
-                                                    className="text-white text-xs font-lexend-medium ml-2"
+                                                    className="text-white text-xs font-lexend-regular ml-2"
                                                     numberOfLines={2}
                                                 >
                                                     {eatery.displayName}
@@ -678,7 +678,7 @@ const styles = StyleSheet.create({
     },
     emptyStateTitle: {
         fontSize: 14,
-        fontFamily: 'Lexend-medium',
+        fontFamily: 'Lexend-regular',
         color: '#333',
         marginBottom: 2,
         textAlign: 'center',

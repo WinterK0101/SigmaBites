@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
       },
       emptyStateTitle: {
         fontSize: 14,
-        fontFamily: 'Lexend-medium',
+        fontFamily: 'Lexend-regular',
         color: '#333',
         marginBottom: 2,
         textAlign: 'center',
@@ -344,7 +344,7 @@ export default function Profile() {
     };
   }, [session?.user?.id]);
 
-  // Setup friend count and real-time subscription - Fixed to prevent multiple subscriptions
+  // Setup friend count and real-time subscription
   useEffect(() => {
     if (!session?.user) return;
 
@@ -742,7 +742,7 @@ export default function Profile() {
                                 }}
                             >
                               <Text
-                                  className="text-white text-xs font-lexend-medium ml-2"
+                                  className="text-white text-xs font-lexend-regular ml-2"
                                   numberOfLines={2}
                               >
                                 {eatery.displayName}
