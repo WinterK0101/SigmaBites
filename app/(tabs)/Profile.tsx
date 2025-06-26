@@ -11,7 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import {useFocusEffect, useRouter} from 'expo-router';
 import { supabase } from '@/SupabaseConfig';
 import { useSession } from '@/context/SessionContext';
 import { useFriendsStore } from '@/store/friendsStore';
@@ -234,52 +234,65 @@ export default function Profile() {
     }
   }, []);
 
-  // Fetch profile on mount or session change
-  useEffect(() => {
-    async function fetchProfile() {
-      if (!session?.user) return;
+  const fetchAndUpdateProfile = useCallback(async () => {
+    if (!session?.user) return;
 
-      try {
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('username, name, avatar_url, favourite_eateries, liked_eateries')
-            .eq('id', session.user.id)
-            .single();
+    try {
+      const { data, error } = await supabase
+          .from('profiles')
+          .select('username, name, avatar_url, favourite_eateries, liked_eateries')
+          .eq('id', session.user.id)
+          .single();
 
-        if (error) {
-          console.log('Error fetching profile:', error.message);
-          return;
-        }
-
-        if (data) {
-          const newProfile = {
-            displayName: data.name,
-            username: data.username,
-            avatar_url: data.avatar_url,
-            favourite_eateries: data.favourite_eateries || [],
-            liked_eateries: data.liked_eateries || [],
-          };
-
-          setProfile(newProfile);
-          setEateryCount(Array.isArray(data.liked_eateries) ? data.liked_eateries.length : 0);
-
-          // Fetch favourite eateries details
-          const favIds = Array.isArray(data.favourite_eateries) ? data.favourite_eateries : [];
-          await fetchFavouriteEateries(favIds);
-
-          // Fetch details for last 3 liked eateries
-          const liked = Array.isArray(data.liked_eateries) ? data.liked_eateries : [];
-          await fetchRecentlySaved(liked);
-        }
-      } catch (error) {
-        console.error('Error in fetchProfile:', error);
+      if (error) {
+        console.log('Error fetching profile:', error.message);
+        return;
       }
-    }
 
-    fetchProfile();
+      if (data) {
+        const newProfile = {
+          displayName: data.name,
+          username: data.username,
+          avatar_url: data.avatar_url,
+          favourite_eateries: data.favourite_eateries || [],
+          liked_eateries: data.liked_eateries || [],
+        };
+
+        setProfile(newProfile);
+        setEateryCount(Array.isArray(data.liked_eateries) ? data.liked_eateries.length : 0);
+
+        // Fetch favourite eateries details
+        const favIds = Array.isArray(data.favourite_eateries) ? data.favourite_eateries : [];
+        await fetchFavouriteEateries(favIds);
+
+        // Fetch details for last 3 liked eateries
+        const liked = Array.isArray(data.liked_eateries) ? data.liked_eateries : [];
+        await fetchRecentlySaved(liked);
+      }
+    } catch (error) {
+      console.error('Error in fetchAndUpdateProfile:', error);
+    }
   }, [session?.user?.id, fetchFavouriteEateries, fetchRecentlySaved]);
 
-  // Setup real-time subscription for profile changess
+  // Fetch profile on mount or session change
+  useEffect(() => {
+    fetchAndUpdateProfile();
+  }, [fetchAndUpdateProfile]);
+
+  // Add focus effect to refresh data when screen comes into focus
+  useFocusEffect(
+      useCallback(() => {
+        // Refresh profile data when screen comes into focus
+        fetchAndUpdateProfile();
+
+        // Also refresh friend count
+        if (session?.user?.id) {
+          fetchFriendCount(session.user.id);
+        }
+      }, [fetchAndUpdateProfile, session?.user?.id, fetchFriendCount])
+  );
+
+  // Setup real-time subscription for profile changes
   useEffect(() => {
     if (!session?.user) return;
 
@@ -342,7 +355,7 @@ export default function Profile() {
         supabase.removeChannel(subscription);
       }
     };
-  }, [session?.user?.id]);
+  }, [session?.user?.id, fetchFavouriteEateries, fetchRecentlySaved]);
 
   // Setup friend count and real-time subscription
   useEffect(() => {
@@ -502,7 +515,7 @@ export default function Profile() {
     }
     return undefined;
   };
-  // -----------------------------------------------------
+  // ----------------------------------------------------
 
   // Always reset tempAvatarUrl when opening the modal
   const handleOpenEditModal = () => {
