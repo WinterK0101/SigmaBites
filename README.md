@@ -87,13 +87,13 @@ Using a Tinder-style swipe interface, users can explore restaurants near them, m
     ```bash
    npm install
 4. **Set up environment variables**
-   Create a .env file and add your Firebase and Google Places API credentials.
-5. **Start the development server**
+   <br> Create a .env file and add your Supabase and Google Places (New) API keys
+6. **Start the development server**
    ```bash
    npx expo start
 7. **Run on a device**
-Install the Expo Go app on your iOS or Android device.
-Scan the QR code generated in the terminal to open the app.
+<br> Install the Expo Go app on your iOS or Android device.
+<br> Scan the QR code generated in the terminal to open the app.
 
 ## Project Structure
 
