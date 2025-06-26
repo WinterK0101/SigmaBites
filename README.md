@@ -5,7 +5,7 @@
 Sigma Bites is a mobile application designed to help users discover nearby eateries through a swipe-based interface inspired by Tinder. Leveraging the Google Places API and real-time geolocation, the app intelligently recommends restaurants based on user preferences and current location. The platform aims to make food discovery social, intuitive, and fun.
 
 <br>
-To run the app on Expo Go, [click here to get the QR code](https://expo.dev/preview/update?message=fonts%20and%20update%20profile%20favourites%20whenever%20page%20is%20in%20focus&updateRuntimeVersion=1.0.0&createdAt=2025-06-26T02%3A05%3A17.021Z&slug=exp&projectId=1899010d-4508-478e-bbff-d515a59a0caa&group=553129fb-5fd0-4cf5-b80e-71ef4e51087c).
+Link to QR code to run the app on Expo Go: https://shorturl.at/dN90C
 
 ---
 
